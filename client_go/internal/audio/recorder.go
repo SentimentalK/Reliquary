@@ -1,4 +1,4 @@
-// Package audio provides microphone recording functionality.
+// Package audio provides microphone recording functionality with streaming support.
 package audio
 
 import (
@@ -10,11 +10,10 @@ import (
 	"github.com/gen2brain/malgo"
 )
 
-// Recorder handles microphone audio capture.
+// Recorder handles microphone audio capture with streaming support.
 type Recorder struct {
 	ctx     *malgo.AllocatedContext
 	device  *malgo.Device
-	buffer  *bytes.Buffer
 	mu      sync.Mutex
 	running bool
 
@@ -22,6 +21,11 @@ type Recorder struct {
 	SampleRate uint32
 	Channels   uint32
 	BitDepth   uint32
+
+	// Streaming support
+	AudioChan  chan []byte  // Channel for streaming audio chunks
+	buffer     *bytes.Buffer // Fallback buffer for non-streaming mode
+	streaming  bool
 }
 
 // NewRecorder creates a new audio recorder with default settings.
@@ -40,7 +44,84 @@ func NewRecorder() (*Recorder, error) {
 	}, nil
 }
 
-// Start begins recording from the default microphone.
+// StartStreaming begins recording and streams audio chunks to the channel.
+// Returns a channel that receives PCM audio chunks in real-time.
+func (r *Recorder) StartStreaming() (<-chan []byte, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if r.running {
+		return r.AudioChan, nil
+	}
+
+	// Create buffered channel for audio chunks
+	r.AudioChan = make(chan []byte, 100)
+	r.streaming = true
+	r.buffer.Reset()
+
+	deviceConfig := malgo.DefaultDeviceConfig(malgo.Capture)
+	deviceConfig.Capture.Format = malgo.FormatS16
+	deviceConfig.Capture.Channels = r.Channels
+	deviceConfig.SampleRate = r.SampleRate
+	// Request smaller buffer for lower latency
+	deviceConfig.PeriodSizeInMilliseconds = 20 // 20ms chunks
+
+	// Callback for receiving audio data - pushes to channel
+	onData := func(outputSamples, inputSamples []byte, frameCount uint32) {
+		if len(inputSamples) > 0 {
+			// Make a copy to avoid data race
+			chunk := make([]byte, len(inputSamples))
+			copy(chunk, inputSamples)
+			
+			select {
+			case r.AudioChan <- chunk:
+			default:
+				// Channel full, drop oldest if needed (shouldn't happen with buffer)
+			}
+		}
+	}
+
+	device, err := malgo.InitDevice(r.ctx.Context, deviceConfig, malgo.DeviceCallbacks{
+		Data: onData,
+	})
+	if err != nil {
+		close(r.AudioChan)
+		return nil, fmt.Errorf("failed to init capture device: %w", err)
+	}
+
+	if err := device.Start(); err != nil {
+		device.Uninit()
+		close(r.AudioChan)
+		return nil, fmt.Errorf("failed to start capture: %w", err)
+	}
+
+	r.device = device
+	r.running = true
+	return r.AudioChan, nil
+}
+
+// StopStreaming ends recording and closes the audio channel.
+func (r *Recorder) StopStreaming() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if !r.running {
+		return
+	}
+
+	r.device.Stop()
+	r.device.Uninit()
+	r.device = nil
+	r.running = false
+
+	if r.streaming && r.AudioChan != nil {
+		close(r.AudioChan)
+		r.AudioChan = nil
+	}
+	r.streaming = false
+}
+
+// Start begins recording to internal buffer (legacy mode).
 func (r *Recorder) Start() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -50,6 +131,7 @@ func (r *Recorder) Start() error {
 	}
 
 	r.buffer.Reset()
+	r.streaming = false
 
 	deviceConfig := malgo.DefaultDeviceConfig(malgo.Capture)
 	deviceConfig.Capture.Format = malgo.FormatS16
@@ -80,7 +162,7 @@ func (r *Recorder) Start() error {
 	return nil
 }
 
-// Stop ends recording and returns audio as WAV bytes.
+// Stop ends recording and returns audio as WAV bytes (legacy mode).
 func (r *Recorder) Stop() ([]byte, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -130,10 +212,15 @@ func (r *Recorder) toWAV(pcmData []byte) []byte {
 // Close releases audio resources.
 func (r *Recorder) Close() {
 	if r.running {
-		r.Stop()
+		r.StopStreaming()
 	}
 	if r.ctx != nil {
 		r.ctx.Uninit()
 		r.ctx.Free()
 	}
+}
+
+// GetSampleRate returns the current sample rate.
+func (r *Recorder) GetSampleRate() uint32 {
+	return r.SampleRate
 }

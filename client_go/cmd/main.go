@@ -1,7 +1,7 @@
-// Voice Typing Client - Main Entry Point
+// Voice Typing Client - Main Entry Point (V0.2 with WebSocket Streaming)
 //
-// A lightweight native client that captures voice input and transcribes it
-// via the Python backend, then pastes the result to the active window.
+// A lightweight native client that captures voice input and streams it
+// via WebSocket to the Python backend for real-time transcription.
 //
 // Configuration:
 //   - Reads from voice_config.json in the same directory as executable
@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"sync"
 	"syscall"
 
 	"voice-typing-client/internal/audio"
@@ -59,9 +60,37 @@ func (s State) String() string {
 	}
 }
 
+// App holds the application state and dependencies.
+type App struct {
+	recorder     *audio.Recorder
+	clipboardMgr *clipboard.Manager
+	hotkeyHandler *hotkey.Handler
+	configMgr    *config.Manager
+	
+	// Current config values (may change via hot-reload)
+	serverURL string
+	deviceID  string
+	
+	mu sync.RWMutex
+}
+
+func (a *App) getServerURL() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.serverURL
+}
+
+func (a *App) setServerURL(url string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.serverURL = url
+}
+
 func main() {
-	// Parse flags (for override or initial setup)
+	// Parse flags
 	configPath := flag.String("config", config.GetConfigPath(), "Path to config file")
+	deviceID := flag.String("device-id", getDefaultDeviceID(), "Device identifier for logging")
+	useHTTP := flag.Bool("http", false, "Use legacy HTTP mode instead of WebSocket streaming")
 	flag.Parse()
 
 	// Load configuration
@@ -74,14 +103,17 @@ func main() {
 	keyName := hotkey.GetKeyName(cfg.KeyCode)
 
 	fmt.Println("╔═══════════════════════════════════════════╗")
-	fmt.Println("║        Voice Typing Client v0.1.0         ║")
+	fmt.Println("║      Voice Typing Client v0.2.0           ║")
+	fmt.Println("║        (WebSocket Streaming)              ║")
 	fmt.Println("╠═══════════════════════════════════════════╣")
 	fmt.Printf("║  Hotkey: %-33s║\n", fmt.Sprintf("%s (code %d)", keyName, cfg.KeyCode))
 	fmt.Printf("║  Server: %-33s║\n", cfg.ServerURL)
-	fmt.Printf("║  Config: %-33s║\n", *configPath)
+	if *useHTTP {
+		fmt.Println("║  Mode:   HTTP (legacy)                    ║")
+	} else {
+		fmt.Println("║  Mode:   WebSocket (streaming)            ║")
+	}
 	fmt.Println("╚═══════════════════════════════════════════╝")
-	fmt.Println()
-	fmt.Println("Config file is watched - changes apply in real-time!")
 	fmt.Println()
 
 	// Initialize components
@@ -101,17 +133,22 @@ func main() {
 		log.Fatalf("Failed to init hotkey: %v", err)
 	}
 
-	apiClient := network.NewClient(cfg.ServerURL)
+	app := &App{
+		recorder:      recorder,
+		clipboardMgr:  clipboardMgr,
+		hotkeyHandler: hotkeyHandler,
+		configMgr:     configMgr,
+		serverURL:     cfg.ServerURL,
+		deviceID:      *deviceID,
+	}
 
 	// Setup config hot-reload
 	configMgr.OnChange(func(newCfg config.Config) {
-		// Update hotkey
 		hotkeyHandler.UpdateKeyCode(newCfg.KeyCode)
-		fmt.Printf("✓ Hotkey updated to: %s (code %d)\n", 
+		fmt.Printf("✓ Hotkey updated to: %s (code %d)\n",
 			hotkey.GetKeyName(newCfg.KeyCode), newCfg.KeyCode)
-		
-		// Update API client
-		apiClient = network.NewClient(newCfg.ServerURL)
+
+		app.setServerURL(newCfg.ServerURL)
 		fmt.Printf("✓ Server updated to: %s\n", newCfg.ServerURL)
 	})
 	configMgr.StartWatching()
@@ -142,16 +179,133 @@ func main() {
 
 	// For macOS, we need to run the event loop on main thread
 	if runtime.GOOS == "darwin" {
-		go runEventLoop(ctx, hotkeyHandler, recorder, &apiClient, clipboardMgr)
-		// Run NSApp on main thread (required for CGEventTap)
+		if *useHTTP {
+			go runEventLoopHTTP(ctx, app)
+		} else {
+			go runEventLoopWebSocket(ctx, app)
+		}
 		runMainLoop(ctx)
 	} else {
-		runEventLoop(ctx, hotkeyHandler, recorder, &apiClient, clipboardMgr)
+		if *useHTTP {
+			runEventLoopHTTP(ctx, app)
+		} else {
+			runEventLoopWebSocket(ctx, app)
+		}
 	}
 }
 
-// runEventLoop handles the main state machine logic.
-func runEventLoop(ctx context.Context, hotkeyHandler *hotkey.Handler, recorder *audio.Recorder, apiClient **network.Client, clipboardMgr *clipboard.Manager) {
+// runEventLoopWebSocket handles streaming mode with WebSocket.
+func runEventLoopWebSocket(ctx context.Context, app *App) {
+	state := StateIdle
+	var audioChan <-chan []byte
+	var streamClient *network.StreamClient
+	var streamErr error
+	var streamDone chan struct{}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case event := <-app.hotkeyHandler.Events:
+			switch event {
+			case hotkey.KeyDown:
+				if state == StateIdle {
+					sound.PlayStart()
+					fmt.Println("🎤 Recording... (release key to stop)")
+
+					// Start streaming
+					audioChan, streamErr = app.recorder.StartStreaming()
+					if streamErr != nil {
+						log.Printf("Failed to start recording: %v", streamErr)
+						sound.PlayError()
+						continue
+					}
+
+					// Connect to server
+					streamClient = network.NewStreamClient(app.getServerURL(), app.deviceID)
+					if err := streamClient.Connect(); err != nil {
+						log.Printf("Failed to connect to server: %v", err)
+						app.recorder.StopStreaming()
+						sound.PlayError()
+						continue
+					}
+
+					// Send config
+					if err := streamClient.SendConfig(int(app.recorder.GetSampleRate())); err != nil {
+						log.Printf("Failed to send config: %v", err)
+						streamClient.Close()
+						app.recorder.StopStreaming()
+						sound.PlayError()
+						continue
+					}
+
+					// Start streaming audio in background
+					streamDone = make(chan struct{})
+					go func() {
+						defer close(streamDone)
+						if err := streamClient.StreamAudio(audioChan); err != nil {
+							log.Printf("Stream error: %v", err)
+						}
+					}()
+
+					state = StateRecording
+				}
+
+			case hotkey.KeyUp:
+				if state == StateRecording {
+					state = StateProcessing
+					fmt.Println("⏳ Processing...")
+
+					// Stop recording (closes audioChan)
+					app.recorder.StopStreaming()
+
+					// Wait for stream to finish
+					<-streamDone
+
+					// Send EOF
+					if err := streamClient.SendEOF(); err != nil {
+						log.Printf("Failed to send EOF: %v", err)
+						streamClient.Close()
+						sound.PlayError()
+						state = StateIdle
+						continue
+					}
+
+					// Receive result
+					result, err := streamClient.ReceiveResult()
+					streamClient.Close()
+
+					if err != nil {
+						log.Printf("Transcription failed: %v", err)
+						sound.PlayError()
+						state = StateIdle
+						continue
+					}
+
+					if result.Text == "" {
+						fmt.Println("⚠️  No speech detected")
+						state = StateIdle
+						continue
+					}
+
+					// Paste result
+					fmt.Printf("✅ Transcribed: %s\n", result.Text)
+					sound.PlaySuccess()
+					if err := app.clipboardMgr.SetTextAndPaste(result.Text); err != nil {
+						log.Printf("Failed to paste: %v", err)
+					}
+
+					state = StateIdle
+					fmt.Println("\nReady for next recording...")
+				}
+			}
+		}
+	}
+}
+
+// runEventLoopHTTP handles legacy HTTP mode.
+func runEventLoopHTTP(ctx context.Context, app *App) {
 	state := StateIdle
 
 	for {
@@ -159,14 +313,13 @@ func runEventLoop(ctx context.Context, hotkeyHandler *hotkey.Handler, recorder *
 		case <-ctx.Done():
 			return
 
-		case event := <-hotkeyHandler.Events:
+		case event := <-app.hotkeyHandler.Events:
 			switch event {
 			case hotkey.KeyDown:
 				if state == StateIdle {
-					// Start recording
 					sound.PlayStart()
 					fmt.Println("🎤 Recording... (release key to stop)")
-					if err := recorder.Start(); err != nil {
+					if err := app.recorder.Start(); err != nil {
 						log.Printf("Failed to start recording: %v", err)
 						sound.PlayError()
 						continue
@@ -176,12 +329,10 @@ func runEventLoop(ctx context.Context, hotkeyHandler *hotkey.Handler, recorder *
 
 			case hotkey.KeyUp:
 				if state == StateRecording {
-					// Stop recording and process
-					sound.PlayStop()
 					state = StateProcessing
 					fmt.Println("⏳ Processing...")
 
-					audioData, err := recorder.Stop()
+					audioData, err := app.recorder.Stop()
 					if err != nil {
 						log.Printf("Failed to stop recording: %v", err)
 						sound.PlayError()
@@ -189,15 +340,15 @@ func runEventLoop(ctx context.Context, hotkeyHandler *hotkey.Handler, recorder *
 						continue
 					}
 
-					// Check if we got any audio
 					if len(audioData) < 100 {
 						fmt.Println("⚠️  Recording too short, skipped")
 						state = StateIdle
 						continue
 					}
 
-					// Send to server (use current client)
-					text, err := (*apiClient).Transcribe(audioData)
+					// Use HTTP client
+					client := network.NewClient(app.getServerURL())
+					text, err := client.Transcribe(audioData)
 					if err != nil {
 						log.Printf("Transcription failed: %v", err)
 						sound.PlayError()
@@ -211,10 +362,9 @@ func runEventLoop(ctx context.Context, hotkeyHandler *hotkey.Handler, recorder *
 						continue
 					}
 
-					// Paste result
 					fmt.Printf("✅ Transcribed: %s\n", text)
 					sound.PlaySuccess()
-					if err := clipboardMgr.SetTextAndPaste(text); err != nil {
+					if err := app.clipboardMgr.SetTextAndPaste(text); err != nil {
 						log.Printf("Failed to paste: %v", err)
 					}
 
@@ -224,4 +374,13 @@ func runEventLoop(ctx context.Context, hotkeyHandler *hotkey.Handler, recorder *
 			}
 		}
 	}
+}
+
+// getDefaultDeviceID generates a default device identifier.
+func getDefaultDeviceID() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "unknown"
+	}
+	return hostname
 }

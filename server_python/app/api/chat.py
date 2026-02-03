@@ -1,10 +1,17 @@
-"""Transcription API endpoints."""
+"""Transcription API endpoints including WebSocket streaming."""
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, Query
+import io
+import json
+import struct
+import time
+from typing import Optional
+
+from fastapi import APIRouter, UploadFile, File, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
 
 from app.config import get_settings
 from app.services.pipelines.manager import get_pipeline_manager
+from app.services.storage_service import get_storage_service
 
 router = APIRouter()
 
@@ -15,7 +22,7 @@ async def transcribe_audio(
     pipeline: str = Query(None, description="Pipeline to use (default: from config)")
 ) -> str:
     """
-    Transcribe uploaded audio file to text.
+    Transcribe uploaded audio file to text (Legacy HTTP endpoint).
     
     - **file**: Audio file (WAV, MP3, etc.)
     - **pipeline**: Optional pipeline key (default: "raw")
@@ -44,3 +51,117 @@ async def transcribe_audio(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
+
+
+def pcm_to_wav(pcm_data: bytes, sample_rate: int, channels: int = 1, bit_depth: int = 16) -> bytes:
+    """Convert raw PCM data to WAV format."""
+    byte_rate = sample_rate * channels * (bit_depth // 8)
+    block_align = channels * (bit_depth // 8)
+    data_size = len(pcm_data)
+    
+    # WAV header
+    header = struct.pack(
+        '<4sI4s4sIHHIIHH4sI',
+        b'RIFF',
+        36 + data_size,     # File size - 8
+        b'WAVE',
+        b'fmt ',
+        16,                 # Subchunk1 size
+        1,                  # Audio format (PCM)
+        channels,
+        sample_rate,
+        byte_rate,
+        block_align,
+        bit_depth,
+        b'data',
+        data_size,
+    )
+    
+    return header + pcm_data
+
+
+@router.websocket("/ws/audio")
+async def websocket_audio_stream(websocket: WebSocket):
+    """
+    WebSocket endpoint for streaming audio transcription.
+    
+    Protocol:
+    1. Client sends config JSON: {"sample_rate": 16000, "device_id": "..."}
+    2. Client sends binary PCM chunks (Int16)
+    3. Client sends "EOF" string when done
+    4. Server responds with {"text": "...", "id": "..."}
+    """
+    await websocket.accept()
+    
+    storage = get_storage_service()
+    settings = get_settings()
+    manager = get_pipeline_manager()
+    
+    pcm_buffer = bytearray()
+    sample_rate: int = 16000
+    device_id: str = "unknown"
+    start_time: float = 0
+    
+    try:
+        # Step 1: Receive config
+        config_data = await websocket.receive_text()
+        config = json.loads(config_data)
+        sample_rate = config.get("sample_rate", 16000)
+        device_id = config.get("device_id", "unknown")
+        
+        start_time = time.time()
+        
+        # Step 2: Receive PCM chunks until EOF
+        while True:
+            message = await websocket.receive()
+            
+            if "text" in message:
+                text_data = message["text"]
+                if text_data == "EOF":
+                    break
+                # Ignore other text messages
+            elif "bytes" in message:
+                pcm_buffer.extend(message["bytes"])
+        
+        # Step 3: Convert PCM to WAV and transcribe
+        if len(pcm_buffer) < 100:
+            await websocket.send_json({"error": "Audio too short", "text": "", "id": ""})
+            await websocket.close()
+            return
+        
+        wav_data = pcm_to_wav(bytes(pcm_buffer), sample_rate)
+        
+        pipe = manager.get_pipeline(settings.default_pipeline)
+        transcription = await pipe.transcribe(wav_data, filename="stream.wav")
+        
+        end_time = time.time()
+        latency_ms = int((end_time - start_time) * 1000)
+        audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)  # 16-bit = 2 bytes
+        
+        # Step 4: Log interaction
+        interaction_id = await storage.log_interaction(
+            device_id=device_id,
+            audio_duration_ms=audio_duration_ms,
+            audio_format="pcm_s16le",
+            raw_transcription=transcription,
+            final_transcription=transcription,
+            latency_ms=latency_ms,
+        )
+        
+        # Step 5: Send result
+        await websocket.send_json({
+            "text": transcription,
+            "id": interaction_id,
+        })
+        
+    except WebSocketDisconnect:
+        pass
+    except json.JSONDecodeError:
+        await websocket.send_json({"error": "Invalid config JSON", "text": "", "id": ""})
+    except Exception as e:
+        await websocket.send_json({"error": str(e), "text": "", "id": ""})
+    finally:
+        try:
+            await websocket.close()
+        except:
+            pass
