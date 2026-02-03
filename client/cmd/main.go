@@ -63,15 +63,16 @@ func (s State) String() string {
 
 // App holds the application state and dependencies.
 type App struct {
-	recorder     *audio.Recorder
-	clipboardMgr *clipboard.Manager
+	recorder      *audio.Recorder
+	clipboardMgr  *clipboard.Manager
 	hotkeyHandler *hotkey.Handler
-	configMgr    *config.Manager
-	
+	configMgr     *config.Manager
+
 	// Current config values (may change via hot-reload)
 	serverURL string
+	userID    string
 	deviceID  string
-	
+
 	mu sync.RWMutex
 }
 
@@ -87,10 +88,18 @@ func (a *App) setServerURL(url string) {
 	a.serverURL = url
 }
 
+func (a *App) getIdentity() network.Identity {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return network.Identity{
+		UserID:   a.userID,
+		DeviceID: a.deviceID,
+	}
+}
+
 func main() {
 	// Parse flags
 	configPath := flag.String("config", config.GetConfigPath(), "Path to config file")
-	deviceID := flag.String("device-id", getDefaultDeviceID(), "Device identifier for logging")
 	useHTTP := flag.Bool("http", false, "Use legacy HTTP mode instead of WebSocket streaming")
 	flag.Parse()
 
@@ -109,6 +118,8 @@ func main() {
 	fmt.Println("╠═══════════════════════════════════════════╣")
 	fmt.Printf("║  Hotkey: %-33s║\n", fmt.Sprintf("%s (code %d)", keyName, cfg.KeyCode))
 	fmt.Printf("║  Server: %-33s║\n", cfg.ServerURL)
+	fmt.Printf("║  User:   %-33s║\n", cfg.UserID)
+	fmt.Printf("║  Device: %-33s║\n", cfg.DeviceID)
 	if *useHTTP {
 		fmt.Println("║  Mode:   HTTP (legacy)                    ║")
 	} else {
@@ -140,7 +151,8 @@ func main() {
 		hotkeyHandler: hotkeyHandler,
 		configMgr:     configMgr,
 		serverURL:     cfg.ServerURL,
-		deviceID:      *deviceID,
+		userID:        cfg.UserID,
+		deviceID:      cfg.DeviceID,
 	}
 
 	// Setup config hot-reload
@@ -203,7 +215,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 	var streamErr error
 	var streamDone chan struct{}
 	var recordingStartTime time.Time
-	
+
 	// Minimum recording duration to avoid accidental taps (1 second)
 	const minRecordingDuration = 1 * time.Second
 
@@ -228,8 +240,8 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 						continue
 					}
 
-					// Connect to server
-					streamClient = network.NewStreamClient(app.getServerURL(), app.deviceID)
+					// Connect to server with identity
+					streamClient = network.NewStreamClient(app.getServerURL(), app.getIdentity())
 					if err := streamClient.Connect(); err != nil {
 						log.Printf("Failed to connect to server: %v", err)
 						app.recorder.StopStreaming()
@@ -237,7 +249,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 						continue
 					}
 
-					// Send config
+					// Send config (includes user_id and device_id)
 					if err := streamClient.SendConfig(int(app.recorder.GetSampleRate())); err != nil {
 						log.Printf("Failed to send config: %v", err)
 						streamClient.Close()
@@ -261,7 +273,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 			case hotkey.KeyUp:
 				if state == StateRecording {
 					recordingDuration := time.Since(recordingStartTime)
-					
+
 					// Stop recording (closes audioChan)
 					app.recorder.StopStreaming()
 
@@ -324,7 +336,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 func runEventLoopHTTP(ctx context.Context, app *App) {
 	state := StateIdle
 	var recordingStartTime time.Time
-	
+
 	// Minimum recording duration to avoid accidental taps (1 second)
 	const minRecordingDuration = 1 * time.Second
 
@@ -404,13 +416,4 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 			}
 		}
 	}
-}
-
-// getDefaultDeviceID generates a default device identifier.
-func getDefaultDeviceID() string {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return "unknown"
-	}
-	return hostname
 }

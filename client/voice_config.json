@@ -1,4 +1,5 @@
 {
-    "keycode": 61,
-    "server_url": "http://localhost:8080"
+  "keycode": 61,
+  "server_url": "http://localhost:8080",
+  "user_id": "xinghan.xu"
 }

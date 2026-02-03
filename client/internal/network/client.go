@@ -14,12 +14,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Identity holds user and device information for the session.
+type Identity struct {
+	UserID   string
+	DeviceID string
+}
+
 // StreamClient handles WebSocket streaming to the transcription server.
 type StreamClient struct {
 	wsURL    string
 	httpURL  string
 	conn     *websocket.Conn
-	deviceID string
+	identity Identity
 }
 
 // TranscriptionResult contains the server response.
@@ -31,7 +37,7 @@ type TranscriptionResult struct {
 }
 
 // NewStreamClient creates a new WebSocket streaming client.
-func NewStreamClient(serverURL string, deviceID string) *StreamClient {
+func NewStreamClient(serverURL string, identity Identity) *StreamClient {
 	// Convert HTTP URL to WebSocket URL
 	wsURL := serverURL
 	if strings.HasPrefix(wsURL, "http://") {
@@ -43,7 +49,7 @@ func NewStreamClient(serverURL string, deviceID string) *StreamClient {
 	return &StreamClient{
 		wsURL:    wsURL + "/ws/audio",
 		httpURL:  serverURL,
-		deviceID: deviceID,
+		identity: identity,
 	}
 }
 
@@ -62,15 +68,19 @@ func (c *StreamClient) Connect() error {
 	return nil
 }
 
-// SendConfig sends the audio configuration to the server.
+// SendConfig sends the audio configuration and identity to the server.
+// This is the WebSocket handshake that includes user_id and device_id.
 func (c *StreamClient) SendConfig(sampleRate int) error {
 	if c.conn == nil {
 		return fmt.Errorf("not connected")
 	}
 
+	// Handshake payload with identity
 	config := map[string]interface{}{
 		"sample_rate": sampleRate,
-		"device_id":   c.deviceID,
+		"client":      "go_vortex_v0.2",
+		"user_id":     c.identity.UserID,
+		"device_id":   c.identity.DeviceID,
 	}
 
 	data, err := json.Marshal(config)

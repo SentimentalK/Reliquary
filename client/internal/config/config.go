@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -14,6 +16,8 @@ import (
 type Config struct {
 	KeyCode   int    `json:"keycode"`
 	ServerURL string `json:"server_url"`
+	UserID    string `json:"user_id"`
+	DeviceID  string `json:"device_id"`
 }
 
 // DefaultConfig returns the default configuration.
@@ -21,7 +25,21 @@ func DefaultConfig() Config {
 	return Config{
 		KeyCode:   61, // Right Option on macOS
 		ServerURL: "http://localhost:8080",
+		UserID:    "default_user",
+		DeviceID:  getDefaultDeviceID(),
 	}
+}
+
+// getDefaultDeviceID returns hostname as device identifier.
+// Simple and human-readable.
+func getDefaultDeviceID() string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return fmt.Sprintf("%s-unknown", runtime.GOOS)
+	}
+	// Strip .local suffix (common on macOS)
+	hostname = strings.TrimSuffix(hostname, ".local")
+	return hostname
 }
 
 // Manager handles configuration loading and hot-reload.
@@ -76,6 +94,14 @@ func (m *Manager) Load() error {
 		return fmt.Errorf("failed to parse config: %w", err)
 	}
 
+	// Apply defaults for missing fields
+	if cfg.UserID == "" {
+		cfg.UserID = "default_user"
+	}
+	if cfg.DeviceID == "" {
+		cfg.DeviceID = getDefaultDeviceID()
+	}
+
 	m.config = cfg
 	return nil
 }
@@ -83,6 +109,11 @@ func (m *Manager) Load() error {
 // saveDefault creates a default config file.
 func (m *Manager) saveDefault() error {
 	m.config = DefaultConfig()
+	return m.saveConfig()
+}
+
+// saveConfig writes the current config to file.
+func (m *Manager) saveConfig() error {
 	data, err := json.MarshalIndent(m.config, "", "  ")
 	if err != nil {
 		return err
