@@ -82,7 +82,11 @@ async def websocket_audio_stream(websocket: WebSocket):
     WebSocket endpoint for streaming audio transcription.
     
     Protocol:
-    1. Client sends config JSON: {"sample_rate": 16000, "device_id": "..."}
+    1. Client sends config JSON: {
+         "sample_rate": 16000, 
+         "device_id": "mac-studio",
+         "user_id": "xinghan"  // Optional, defaults to settings.default_user_id
+       }
     2. Client sends binary PCM chunks (Int16)
     3. Client sends "EOF" string when done
     4. Server sends {"status": "processing"} keep-alive during transcription
@@ -96,7 +100,11 @@ async def websocket_audio_stream(websocket: WebSocket):
     
     pcm_buffer = bytearray()
     sample_rate: int = 16000
-    device_id: str = "unknown"
+    
+    # Session identity (extracted from config frame)
+    current_user_id: str = settings.default_user_id
+    current_device_id: str = "unknown_device"
+    
     start_time: float = 0
     client_connected = True
     
@@ -112,11 +120,14 @@ async def websocket_audio_stream(websocket: WebSocket):
                 break
     
     try:
-        # Step 1: Receive config
+        # Step 1: Receive and parse config (Handshake)
         config_data = await websocket.receive_text()
         config = json.loads(config_data)
+        
+        # Extract identity from config frame
         sample_rate = config.get("sample_rate", 16000)
-        device_id = config.get("device_id", "unknown")
+        current_user_id = config.get("user_id", settings.default_user_id) or settings.default_user_id
+        current_device_id = config.get("device_id", "unknown_device") or "unknown_device"
         
         start_time = time.time()
         
@@ -168,9 +179,10 @@ async def websocket_audio_stream(websocket: WebSocket):
         latency_ms = int((end_time - start_time) * 1000)
         audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)
         
-        # Step 5: Log interaction
+        # Step 5: Log interaction with user/device identity
         interaction_id = await storage.log_interaction(
-            device_id=device_id,
+            user_id=current_user_id,
+            device_id=current_device_id,
             audio_duration_ms=audio_duration_ms,
             audio_format="pcm_s16le",
             raw_transcription=transcription,
