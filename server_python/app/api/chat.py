@@ -1,10 +1,9 @@
 """Transcription API endpoints including WebSocket streaming."""
 
-import io
+import asyncio
 import json
 import struct
 import time
-from typing import Optional
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import PlainTextResponse
@@ -33,13 +32,11 @@ async def transcribe_audio(
     pipeline_key = pipeline or settings.default_pipeline
     
     try:
-        # Read audio bytes
         audio_bytes = await file.read()
         
         if not audio_bytes:
             raise HTTPException(status_code=400, detail="Empty audio file")
         
-        # Get pipeline and transcribe
         manager = get_pipeline_manager()
         pipe = manager.get_pipeline(pipeline_key)
         
@@ -59,15 +56,14 @@ def pcm_to_wav(pcm_data: bytes, sample_rate: int, channels: int = 1, bit_depth: 
     block_align = channels * (bit_depth // 8)
     data_size = len(pcm_data)
     
-    # WAV header
     header = struct.pack(
         '<4sI4s4sIHHIIHH4sI',
         b'RIFF',
-        36 + data_size,     # File size - 8
+        36 + data_size,
         b'WAVE',
         b'fmt ',
-        16,                 # Subchunk1 size
-        1,                  # Audio format (PCM)
+        16,
+        1,
         channels,
         sample_rate,
         byte_rate,
@@ -89,7 +85,8 @@ async def websocket_audio_stream(websocket: WebSocket):
     1. Client sends config JSON: {"sample_rate": 16000, "device_id": "..."}
     2. Client sends binary PCM chunks (Int16)
     3. Client sends "EOF" string when done
-    4. Server responds with {"text": "...", "id": "..."}
+    4. Server sends {"status": "processing"} keep-alive during transcription
+    5. Server responds with {"text": "...", "id": "..."}
     """
     await websocket.accept()
     
@@ -101,6 +98,18 @@ async def websocket_audio_stream(websocket: WebSocket):
     sample_rate: int = 16000
     device_id: str = "unknown"
     start_time: float = 0
+    client_connected = True
+    
+    async def send_keepalive():
+        """Send periodic keep-alive messages during processing."""
+        nonlocal client_connected
+        while client_connected:
+            try:
+                await websocket.send_json({"status": "processing"})
+                await asyncio.sleep(1)
+            except Exception:
+                client_connected = False
+                break
     
     try:
         # Step 1: Receive config
@@ -111,34 +120,55 @@ async def websocket_audio_stream(websocket: WebSocket):
         
         start_time = time.time()
         
-        # Step 2: Receive PCM chunks until EOF
+        # Step 2: Receive PCM chunks until EOF or disconnect
         while True:
-            message = await websocket.receive()
+            try:
+                message = await websocket.receive()
+            except WebSocketDisconnect:
+                client_connected = False
+                return
+            
+            # Check for disconnect message type
+            if message.get("type") == "websocket.disconnect":
+                client_connected = False
+                return
             
             if "text" in message:
                 text_data = message["text"]
                 if text_data == "EOF":
                     break
-                # Ignore other text messages
             elif "bytes" in message:
                 pcm_buffer.extend(message["bytes"])
         
-        # Step 3: Convert PCM to WAV and transcribe
+        # Step 3: Check audio length
         if len(pcm_buffer) < 100:
-            await websocket.send_json({"error": "Audio too short", "text": "", "id": ""})
-            await websocket.close()
+            if client_connected:
+                await websocket.send_json({"error": "Audio too short", "text": "", "id": ""})
             return
         
+        # Step 4: Start keep-alive and transcribe
         wav_data = pcm_to_wav(bytes(pcm_buffer), sample_rate)
-        
         pipe = manager.get_pipeline(settings.default_pipeline)
-        transcription = await pipe.transcribe(wav_data, filename="stream.wav")
+        
+        # Start keep-alive task
+        keepalive_task = asyncio.create_task(send_keepalive())
+        
+        try:
+            transcription = await pipe.transcribe(wav_data, filename="stream.wav")
+        finally:
+            # Stop keep-alive
+            client_connected = False
+            keepalive_task.cancel()
+            try:
+                await keepalive_task
+            except asyncio.CancelledError:
+                pass
         
         end_time = time.time()
         latency_ms = int((end_time - start_time) * 1000)
-        audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)  # 16-bit = 2 bytes
+        audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)
         
-        # Step 4: Log interaction
+        # Step 5: Log interaction
         interaction_id = await storage.log_interaction(
             device_id=device_id,
             audio_duration_ms=audio_duration_ms,
@@ -148,20 +178,27 @@ async def websocket_audio_stream(websocket: WebSocket):
             latency_ms=latency_ms,
         )
         
-        # Step 5: Send result
+        # Step 6: Send result
         await websocket.send_json({
             "text": transcription,
             "id": interaction_id,
         })
         
     except WebSocketDisconnect:
+        # Client disconnected - this is normal, don't treat as error
         pass
     except json.JSONDecodeError:
-        await websocket.send_json({"error": "Invalid config JSON", "text": "", "id": ""})
+        try:
+            await websocket.send_json({"error": "Invalid config JSON", "text": "", "id": ""})
+        except Exception:
+            pass
     except Exception as e:
-        await websocket.send_json({"error": str(e), "text": "", "id": ""})
+        try:
+            await websocket.send_json({"error": str(e), "text": "", "id": ""})
+        except Exception:
+            pass
     finally:
         try:
             await websocket.close()
-        except:
+        except Exception:
             pass

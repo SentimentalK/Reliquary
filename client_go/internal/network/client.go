@@ -24,9 +24,10 @@ type StreamClient struct {
 
 // TranscriptionResult contains the server response.
 type TranscriptionResult struct {
-	Text  string `json:"text"`
-	ID    string `json:"id"`
-	Error string `json:"error,omitempty"`
+	Text   string `json:"text"`
+	ID     string `json:"id"`
+	Status string `json:"status,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 // NewStreamClient creates a new WebSocket streaming client.
@@ -106,29 +107,40 @@ func (c *StreamClient) SendEOF() error {
 }
 
 // ReceiveResult waits for and returns the transcription result.
+// It ignores intermediate status messages (keep-alive) and waits for final result.
 func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 	if c.conn == nil {
 		return nil, fmt.Errorf("not connected")
 	}
 
-	// Set read deadline
-	c.conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+	// Set read deadline (longer to account for Groq processing)
+	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
 
-	_, message, err := c.conn.ReadMessage()
-	if err != nil {
-		return nil, fmt.Errorf("failed to receive result: %w", err)
+	for {
+		_, message, err := c.conn.ReadMessage()
+		if err != nil {
+			return nil, fmt.Errorf("failed to receive result: %w", err)
+		}
+
+		var result TranscriptionResult
+		if err := json.Unmarshal(message, &result); err != nil {
+			return nil, fmt.Errorf("failed to parse result: %w", err)
+		}
+
+		// Ignore keep-alive "processing" status messages
+		if result.Status == "processing" {
+			// Reset read deadline on each keep-alive
+			c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+			continue
+		}
+
+		// Got actual result or error
+		if result.Error != "" {
+			return nil, fmt.Errorf("server error: %s", result.Error)
+		}
+
+		return &result, nil
 	}
-
-	var result TranscriptionResult
-	if err := json.Unmarshal(message, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse result: %w", err)
-	}
-
-	if result.Error != "" {
-		return nil, fmt.Errorf("server error: %s", result.Error)
-	}
-
-	return &result, nil
 }
 
 // Close closes the WebSocket connection.
