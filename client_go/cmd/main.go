@@ -23,6 +23,7 @@ import (
 	"runtime"
 	"sync"
 	"syscall"
+	"time"
 
 	"voice-typing-client/internal/audio"
 	"voice-typing-client/internal/clipboard"
@@ -201,6 +202,10 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 	var streamClient *network.StreamClient
 	var streamErr error
 	var streamDone chan struct{}
+	var recordingStartTime time.Time
+	
+	// Minimum recording duration to avoid accidental taps (1 second)
+	const minRecordingDuration = 1 * time.Second
 
 	for {
 		select {
@@ -213,6 +218,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 				if state == StateIdle {
 					sound.PlayStart()
 					fmt.Println("🎤 Recording... (release key to stop)")
+					recordingStartTime = time.Now()
 
 					// Start streaming
 					audioChan, streamErr = app.recorder.StartStreaming()
@@ -254,14 +260,24 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 
 			case hotkey.KeyUp:
 				if state == StateRecording {
-					state = StateProcessing
-					fmt.Println("⏳ Processing...")
-
+					recordingDuration := time.Since(recordingStartTime)
+					
 					// Stop recording (closes audioChan)
 					app.recorder.StopStreaming()
 
 					// Wait for stream to finish
 					<-streamDone
+
+					// Check if recording was too short (accidental tap)
+					if recordingDuration < minRecordingDuration {
+						fmt.Printf("⚠️  Recording too short (%.1fs < 1s), skipped\n", recordingDuration.Seconds())
+						streamClient.Close()
+						state = StateIdle
+						continue
+					}
+
+					state = StateProcessing
+					fmt.Println("⏳ Processing...")
 
 					// Send EOF
 					if err := streamClient.SendEOF(); err != nil {
@@ -307,6 +323,10 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 // runEventLoopHTTP handles legacy HTTP mode.
 func runEventLoopHTTP(ctx context.Context, app *App) {
 	state := StateIdle
+	var recordingStartTime time.Time
+	
+	// Minimum recording duration to avoid accidental taps (1 second)
+	const minRecordingDuration = 1 * time.Second
 
 	for {
 		select {
@@ -319,6 +339,7 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 				if state == StateIdle {
 					sound.PlayStart()
 					fmt.Println("🎤 Recording... (release key to stop)")
+					recordingStartTime = time.Now()
 					if err := app.recorder.Start(); err != nil {
 						log.Printf("Failed to start recording: %v", err)
 						sound.PlayError()
@@ -329,8 +350,7 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 
 			case hotkey.KeyUp:
 				if state == StateRecording {
-					state = StateProcessing
-					fmt.Println("⏳ Processing...")
+					recordingDuration := time.Since(recordingStartTime)
 
 					audioData, err := app.recorder.Stop()
 					if err != nil {
@@ -340,11 +360,21 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 						continue
 					}
 
+					// Check if recording was too short (accidental tap)
+					if recordingDuration < minRecordingDuration {
+						fmt.Printf("⚠️  Recording too short (%.1fs < 1s), skipped\n", recordingDuration.Seconds())
+						state = StateIdle
+						continue
+					}
+
 					if len(audioData) < 100 {
 						fmt.Println("⚠️  Recording too short, skipped")
 						state = StateIdle
 						continue
 					}
+
+					state = StateProcessing
+					fmt.Println("⏳ Processing...")
 
 					// Use HTTP client
 					client := network.NewClient(app.getServerURL())
