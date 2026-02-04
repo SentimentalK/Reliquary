@@ -67,6 +67,7 @@ type App struct {
 	clipboardMgr  *clipboard.Manager
 	hotkeyHandler *hotkey.Handler
 	configMgr     *config.Manager
+	controlPlane  *network.ControlPlaneClient
 
 	// Current config values (may change via hot-reload)
 	serverURL string
@@ -155,7 +156,7 @@ func main() {
 		deviceID:      cfg.DeviceID,
 	}
 
-	// Setup config hot-reload
+	// Setup config hot-reload (from local file changes)
 	configMgr.OnChange(func(newCfg config.Config) {
 		hotkeyHandler.UpdateKeyCode(newCfg.KeyCode)
 		fmt.Printf("✓ Hotkey updated to: %s (code %d)\n",
@@ -166,6 +167,46 @@ func main() {
 	})
 	configMgr.StartWatching()
 	defer configMgr.StopWatching()
+
+	// Setup Control Plane (real-time server push)
+	controlPlane := network.NewControlPlaneClient(cfg.ServerURL, network.Identity{
+		UserID:   cfg.UserID,
+		DeviceID: cfg.DeviceID,
+	})
+	app.controlPlane = controlPlane
+
+	// Handle config updates from server (Config as Cache philosophy)
+	controlPlane.OnConfigUpdate(func(update network.ConfigUpdate) {
+		if update.KeyCode != nil {
+			hotkeyHandler.SetTriggerKey(*update.KeyCode)
+			// Persist to cache (voice_config.json)
+			if err := configMgr.SetKeyCode(*update.KeyCode); err != nil {
+				fmt.Printf("⚠️  Failed to save config: %v\n", err)
+			}
+			fmt.Printf("✓ [Server] Hotkey updated to: %s (code %d)\n",
+				hotkey.GetKeyName(*update.KeyCode), *update.KeyCode)
+		}
+		if update.ServerURL != nil {
+			app.setServerURL(*update.ServerURL)
+			fmt.Printf("✓ [Server] Server URL updated to: %s\n", *update.ServerURL)
+		}
+	})
+
+	// Handle key learning mode from server
+	controlPlane.OnStartLearning(func() {
+		fmt.Println("🔑 Key Learning Mode: Press the modifier key you want to use...")
+		hotkeyHandler.EnableListeningMode(func(keyCode int) {
+			fmt.Printf("🔑 Detected: %s (code %d)\n", hotkey.GetKeyName(keyCode), keyCode)
+			// Report back to server
+			if err := controlPlane.SendKeyDetected(keyCode); err != nil {
+				fmt.Printf("⚠️  Failed to report key: %v\n", err)
+			}
+		})
+	})
+
+	// Start Control Plane in background with auto-reconnect
+	go controlPlane.ConnectWithRetry()
+	defer controlPlane.Stop()
 
 	// Setup context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())

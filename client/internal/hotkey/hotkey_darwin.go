@@ -12,19 +12,43 @@ package hotkey
 #include <stdio.h>
 
 // Forward declaration for Go callback
-extern void goKeyEventCallback(int eventType);
+// Now receives: eventType (0=down, 1=up), keyCode (the actual key)
+extern void goKeyEventCallback(int eventType, int keyCode);
 
 // Static variables
 static CFMachPortRef hotkeyEventTap = NULL;
 static CFRunLoopSourceRef hotkeyRunLoopSource = NULL;
 static int hotkeyLastState = 0;
 static int hotkeyTargetKeyCode = 61; // Default: Right Option
+static int hotkeyListeningMode = 0;  // When 1, report all modifier key presses
 
 // Update key code at runtime
 static void hotkeyUpdateKeyCode(int keyCode) {
     printf("[Hotkey] Updating key code: %d -> %d\n", hotkeyTargetKeyCode, keyCode);
     hotkeyTargetKeyCode = keyCode;
     hotkeyLastState = 0; // Reset state to avoid stuck key
+}
+
+// Enable/disable listening mode (for key learning)
+static void hotkeySetListeningMode(int enabled) {
+    printf("[Hotkey] Listening mode: %s\n", enabled ? "ON" : "OFF");
+    hotkeyListeningMode = enabled;
+}
+
+// Check if a modifier key is pressed based on its key code
+static int isModifierPressed(CGEventFlags flags, int keyCode) {
+    switch (keyCode) {
+        case 61: case 58: // Option keys
+            return (flags & kCGEventFlagMaskAlternate) != 0;
+        case 60: case 56: // Shift keys
+            return (flags & kCGEventFlagMaskShift) != 0;
+        case 59: case 62: // Control keys
+            return (flags & kCGEventFlagMaskControl) != 0;
+        case 55: case 54: // Command keys
+            return (flags & kCGEventFlagMaskCommand) != 0;
+        default:
+            return 0;
+    }
 }
 
 // Static event tap callback
@@ -38,33 +62,30 @@ static CGEventRef hotkeyEventCallback(CGEventTapProxy proxy, CGEventType type, C
 
     // Get the key code
     CGKeyCode keyCode = (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
+    CGEventFlags flags = CGEventGetFlags(event);
 
-    // Check if it's our target key on flags changed
-    if (type == kCGEventFlagsChanged && keyCode == hotkeyTargetKeyCode) {
-        CGEventFlags flags = CGEventGetFlags(event);
-        
-        // Check the appropriate modifier based on key code
-        int isPressed = 0;
-        if (hotkeyTargetKeyCode == 61 || hotkeyTargetKeyCode == 58) {
-            // Option keys
-            isPressed = (flags & kCGEventFlagMaskAlternate) != 0;
-        } else if (hotkeyTargetKeyCode == 60 || hotkeyTargetKeyCode == 56) {
-            // Shift keys
-            isPressed = (flags & kCGEventFlagMaskShift) != 0;
-        } else if (hotkeyTargetKeyCode == 59 || hotkeyTargetKeyCode == 62) {
-            // Control keys
-            isPressed = (flags & kCGEventFlagMaskControl) != 0;
-        } else if (hotkeyTargetKeyCode == 55 || hotkeyTargetKeyCode == 54) {
-            // Command keys
-            isPressed = (flags & kCGEventFlagMaskCommand) != 0;
+    // Learning Mode: Report any modifier key press
+    if (hotkeyListeningMode && type == kCGEventFlagsChanged) {
+        // Check if this is a known modifier key being pressed
+        int isPressed = isModifierPressed(flags, keyCode);
+        if (isPressed) {
+            // Report the detected key and auto-disable listening mode
+            hotkeyListeningMode = 0;
+            goKeyEventCallback(2, keyCode);  // eventType 2 = learning mode detection
+            return event;
         }
+    }
+
+    // Normal mode: Check if it's our target key
+    if (type == kCGEventFlagsChanged && keyCode == hotkeyTargetKeyCode) {
+        int isPressed = isModifierPressed(flags, keyCode);
 
         if (isPressed && !hotkeyLastState) {
             hotkeyLastState = 1;
-            goKeyEventCallback(0);
+            goKeyEventCallback(0, keyCode);  // KeyDown
         } else if (!isPressed && hotkeyLastState) {
             hotkeyLastState = 0;
-            goKeyEventCallback(1);
+            goKeyEventCallback(1, keyCode);  // KeyUp
         }
     }
 
@@ -116,6 +137,7 @@ static void hotkeyStopEventTap() {
         hotkeyRunLoopSource = NULL;
     }
     hotkeyLastState = 0;
+    hotkeyListeningMode = 0;
 }
 */
 import "C"
@@ -128,26 +150,61 @@ import (
 var globalHandler *Handler
 
 //export goKeyEventCallback
-func goKeyEventCallback(eventType C.int) {
+func goKeyEventCallback(eventType C.int, keyCode C.int) {
 	if globalHandler == nil {
 		return
 	}
-	if eventType == 0 {
+
+	switch eventType {
+	case 0: // KeyDown
 		select {
 		case globalHandler.Events <- KeyDown:
 		default:
 		}
-	} else {
+	case 1: // KeyUp
 		select {
 		case globalHandler.Events <- KeyUp:
 		default:
 		}
+	case 2: // Learning Mode - Key Detected
+		globalHandler.mu.Lock()
+		callback := globalHandler.OnKeyDetected
+		globalHandler.listeningMode = false
+		globalHandler.OnKeyDetected = nil
+		globalHandler.mu.Unlock()
+
+		if callback != nil {
+			// Call async to not block the event loop
+			go callback(int(keyCode))
+		}
+		fmt.Printf("[Hotkey] Learning mode: detected key code %d\n", int(keyCode))
 	}
 }
 
 // updateHotkeyKeyCode updates the key code in the C layer.
 func updateHotkeyKeyCode(keyCode int) {
 	C.hotkeyUpdateKeyCode(C.int(keyCode))
+}
+
+// setListeningMode enables or disables listening mode in the C layer.
+func setListeningMode(enabled bool) {
+	if enabled {
+		C.hotkeySetListeningMode(C.int(1))
+	} else {
+		C.hotkeySetListeningMode(C.int(0))
+	}
+}
+
+// EnableListeningModeDarwin activates key learning in the C event tap.
+// This overrides the generic hotkey.go version for macOS.
+func (h *Handler) EnableListeningMode(callback func(int)) {
+	h.mu.Lock()
+	h.listeningMode = true
+	h.OnKeyDetected = callback
+	h.mu.Unlock()
+
+	// Also enable in C layer so it handles the event
+	setListeningMode(true)
 }
 
 // Start begins listening for the configured key.

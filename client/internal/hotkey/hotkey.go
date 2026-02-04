@@ -31,12 +31,24 @@ var DefaultKeyCode = 61
 
 // Handler manages global hotkey detection.
 // Detects the configured key press and release.
+//
+// Thread Safety:
+// - Uses RWMutex for concurrent access to KeyCode and listeningMode
+// - listeningMode takes priority over trigger key detection
 type Handler struct {
 	Events  chan KeyEvent
 	KeyCode int
 	running bool
 	cancel  context.CancelFunc
-	mu      sync.Mutex
+
+	// Thread safety: RWMutex protects KeyCode and learning mode state
+	mu sync.RWMutex
+
+	// Key Learning Mode
+	// When true, next key press triggers OnKeyDetected instead of recording
+	listeningMode bool
+	// Callback invoked when a key is detected during learning mode
+	OnKeyDetected func(int)
 }
 
 // NewHandler creates a new hotkey handler with the specified key code.
@@ -48,18 +60,75 @@ func NewHandler(keyCode int) (*Handler, error) {
 	}, nil
 }
 
-// UpdateKeyCode changes the hotkey to a new key code.
+// SetTriggerKey safely updates the trigger key code.
 // This takes effect immediately without restart.
-func (h *Handler) UpdateKeyCode(newKeyCode int) {
+// Thread-safe for use from Control Plane.
+func (h *Handler) SetTriggerKey(keyCode int) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	
-	if h.KeyCode == newKeyCode {
+
+	if h.KeyCode == keyCode {
 		return
 	}
-	
-	h.KeyCode = newKeyCode
-	updateHotkeyKeyCode(newKeyCode)
+
+	h.KeyCode = keyCode
+	updateHotkeyKeyCode(keyCode)
+}
+
+// UpdateKeyCode changes the hotkey to a new key code.
+// Alias for SetTriggerKey for backwards compatibility.
+func (h *Handler) UpdateKeyCode(newKeyCode int) {
+	h.SetTriggerKey(newKeyCode)
+}
+
+// NOTE: EnableListeningMode is implemented in platform-specific files
+// (hotkey_darwin.go, hotkey_windows.go, hotkey_linux.go) because it
+// requires integration with the native event loop.
+
+// DisableListeningMode manually disables key learning mode.
+func (h *Handler) DisableListeningMode() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.listeningMode = false
+	h.OnKeyDetected = nil
+}
+
+// IsListening returns whether learning mode is active.
+func (h *Handler) IsListening() bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	return h.listeningMode
+}
+
+// CheckAndHandle is called by OS-specific hooks when any key event occurs.
+// Returns true if event was consumed (learning mode), false otherwise.
+//
+// Priority order:
+// 1. If listeningMode: capture key, call OnKeyDetected, consume event
+// 2. If keyCode == triggerKey: emit KeyDown/KeyUp event
+func (h *Handler) CheckAndHandle(keyCode int, isDown bool) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	// Priority 1: Learning Mode (only on key down to avoid double-fire)
+	if h.listeningMode && isDown {
+		h.listeningMode = false
+		callback := h.OnKeyDetected
+		h.OnKeyDetected = nil
+
+		if callback != nil {
+			// Call async to avoid blocking the event loop
+			go callback(keyCode)
+		}
+
+		return true // Consume event, don't trigger recording
+	}
+
+	// Priority 2: Trigger Key Detection
+	// Note: This is handled in platform-specific code for now
+	// This method is for future extension or alternative implementations
+	return false
 }
 
 // GetKeyName returns a human-readable name for common key codes.

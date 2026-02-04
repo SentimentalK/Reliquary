@@ -33,3 +33,14 @@ func (h *Handler) Stop() error {
 	}
 	return nil
 }
+
+// EnableListeningMode activates key learning mode on Linux.
+// Note: Linux support is limited - this is a stub implementation.
+func (h *Handler) EnableListeningMode(callback func(int)) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.listeningMode = true
+	h.OnKeyDetected = callback
+	// Linux would need X11/evdev integration to detect key presses
+}

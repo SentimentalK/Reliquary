@@ -305,3 +305,283 @@ func (c *Client) Transcribe(audioData []byte) (string, error) {
 
 	return string(respBody), nil
 }
+
+// ============== Control Plane Client ==============
+
+// ControlPlaneConfig holds configuration for the control plane connection.
+type ControlPlaneConfig struct {
+	ServerURL string
+	Identity  Identity
+}
+
+// ControlMessage represents a message from the server on the control channel.
+type ControlMessage struct {
+	Type    string                 `json:"type"`
+	Payload map[string]interface{} `json:"payload"`
+}
+
+// ConfigUpdate represents a config update payload from the server.
+type ConfigUpdate struct {
+	KeyCode   *int    `json:"keycode,omitempty"`
+	ServerURL *string `json:"server_url,omitempty"`
+	Language  *string `json:"language,omitempty"`
+}
+
+// ControlPlaneClient handles the persistent control channel connection.
+type ControlPlaneClient struct {
+	wsURL    string
+	identity Identity
+	conn     *websocket.Conn
+
+	// Callbacks
+	onConfigUpdate   func(ConfigUpdate)
+	onStartLearning  func()
+	onConnected      func()
+	onDisconnected   func()
+
+	// State
+	connected bool
+	stopChan  chan struct{}
+}
+
+// NewControlPlaneClient creates a new control plane client.
+func NewControlPlaneClient(serverURL string, identity Identity) *ControlPlaneClient {
+	// Convert HTTP URL to WebSocket URL
+	wsURL := serverURL
+	if strings.HasPrefix(wsURL, "http://") {
+		wsURL = "ws://" + strings.TrimPrefix(wsURL, "http://")
+	} else if strings.HasPrefix(wsURL, "https://") {
+		wsURL = "wss://" + strings.TrimPrefix(wsURL, "https://")
+	}
+
+	return &ControlPlaneClient{
+		wsURL:    wsURL + "/ws/control",
+		identity: identity,
+		stopChan: make(chan struct{}),
+	}
+}
+
+// OnConfigUpdate sets the callback for config updates from server.
+func (c *ControlPlaneClient) OnConfigUpdate(fn func(ConfigUpdate)) {
+	c.onConfigUpdate = fn
+}
+
+// OnStartLearning sets the callback for key learning mode initiation.
+func (c *ControlPlaneClient) OnStartLearning(fn func()) {
+	c.onStartLearning = fn
+}
+
+// OnConnected sets the callback for successful connection.
+func (c *ControlPlaneClient) OnConnected(fn func()) {
+	c.onConnected = fn
+}
+
+// OnDisconnected sets the callback for disconnection.
+func (c *ControlPlaneClient) OnDisconnected(fn func()) {
+	c.onDisconnected = fn
+}
+
+// ConnectWithRetry connects to the control plane with automatic reconnection.
+// This blocks forever, reconnecting on failures. Run in a goroutine.
+func (c *ControlPlaneClient) ConnectWithRetry() {
+	reconnectDelay := 5 * time.Second
+	maxDelay := 60 * time.Second
+
+	for {
+		select {
+		case <-c.stopChan:
+			fmt.Println("[Control] Stopped")
+			return
+		default:
+		}
+
+		err := c.connect()
+		if err != nil {
+			fmt.Printf("[Control] Connection failed: %v (retrying in %v)\n", err, reconnectDelay)
+			time.Sleep(reconnectDelay)
+			
+			// Exponential backoff with cap
+			reconnectDelay = reconnectDelay * 2
+			if reconnectDelay > maxDelay {
+				reconnectDelay = maxDelay
+			}
+			continue
+		}
+
+		// Reset delay on successful connection
+		reconnectDelay = 5 * time.Second
+
+		// Run message loop (blocks until disconnect)
+		c.messageLoop()
+	}
+}
+
+// connect establishes a connection to the control plane.
+func (c *ControlPlaneClient) connect() error {
+	fmt.Printf("[Control] Connecting to %s...\n", c.wsURL)
+
+	dialer := websocket.Dialer{
+		HandshakeTimeout: ConnectTimeout,
+	}
+
+	conn, _, err := dialer.Dial(c.wsURL, http.Header{})
+	if err != nil {
+		return fmt.Errorf("dial failed: %w", err)
+	}
+
+	// Send handshake with identity
+	handshake := map[string]string{
+		"device_id": c.identity.DeviceID,
+		"user_id":   c.identity.UserID,
+	}
+
+	conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
+	if err := conn.WriteJSON(handshake); err != nil {
+		conn.Close()
+		return fmt.Errorf("handshake failed: %w", err)
+	}
+
+	c.conn = conn
+	c.connected = true
+	fmt.Printf("[Control] Connected (device: %s, user: %s)\n", c.identity.DeviceID, c.identity.UserID)
+
+	if c.onConnected != nil {
+		c.onConnected()
+	}
+
+	return nil
+}
+
+// messageLoop reads messages from the server.
+func (c *ControlPlaneClient) messageLoop() {
+	defer func() {
+		c.connected = false
+		if c.conn != nil {
+			c.conn.Close()
+			c.conn = nil
+		}
+		if c.onDisconnected != nil {
+			c.onDisconnected()
+		}
+		fmt.Println("[Control] Disconnected")
+	}()
+
+	// Set ping handler
+	c.conn.SetPingHandler(func(data string) error {
+		return c.conn.WriteControl(websocket.PongMessage, []byte(data), time.Now().Add(WriteTimeout))
+	})
+
+	for {
+		select {
+		case <-c.stopChan:
+			return
+		default:
+		}
+
+		// Set read deadline (5 minute timeout, will get pings to keep alive)
+		c.conn.SetReadDeadline(time.Now().Add(5 * time.Minute))
+
+		_, message, err := c.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				return
+			}
+			fmt.Printf("[Control] Read error: %v\n", err)
+			return
+		}
+
+		var msg ControlMessage
+		if err := json.Unmarshal(message, &msg); err != nil {
+			fmt.Printf("[Control] Invalid message: %v\n", err)
+			continue
+		}
+
+		c.handleMessage(msg)
+	}
+}
+
+// handleMessage processes incoming control messages.
+func (c *ControlPlaneClient) handleMessage(msg ControlMessage) {
+	switch msg.Type {
+	case "connected":
+		fmt.Println("[Control] Server acknowledged connection")
+
+	case "config_update":
+		fmt.Println("[Control] Received config_update")
+		if c.onConfigUpdate != nil {
+			update := parseConfigUpdate(msg.Payload)
+			c.onConfigUpdate(update)
+		}
+
+	case "start_learning":
+		fmt.Println("[Control] Received start_learning command")
+		if c.onStartLearning != nil {
+			c.onStartLearning()
+		}
+
+	case "ping":
+		// Respond with pong
+		c.sendMessage("pong", nil)
+
+	default:
+		fmt.Printf("[Control] Unknown message type: %s\n", msg.Type)
+	}
+}
+
+// parseConfigUpdate extracts config update fields from payload.
+func parseConfigUpdate(payload map[string]interface{}) ConfigUpdate {
+	update := ConfigUpdate{}
+
+	if v, ok := payload["keycode"].(float64); ok {
+		keyCode := int(v)
+		update.KeyCode = &keyCode
+	}
+	if v, ok := payload["server_url"].(string); ok {
+		update.ServerURL = &v
+	}
+	if v, ok := payload["language"].(string); ok {
+		update.Language = &v
+	}
+
+	return update
+}
+
+// sendMessage sends a message to the server.
+func (c *ControlPlaneClient) sendMessage(msgType string, payload map[string]interface{}) error {
+	if c.conn == nil || !c.connected {
+		return fmt.Errorf("not connected")
+	}
+
+	msg := ControlMessage{
+		Type:    msgType,
+		Payload: payload,
+	}
+
+	c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
+	return c.conn.WriteJSON(msg)
+}
+
+// SendKeyDetected reports a detected key code to the server (for key learning).
+func (c *ControlPlaneClient) SendKeyDetected(keyCode int) error {
+	return c.sendMessage("key_detected", map[string]interface{}{
+		"code": keyCode,
+	})
+}
+
+// IsConnected returns whether the control plane is connected.
+func (c *ControlPlaneClient) IsConnected() bool {
+	return c.connected
+}
+
+// Stop terminates the control plane connection.
+func (c *ControlPlaneClient) Stop() {
+	close(c.stopChan)
+	if c.conn != nil {
+		c.conn.WriteControl(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+			time.Now().Add(time.Second),
+		)
+		c.conn.Close()
+	}
+}

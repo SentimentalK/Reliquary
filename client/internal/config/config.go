@@ -121,6 +121,50 @@ func (m *Manager) saveConfig() error {
 	return os.WriteFile(m.configPath, data, 0644)
 }
 
+// Save persists the current configuration to disk.
+// Used by Control Plane to save server-pushed config updates.
+func (m *Manager) Save() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.saveConfig()
+}
+
+// Update atomically updates configuration fields and persists to disk.
+// Useful for applying partial config updates from Control Plane.
+func (m *Manager) Update(keyCode *int, serverURL *string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	changed := false
+
+	if keyCode != nil && m.config.KeyCode != *keyCode {
+		m.config.KeyCode = *keyCode
+		changed = true
+	}
+	if serverURL != nil && m.config.ServerURL != *serverURL {
+		m.config.ServerURL = *serverURL
+		changed = true
+	}
+
+	if changed {
+		return m.saveConfig()
+	}
+	return nil
+}
+
+// SetKeyCode updates the keycode and persists to disk.
+func (m *Manager) SetKeyCode(keyCode int) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.config.KeyCode == keyCode {
+		return nil
+	}
+
+	m.config.KeyCode = keyCode
+	return m.saveConfig()
+}
+
 // Get returns the current configuration.
 func (m *Manager) Get() Config {
 	m.mu.RLock()

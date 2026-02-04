@@ -66,3 +66,50 @@ func (h *Handler) Stop() error {
 	}
 	return nil
 }
+
+// EnableListeningMode activates key learning mode on Windows.
+// Uses polling to detect the next modifier key press.
+func (h *Handler) EnableListeningMode(callback func(int)) {
+	h.mu.Lock()
+	h.listeningMode = true
+	h.OnKeyDetected = callback
+	h.mu.Unlock()
+
+	// Start a goroutine to detect the next modifier key press
+	go func() {
+		// Windows modifier key codes
+		modifierKeys := []int{
+			0xA0, 0xA1, // Left/Right Shift
+			0xA2, 0xA3, // Left/Right Control
+			0xA4, 0xA5, // Left/Right Alt
+			0x5B, 0x5C, // Left/Right Windows key
+		}
+
+		for {
+			h.mu.RLock()
+			listening := h.listeningMode
+			h.mu.RUnlock()
+
+			if !listening {
+				return
+			}
+
+			for _, keyCode := range modifierKeys {
+				ret, _, _ := getAsyncKeyState.Call(uintptr(keyCode))
+				if (ret & 0x8000) != 0 {
+					h.mu.Lock()
+					h.listeningMode = false
+					cb := h.OnKeyDetected
+					h.OnKeyDetected = nil
+					h.mu.Unlock()
+
+					if cb != nil {
+						cb(keyCode)
+					}
+					return
+				}
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+}
