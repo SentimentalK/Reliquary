@@ -168,11 +168,13 @@ async def websocket_control_plane(websocket: WebSocket):
                     break
                 
                 if "text" in message:
+                    raw_text = message["text"]
+                    print(f"[Control] Raw message from {device_id}: {raw_text[:200]}")
                     try:
-                        data = json.loads(message["text"])
+                        data = json.loads(raw_text)
                         await handle_client_message(device_id, user_id, data, websocket)
-                    except json.JSONDecodeError:
-                        print(f"[Control] Invalid JSON from {device_id}")
+                    except json.JSONDecodeError as e:
+                        print(f"[Control] Invalid JSON from {device_id}: {e}")
                 
             except asyncio.TimeoutError:
                 # No message received, but heartbeat keeps connection alive
@@ -235,7 +237,10 @@ async def handle_client_message(
     msg_type = data.get("type")
     
     if msg_type == "key_detected":
-        code = data.get("code")
+        # Client sends: {"type": "key_detected", "payload": {"code": 60}}
+        payload = data.get("payload", {})
+        code = payload.get("code") if isinstance(payload, dict) else data.get("code")
+        
         if code is not None:
             print(f"[Control] Device {device_id} detected key code: {code}")
             
@@ -258,6 +263,8 @@ async def handle_client_message(
                 })
             except Exception as e:
                 print(f"[Control] Failed to auto-push config: {e}")
+        else:
+            print(f"[Control] key_detected missing code field: {data}")
     
     elif msg_type == "pong":
         # Keepalive response, no action needed

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { Laptop, Keyboard } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
@@ -11,14 +10,11 @@ interface DeviceCardProps {
 
 export function DeviceCard({ device }: DeviceCardProps) {
     const { openSheet } = useDevicesStore()
-    const [isHovered, setIsHovered] = useState(false)
 
     return (
         <Card
             className={`group relative cursor-pointer transition-all hover:shadow-xl ${device.connected ? 'border-green-500/50' : 'border-muted'
                 }`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
             onClick={() => openSheet(device)}
         >
             {/* Status Indicator */}
@@ -69,14 +65,12 @@ export function DeviceCard({ device }: DeviceCardProps) {
                     )}
                 </div>
 
-                {/* Hover Action */}
-                {isHovered && (
-                    <div className="mt-4">
-                        <Button variant="secondary" size="sm" className="w-full">
-                            配置设备
-                        </Button>
-                    </div>
-                )}
+                {/* Action Button - Always visible */}
+                <div className="mt-4">
+                    <Button variant="secondary" size="sm" className="w-full">
+                        配置设备
+                    </Button>
+                </div>
             </CardContent>
         </Card>
     )
