@@ -1,5 +1,6 @@
 {
-  "keycode": 61,
+  "keycode": 60,
   "server_url": "http://localhost:8080",
-  "user_id": "xinghan.xu"
+  "user_id": "xinghan.xu",
+  "device_id": "SentimentalKs-MacBook-Pro"
 }
