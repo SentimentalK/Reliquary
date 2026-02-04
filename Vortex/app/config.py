@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     
     # Server settings
     server_host: str = "0.0.0.0"
-    server_port: int = 8000
+    server_port: int = 8080
     
     # Storage settings (Multi-User Distributed Storage)
     storage_root: str = "./data"  # Root path for all logs (can be NAS/Cloud mount)

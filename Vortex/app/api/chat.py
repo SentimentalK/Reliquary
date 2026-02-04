@@ -166,6 +166,8 @@ async def websocket_audio_stream(websocket: WebSocket):
         nonlocal client_connected
         while client_connected:
             try:
+                # Send heartbeat IMMEDIATELY, then wait
+                # This ensures client gets first heartbeat right away
                 await websocket.send_json({"status": "processing"})
                 await asyncio.sleep(KEEPALIVE_INTERVAL)
             except Exception:
