@@ -16,8 +16,11 @@ import (
 type Config struct {
 	KeyCode   int    `json:"keycode"`
 	ServerURL string `json:"server_url"`
-	UserID    string `json:"user_id"`
 	DeviceID  string `json:"device_id"`
+	// Authentication (v1.5 Multi-User)
+	AuthToken string `json:"auth_token,omitempty"` // sk-vortex-xxx format
+	// BYOK: Bring Your Own Key (optional)
+	ApiKey string `json:"api_key,omitempty"` // User's own Groq API key
 }
 
 // DefaultConfig returns the default configuration.
@@ -25,9 +28,15 @@ func DefaultConfig() Config {
 	return Config{
 		KeyCode:   61, // Right Option on macOS
 		ServerURL: "http://localhost:8080",
-		UserID:    "default_user",
 		DeviceID:  getDefaultDeviceID(),
+		AuthToken: "", // Must be set after registration
+		ApiKey:    "", // Optional BYOK
 	}
+}
+
+// HasAuthToken returns true if auth token is configured.
+func (c Config) HasAuthToken() bool {
+	return c.AuthToken != "" && len(c.AuthToken) > 10
 }
 
 // getDefaultDeviceID returns hostname as device identifier.
@@ -74,8 +83,14 @@ func GetConfigPath() string {
 	return filepath.Join(dir, "voice_config.json")
 }
 
+// Exists checks if the config file exists.
+func (m *Manager) Exists() bool {
+	_, err := os.Stat(m.configPath)
+	return err == nil
+}
+
 // Load reads configuration from file.
-// Creates default config if file doesn't exist.
+// Returns error if file doesn't exist (use LoadOrSetup for first-time setup).
 func (m *Manager) Load() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -83,8 +98,7 @@ func (m *Manager) Load() error {
 	data, err := os.ReadFile(m.configPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Create default config file
-			return m.saveDefault()
+			return fmt.Errorf("config not found: %s (run setup first)", m.configPath)
 		}
 		return fmt.Errorf("failed to read config: %w", err)
 	}
@@ -95,15 +109,88 @@ func (m *Manager) Load() error {
 	}
 
 	// Apply defaults for missing fields
-	if cfg.UserID == "" {
-		cfg.UserID = "default_user"
-	}
 	if cfg.DeviceID == "" {
 		cfg.DeviceID = getDefaultDeviceID()
+	}
+	if cfg.ServerURL == "" {
+		cfg.ServerURL = "http://localhost:8080"
 	}
 
 	m.config = cfg
 	return nil
+}
+
+// LoadOrSetup loads config if exists, otherwise runs interactive setup.
+// Returns true if setup was performed (new user).
+func (m *Manager) LoadOrSetup() (bool, error) {
+	if m.Exists() {
+		// Config exists, just load it
+		return false, m.Load()
+	}
+
+	// First-time setup
+	fmt.Println("\n🎙️  Welcome to Vortex Voice Client!")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("Let's set up your configuration.\n")
+
+	// Get server URL
+	fmt.Print("Server URL [http://localhost:8080]: ")
+	var serverURL string
+	fmt.Scanln(&serverURL)
+	if serverURL == "" {
+		serverURL = "http://localhost:8080"
+	}
+
+	// Get auth token
+	fmt.Println("\nTo get your auth token:")
+	fmt.Println("  1. Open the Vortex web UI")
+	fmt.Println("  2. Register with your invite code")
+	fmt.Println("  3. Copy your master secret (sk-vortex-xxx)")
+	fmt.Println()
+	fmt.Print("Auth Token (or press Enter to skip): ")
+	var authToken string
+	fmt.Scanln(&authToken)
+
+	// Create config
+	m.mu.Lock()
+	m.config = Config{
+		KeyCode:   61, // Right Option on macOS
+		ServerURL: serverURL,
+		DeviceID:  getDefaultDeviceID(),
+		AuthToken: authToken,
+		ApiKey:    "", // Can be set via web UI later
+	}
+	m.mu.Unlock()
+
+	if err := m.Save(); err != nil {
+		return true, fmt.Errorf("failed to save config: %w", err)
+	}
+
+	fmt.Printf("\n✅ Config saved to: %s\n", m.configPath)
+	if authToken == "" {
+		fmt.Println("⚠️  No auth token set. You can add it later to voice_config.json")
+	}
+	fmt.Println()
+
+	return true, nil
+}
+
+// SetAuthToken updates the auth token and saves to disk.
+// Used when receiving token from server registration.
+func (m *Manager) SetAuthToken(token string) error {
+	m.mu.Lock()
+	m.config.AuthToken = token
+	m.mu.Unlock()
+	return m.Save()
+}
+
+// SetApiKey updates the API key (BYOK) and saves to disk.
+// Used when receiving config update from server.
+func (m *Manager) SetApiKey(apiKey string) error {
+	m.mu.Lock()
+	m.config.ApiKey = apiKey
+	m.mu.Unlock()
+	return m.Save()
 }
 
 // saveDefault creates a default config file.

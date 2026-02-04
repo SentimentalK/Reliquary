@@ -124,22 +124,44 @@ async def websocket_control_plane(websocket: WebSocket):
         handshake = json.loads(handshake_data)
         device_id = handshake.get("device_id")
         user_id = handshake.get("user_id", "unknown_user")
+        auth_token = handshake.get("auth_token")  # Optional authentication
         
         if not device_id:
             await websocket.send_json({"error": "device_id required in handshake"})
             await websocket.close(code=1008, reason="Missing device_id")
             return
         
-        # Step 2: Register connection
-        await manager.connect(device_id, user_id, websocket)
+        # Step 2: Authenticate (optional, based on config)
+        user_info = None
+        from app.config import get_settings
+        settings = get_settings()
         
-        # Step 3: Send acknowledgment with INITIAL CONFIG SYNC
+        if auth_token:
+            from app.services.auth import verify_token
+            user_info = verify_token(auth_token)
+            if not user_info:
+                await websocket.send_json({"error": "Invalid auth_token"})
+                await websocket.close(code=4001, reason="Authentication failed")
+                return
+            # Use authenticated user's display name
+            user_id = user_info.display_name
+            print(f"[Control] Authenticated: {user_info.display_name} (role: {user_info.role})")
+        elif settings.require_auth:
+            await websocket.send_json({"error": "auth_token required"})
+            await websocket.close(code=4001, reason="Authentication required")
+            return
+        
+        # Step 3: Register connection with user info
+        await manager.connect(device_id, user_id, websocket, user_info)
+        
+        # Step 4: Send acknowledgment with INITIAL CONFIG SYNC
         current_config = get_device_config(device_id)
         await websocket.send_json({
             "type": "connected",
             "payload": {
                 "device_id": device_id,
                 "user_id": user_id,
+                "authenticated": user_info is not None,
                 "message": "Control plane connected successfully"
             }
         })
@@ -151,7 +173,7 @@ async def websocket_control_plane(websocket: WebSocket):
             "payload": current_config
         })
         
-        # Step 4: Start heartbeat background task
+        # Step 5: Start heartbeat background task
         heartbeat_task = asyncio.create_task(send_heartbeat())
         
         # Step 5: Message loop - listen for client messages

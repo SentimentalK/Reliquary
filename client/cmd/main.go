@@ -71,8 +71,9 @@ type App struct {
 
 	// Current config values (may change via hot-reload)
 	serverURL string
-	userID    string
 	deviceID  string
+	authToken string // v1.5 Multi-User authentication
+	apiKey    string // v1.5 BYOK (Bring Your Own Key)
 
 	mu sync.RWMutex
 }
@@ -93,8 +94,9 @@ func (a *App) getIdentity() network.Identity {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return network.Identity{
-		UserID:   a.userID,
-		DeviceID: a.deviceID,
+		DeviceID:  a.deviceID,
+		AuthToken: a.authToken,
+		ApiKey:    a.apiKey,
 	}
 }
 
@@ -104,23 +106,27 @@ func main() {
 	useHTTP := flag.Bool("http", false, "Use legacy HTTP mode instead of WebSocket streaming")
 	flag.Parse()
 
-	// Load configuration
+	// Load configuration (interactive setup if first time)
 	configMgr := config.NewManager(*configPath)
-	if err := configMgr.Load(); err != nil {
-		log.Printf("Warning: %v, using defaults", err)
+	isNewUser, err := configMgr.LoadOrSetup()
+	if err != nil {
+		log.Fatalf("Configuration error: %v", err)
 	}
 	cfg := configMgr.Get()
 
 	keyName := hotkey.GetKeyName(cfg.KeyCode)
+	authStatus := "🔓 No Auth"
+	if cfg.HasAuthToken() {
+		authStatus = "🔐 Authenticated"
+	}
 
 	fmt.Println("╔═══════════════════════════════════════════╗")
-	fmt.Println("║      Voice Typing Client v0.2.0           ║")
-	fmt.Println("║        (WebSocket Streaming)              ║")
+	fmt.Println("║      Vortex Voice Client v1.5.0           ║")
+	fmt.Println("║        (Multi-User + BYOK)                ║")
 	fmt.Println("╠═══════════════════════════════════════════╣")
 	fmt.Printf("║  Hotkey: %-33s║\n", fmt.Sprintf("%s (code %d)", keyName, cfg.KeyCode))
 	fmt.Printf("║  Server: %-33s║\n", cfg.ServerURL)
-	fmt.Printf("║  User:   %-33s║\n", cfg.UserID)
-	fmt.Printf("║  Device: %-33s║\n", cfg.DeviceID)
+	fmt.Printf("║  Auth:   %-33s║\n", authStatus)
 	if *useHTTP {
 		fmt.Println("║  Mode:   HTTP (legacy)                    ║")
 	} else {
@@ -128,6 +134,11 @@ func main() {
 	}
 	fmt.Println("╚═══════════════════════════════════════════╝")
 	fmt.Println()
+	
+	if isNewUser {
+		fmt.Println("🆕 First-time setup complete! Starting client...")
+		fmt.Println()
+	}
 
 	// Initialize components
 	recorder, err := audio.NewRecorder()
@@ -152,8 +163,9 @@ func main() {
 		hotkeyHandler: hotkeyHandler,
 		configMgr:     configMgr,
 		serverURL:     cfg.ServerURL,
-		userID:        cfg.UserID,
 		deviceID:      cfg.DeviceID,
+		authToken:     cfg.AuthToken,
+		apiKey:        cfg.ApiKey,
 	}
 
 	// Setup config hot-reload (from local file changes)
@@ -170,8 +182,9 @@ func main() {
 
 	// Setup Control Plane (real-time server push)
 	controlPlane := network.NewControlPlaneClient(cfg.ServerURL, network.Identity{
-		UserID:   cfg.UserID,
-		DeviceID: cfg.DeviceID,
+		DeviceID:  cfg.DeviceID,
+		AuthToken: cfg.AuthToken,
+		ApiKey:    cfg.ApiKey,
 	})
 	app.controlPlane = controlPlane
 
@@ -190,6 +203,13 @@ func main() {
 			app.setServerURL(*update.ServerURL)
 			fmt.Printf("✓ [Server] Server URL updated to: %s\n", *update.ServerURL)
 		}
+		if update.ApiKey != nil {
+			// Cache the API key from server
+			if err := configMgr.SetApiKey(*update.ApiKey); err != nil {
+				fmt.Printf("⚠️  Failed to save API key: %v\n", err)
+			}
+			fmt.Println("✓ [Server] API key updated (cached locally)")
+		}
 	})
 
 	// Handle key learning mode from server
@@ -207,9 +227,33 @@ func main() {
 		})
 	})
 
+	// Handle authentication failures (401) - delete cache and exit
+	controlPlane.OnAuthFailed(func(reason string) {
+		fmt.Println()
+		fmt.Println("❌ Authentication Failed!")
+		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Printf("   Reason: %s\n", reason)
+		fmt.Println()
+		
+		// Delete the cache file so user can reconfigure
+		if err := os.Remove(*configPath); err != nil {
+			fmt.Printf("   ⚠️  Could not delete config: %v\n", err)
+		} else {
+			fmt.Printf("   🗑️  Deleted config cache: %s\n", *configPath)
+		}
+		
+		fmt.Println()
+		fmt.Println("   Please restart the client to reconfigure.")
+		fmt.Println()
+		
+		// Exit the application
+		os.Exit(1)
+	})
+
 	// Start Control Plane in background with auto-reconnect
 	go controlPlane.ConnectWithRetry()
 	defer controlPlane.Stop()
+
 
 	// Setup context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())

@@ -82,7 +82,9 @@ async def process_audio_buffer(
     user_id: str,
     device_id: str,
     start_time: float,
-    trigger: str = "eof"
+    trigger: str = "eof",
+    api_key: str = None,  # BYOK: Bring Your Own Key
+    user_info: object = None,  # UserInfo for proper storage path
 ) -> tuple[str, str]:
     """
     Process the audio buffer and return (transcription, interaction_id).
@@ -90,10 +92,12 @@ async def process_audio_buffer(
     Args:
         pcm_buffer: Raw PCM audio data
         sample_rate: Audio sample rate
-        user_id: User identifier
+        user_id: User identifier (display_name from auth)
         device_id: Device identifier
         start_time: Recording start timestamp
         trigger: What triggered processing ("eof", "disconnect", "size_limit")
+        api_key: Optional API key override (BYOK)
+        user_info: UserInfo object for proper storage path
     
     Returns:
         Tuple of (transcription_text, interaction_id)
@@ -112,7 +116,8 @@ async def process_audio_buffer(
     pipe = manager.get_pipeline(settings.default_pipeline)
     
     try:
-        transcription = await pipe.transcribe(wav_data, filename="stream.wav")
+        # Pass api_key for BYOK support
+        transcription = await pipe.transcribe(wav_data, filename="stream.wav", api_key=api_key)
     except Exception as e:
         print(f"[WebSocket] Transcription failed: {e}")
         transcription = f"[Transcription Error: {str(e)}]"
@@ -121,7 +126,7 @@ async def process_audio_buffer(
     latency_ms = int((end_time - start_time) * 1000)
     audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)
     
-    # Log interaction with trigger info
+    # Log interaction with user_info for proper storage path
     interaction_id = await storage.log_interaction(
         user_id=user_id,
         device_id=device_id,
@@ -130,6 +135,7 @@ async def process_audio_buffer(
         raw_transcription=transcription,
         final_transcription=transcription,
         latency_ms=latency_ms,
+        user_info=user_info,
     )
     
     print(f"[WebSocket] Transcription complete ({trigger}): {transcription[:50]}...")
@@ -153,9 +159,10 @@ async def websocket_audio_stream(websocket: WebSocket):
     pcm_buffer = bytearray()
     sample_rate: int = 16000
     
-    # Session identity
-    current_user_id: str = settings.default_user_id
+    # Session identity and config
+    current_user_id: str = "guest"
     current_device_id: str = "unknown_device"
+    session_api_key: str = settings.groq_api_key  # Default to server key, may be overridden by BYOK
     
     start_time: float = time.time()
     client_connected = True
@@ -185,10 +192,42 @@ async def websocket_audio_stream(websocket: WebSocket):
         config_received = True
         
         sample_rate = config.get("sample_rate", 16000)
-        current_user_id = config.get("user_id", settings.default_user_id) or settings.default_user_id
         current_device_id = config.get("device_id", "unknown_device") or "unknown_device"
         
-        print(f"[WebSocket] Config received: user={current_user_id}, device={current_device_id}")
+        # Auth and BYOK support
+        auth_token = config.get("auth_token")  # Optional authentication
+        api_key = config.get("api_key")  # Bring Your Own Key (BYOK)
+        
+        # Authentication - user_id comes ONLY from verified auth_token
+        user_info = None
+        if auth_token:
+            from app.services.auth import verify_token
+            user_info = verify_token(auth_token)
+            if user_info:
+                current_user_id = user_info.display_name
+                print(f"[WebSocket] Authenticated: {user_info.display_name}")
+            else:
+                # Invalid token - reject if auth required
+                if settings.require_auth:
+                    await websocket.send_json({"error": "Invalid auth_token"})
+                    await websocket.close(code=4001, reason="Authentication failed")
+                    return
+                # Otherwise fall through to guest
+                current_user_id = "guest"
+                print("[WebSocket] Invalid auth_token, using guest mode")
+        elif settings.require_auth:
+            # Auth required but not provided - reject
+            await websocket.send_json({"error": "auth_token required"})
+            await websocket.close(code=4001, reason="Authentication required")
+            return
+        else:
+            # No auth required, no token - guest mode
+            current_user_id = "guest"
+        
+        # Store BYOK api_key for later use (will be passed to pipeline)
+        session_api_key = api_key or settings.groq_api_key
+        
+        print(f"[WebSocket] Config received: user={current_user_id}, device={current_device_id}, byok={bool(api_key)}")
         start_time = time.time()
         
         # Step 2: Receive PCM chunks until EOF, disconnect, or size limit
@@ -248,6 +287,8 @@ async def websocket_audio_stream(websocket: WebSocket):
                     device_id=current_device_id,
                     start_time=start_time,
                     trigger=trigger,
+                    api_key=session_api_key,
+                    user_info=user_info,
                 )
             finally:
                 # Stop heartbeat but DON'T set client_connected=False yet
@@ -286,6 +327,8 @@ async def websocket_audio_stream(websocket: WebSocket):
                 device_id=current_device_id,
                 start_time=start_time,
                 trigger="disconnect",
+                api_key=session_api_key,
+                user_info=user_info,
             )
     except json.JSONDecodeError:
         try:
@@ -303,6 +346,8 @@ async def websocket_audio_stream(websocket: WebSocket):
                 device_id=current_device_id,
                 start_time=start_time,
                 trigger="error",
+                api_key=session_api_key,
+                user_info=user_info,
             )
         try:
             await websocket.send_json({"error": str(e), "text": "", "id": ""})

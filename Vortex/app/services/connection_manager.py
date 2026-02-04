@@ -12,7 +12,7 @@ Philosophy: "Config as Cache"
 import asyncio
 import json
 from typing import Dict, Optional, Any
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fastapi import WebSocket
 
 
@@ -23,6 +23,8 @@ class DeviceConnection:
     user_id: str
     websocket: WebSocket
     connected_at: float
+    # Authenticated user info (from auth service)
+    user_info: Optional[Any] = None  # UserInfo from auth.py
 
 
 class ConnectionManager:
@@ -33,6 +35,7 @@ class ConnectionManager:
     - Connection tracking by device_id
     - Push commands to connected devices
     - Connection lifecycle management
+    - Role-based device visibility
     """
     
     _instance: Optional["ConnectionManager"] = None
@@ -55,7 +58,13 @@ class ConnectionManager:
         """Return dict of device_id -> WebSocket for all active connections."""
         return {device_id: conn.websocket for device_id, conn in self._connections.items()}
     
-    async def connect(self, device_id: str, user_id: str, websocket: WebSocket) -> None:
+    async def connect(
+        self,
+        device_id: str,
+        user_id: str,
+        websocket: WebSocket,
+        user_info: Optional[Any] = None
+    ) -> None:
         """
         Register a new device connection.
         
@@ -65,6 +74,7 @@ class ConnectionManager:
             device_id: Unique device identifier
             user_id: User identifier
             websocket: FastAPI WebSocket instance
+            user_info: Authenticated user info (from auth service)
         """
         import time
         
@@ -83,6 +93,7 @@ class ConnectionManager:
                 user_id=user_id,
                 websocket=websocket,
                 connected_at=time.time(),
+                user_info=user_info,
             )
             print(f"[ConnectionManager] Device {device_id} connected (user: {user_id})")
     
@@ -197,9 +208,38 @@ class ConnectionManager:
             device_id for device_id, conn in self._connections.items()
             if conn.user_id == user_id
         ]
+    
+    def get_all_connections(self, requesting_user: Optional[Any] = None) -> list[Dict[str, Any]]:
+        """
+        Get all connection info with role-based filtering.
+        
+        Args:
+            requesting_user: UserInfo of the requesting user
+                - If admin: returns ALL connections
+                - If user: returns only their own connections
+                - If None: returns empty list
+        
+        Returns:
+            List of connection info dicts
+        """
+        if requesting_user is None:
+            return []
+        
+        connections = []
+        for device_id, conn in self._connections.items():
+            # Admin sees all, user sees only own devices
+            if requesting_user.role == "admin" or conn.user_id == requesting_user.display_name:
+                connections.append({
+                    "device_id": conn.device_id,
+                    "user_id": conn.user_id,
+                    "connected_at": conn.connected_at,
+                })
+        
+        return connections
 
 
 # Singleton accessor
 def get_connection_manager() -> ConnectionManager:
     """Get the singleton ConnectionManager instance."""
     return ConnectionManager()
+

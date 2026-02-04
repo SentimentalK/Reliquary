@@ -1,20 +1,39 @@
 """FastAPI application entry point."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
 from app.api.devices import router as devices_router
 from app.api.logs import router as logs_router
 from app.config import get_settings
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan - startup and shutdown."""
+    # Startup
+    from app.services.auth import init_db
+    init_db()
+    print("[Vortex] Server started (Multi-User Mode)")
+    
+    yield
+    
+    # Shutdown
+    print("[Vortex] Server shutting down")
+
+
 app = FastAPI(
-    title="Voice Typing API",
-    description="Low-latency voice transcription service with Control Plane",
-    version="0.2.0",
+    title="Vortex API",
+    description="Multi-User Voice Transcription Service with Zero-Trust Architecture",
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
-# CORS middleware for local development
+# CORS middleware for web UI and cross-origin requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,6 +43,7 @@ app.add_middleware(
 )
 
 # Register routers
+app.include_router(auth_router, tags=["authentication"])
 app.include_router(chat_router, tags=["transcription"])
 app.include_router(devices_router, tags=["devices"])
 app.include_router(logs_router, tags=["logs"])
@@ -32,7 +52,7 @@ app.include_router(logs_router, tags=["logs"])
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
-    return {"status": "ok"}
+    return {"status": "ok", "version": "1.0.0"}
 
 
 if __name__ == "__main__":

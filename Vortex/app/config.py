@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     """Application settings loaded from environment."""
     
-    # API Keys
+    # API Keys (Server-side fallback, clients should use BYOK)
     groq_api_key: str = ""
     
     # Pipeline settings
@@ -21,7 +21,13 @@ class Settings(BaseSettings):
     
     # Storage settings (Multi-User Distributed Storage)
     storage_root: str = "./data"  # Root path for all logs (can be NAS/Cloud mount)
-    default_user_id: str = "default_user"  # Fallback if client sends no user_id
+    
+    # Authentication - Invite Codes
+    admin_invite_code: str = "vortex-admin-2026"  # Override via ADMIN_INVITE_CODE env
+    user_invite_code: str = "vortex-user-2026"    # Override via USER_INVITE_CODE env
+    
+    # Auth settings
+    require_auth: bool = True  # Set to False for development/local use
     
     class Config:
         env_file = ".env"

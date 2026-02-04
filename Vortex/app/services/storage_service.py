@@ -1,7 +1,12 @@
 """Storage service for logging interactions to JSONL files.
 
 Supports multi-user distributed storage with path structure:
-{STORAGE_ROOT}/{user_id}/{YYYY-MM-DD}_{device_id}.jsonl
+{STORAGE_ROOT}/{DisplayName}_{SecretHash[:6]}/{YYYY-MM-DD}_{device_id}.jsonl
+
+This format:
+- Is human-readable (contains display name)
+- Avoids collisions (short hash suffix)
+- Keeps user data organized
 """
 
 import json
@@ -9,7 +14,7 @@ import re
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 import aiofiles
 
 from app.config import get_settings
@@ -19,7 +24,7 @@ def sanitize_filename(name: str) -> str:
     """
     Sanitize a string to be safe for use in filenames.
     
-    Removes unsafe characters like / \ : * ? " < > |
+    Removes unsafe characters like / \\ : * ? " < > |
     and replaces spaces with underscores.
     """
     # Remove or replace unsafe characters
@@ -48,18 +53,37 @@ class StorageService:
         # Resolve to absolute path
         self.storage_root = Path(root).resolve()
     
-    def _get_user_dir(self, user_id: str) -> Path:
-        """Get the directory for a specific user."""
+    def _get_user_dir(self, user_id: str, user_info: Optional[object] = None) -> Path:
+        """
+        Get the directory for a specific user.
+        
+        Args:
+            user_id: User identifier (display name or legacy user_id)
+            user_info: Optional UserInfo object from auth service
+        
+        Returns:
+            Path to user's data directory
+        """
+        # If we have auth user info, use the proper storage prefix
+        if user_info is not None:
+            try:
+                from app.services.auth import get_user_storage_prefix
+                prefix = get_user_storage_prefix(user_info)
+                return self.storage_root / prefix
+            except Exception:
+                pass  # Fall back to simple user_id
+        
+        # Legacy: just use sanitized user_id
         safe_user_id = sanitize_filename(user_id)
         return self.storage_root / safe_user_id
     
-    def _get_log_path(self, user_id: str, device_id: str) -> Path:
+    def _get_log_path(self, user_id: str, device_id: str, user_info: Optional[object] = None) -> Path:
         """
         Get the log file path for a user and device.
         
-        Path format: {STORAGE_ROOT}/{user_id}/{YYYY-MM-DD}_{device_id}.jsonl
+        Path format: {STORAGE_ROOT}/{UserPrefix}/{YYYY-MM-DD}_{device_id}.jsonl
         """
-        user_dir = self._get_user_dir(user_id)
+        user_dir = self._get_user_dir(user_id, user_info)
         date_str = datetime.now().strftime("%Y-%m-%d")
         safe_device_id = sanitize_filename(device_id)
         filename = f"{date_str}_{safe_device_id}.jsonl"
@@ -74,18 +98,20 @@ class StorageService:
         raw_transcription: str,
         final_transcription: str,
         latency_ms: int,
+        user_info: Optional[object] = None,  # UserInfo for proper storage path
     ) -> str:
         """
         Log an interaction to the user's JSONL file.
         
         Args:
-            user_id: User identifier for directory routing
+            user_id: User identifier (display name)
             device_id: Client-provided device identifier
             audio_duration_ms: Duration of audio in milliseconds
             audio_format: Audio format (e.g., "pcm_s16le")
             raw_transcription: Raw text from Whisper
             final_transcription: Final text (after any processing)
             latency_ms: Total processing latency
+            user_info: Optional UserInfo object for proper storage path
             
         Returns:
             Generated interaction ID
@@ -109,7 +135,8 @@ class StorageService:
         }
         
         # Get log path and ensure user directory exists
-        log_path = self._get_log_path(user_id, device_id)
+        # Pass user_info to get proper {DisplayName}_{Hash[:6]}/ format
+        log_path = self._get_log_path(user_id, device_id, user_info)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         
         # Write asynchronously (append mode)

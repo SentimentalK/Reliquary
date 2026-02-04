@@ -1,6 +1,6 @@
 {
-  "keycode": 60,
+  "keycode": 61,
   "server_url": "http://localhost:8080",
-  "user_id": "xinghan.xu",
-  "device_id": "SentimentalKs-MacBook-Pro"
+  "device_id": "SentimentalKs-MacBook-Pro",
+  "auth_token": "sk-vortex-6e6b457a3fc7e4108753158f1dfec2f5"
 }

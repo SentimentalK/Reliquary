@@ -22,10 +22,12 @@ const (
 	HeartbeatInterval = 30 * time.Second  // Ping interval to keep connection alive
 )
 
-// Identity holds user and device information for the session.
+// Identity holds device and auth information for the session.
+// User identity is determined server-side from auth_token.
 type Identity struct {
-	UserID   string
-	DeviceID string
+	DeviceID  string
+	AuthToken string // sk-vortex-xxx format (v1.5 Multi-User)
+	ApiKey    string // Optional BYOK for Groq API
 }
 
 // StreamClient handles WebSocket streaming to the transcription server.
@@ -82,7 +84,8 @@ func (c *StreamClient) Connect() error {
 }
 
 // SendConfig sends the audio configuration and identity to the server.
-// This is the WebSocket handshake that includes user_id and device_id.
+// This is the WebSocket handshake that includes device_id and auth credentials.
+// User identity is determined server-side from auth_token.
 func (c *StreamClient) SendConfig(sampleRate int) error {
 	if c.conn == nil {
 		return fmt.Errorf("not connected")
@@ -91,12 +94,21 @@ func (c *StreamClient) SendConfig(sampleRate int) error {
 	// Set write deadline
 	c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
 
-	// Handshake payload with identity
+	// Handshake payload with device and auth (v1.5)
 	config := map[string]interface{}{
 		"sample_rate": sampleRate,
-		"client":      "go_vortex_v0.2",
-		"user_id":     c.identity.UserID,
+		"client":      "go_vortex_v1.5",
 		"device_id":   c.identity.DeviceID,
+	}
+
+	// Add auth token if present (v1.5 Multi-User)
+	if c.identity.AuthToken != "" {
+		config["auth_token"] = c.identity.AuthToken
+	}
+
+	// Add API key if present (BYOK)
+	if c.identity.ApiKey != "" {
+		config["api_key"] = c.identity.ApiKey
 	}
 
 	data, err := json.Marshal(config)
@@ -337,6 +349,7 @@ type ConfigUpdate struct {
 	KeyCode   *int    `json:"keycode,omitempty"`
 	ServerURL *string `json:"server_url,omitempty"`
 	Language  *string `json:"language,omitempty"`
+	ApiKey    *string `json:"api_key,omitempty"` // BYOK from server
 }
 
 // ControlPlaneClient handles the persistent control channel connection.
@@ -350,10 +363,12 @@ type ControlPlaneClient struct {
 	onStartLearning  func()
 	onConnected      func()
 	onDisconnected   func()
+	onAuthFailed     func(reason string) // Called on 401 (no retry)
 
 	// State
-	connected bool
-	stopChan  chan struct{}
+	connected  bool
+	authFailed bool // Set to true on 401, prevents retry
+	stopChan   chan struct{}
 }
 
 // NewControlPlaneClient creates a new control plane client.
@@ -393,8 +408,20 @@ func (c *ControlPlaneClient) OnDisconnected(fn func()) {
 	c.onDisconnected = fn
 }
 
+// OnAuthFailed sets the callback for authentication failure (401).
+// When auth fails, the client will NOT retry.
+func (c *ControlPlaneClient) OnAuthFailed(fn func(reason string)) {
+	c.onAuthFailed = fn
+}
+
+// IsAuthFailed returns true if authentication has failed.
+func (c *ControlPlaneClient) IsAuthFailed() bool {
+	return c.authFailed
+}
+
 // ConnectWithRetry connects to the control plane with automatic reconnection.
 // This blocks forever, reconnecting on failures. Run in a goroutine.
+// IMPORTANT: Does NOT retry on 401 (authentication failure).
 func (c *ControlPlaneClient) ConnectWithRetry() {
 	reconnectDelay := 5 * time.Second
 	maxDelay := 60 * time.Second
@@ -407,8 +434,23 @@ func (c *ControlPlaneClient) ConnectWithRetry() {
 		default:
 		}
 
+		// Don't retry if auth failed
+		if c.authFailed {
+			fmt.Println("[Control] Auth failed, not retrying. Please update your auth_token.")
+			return
+		}
+
 		err := c.connect()
 		if err != nil {
+			// Check if it's an auth error (don't retry)
+			if c.authFailed {
+				fmt.Println("[Control] Authentication failed. Check your auth_token and restart.")
+				if c.onAuthFailed != nil {
+					c.onAuthFailed(err.Error())
+				}
+				return
+			}
+
 			fmt.Printf("[Control] Connection failed: %v (retrying in %v)\n", err, reconnectDelay)
 			time.Sleep(reconnectDelay)
 			
@@ -425,6 +467,11 @@ func (c *ControlPlaneClient) ConnectWithRetry() {
 
 		// Run message loop (blocks until disconnect)
 		c.messageLoop()
+
+		// Check if we should stop retrying due to auth failure
+		if c.authFailed {
+			return
+		}
 	}
 }
 
@@ -441,10 +488,15 @@ func (c *ControlPlaneClient) connect() error {
 		return fmt.Errorf("dial failed: %w", err)
 	}
 
-	// Send handshake with identity
+	// Send handshake with device and auth (v1.5)
+	// User identity is determined server-side from auth_token
 	handshake := map[string]string{
 		"device_id": c.identity.DeviceID,
-		"user_id":   c.identity.UserID,
+	}
+
+	// Add auth token if present (v1.5 Multi-User)
+	if c.identity.AuthToken != "" {
+		handshake["auth_token"] = c.identity.AuthToken
 	}
 
 	conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
@@ -455,11 +507,17 @@ func (c *ControlPlaneClient) connect() error {
 
 	c.conn = conn
 	c.connected = true
-	fmt.Printf("[Control] Connected (device: %s, user: %s)\n", c.identity.DeviceID, c.identity.UserID)
+	
+	authStatus := "unauthenticated"
+	if c.identity.AuthToken != "" {
+		authStatus = "authenticated"
+	}
+	fmt.Printf("[Control] Connected (device: %s, %s)\n", c.identity.DeviceID, authStatus)
 
 	if c.onConnected != nil {
 		c.onConnected()
 	}
+
 
 	return nil
 }
@@ -495,7 +553,26 @@ func (c *ControlPlaneClient) messageLoop() {
 
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
+			// Check for authentication failure (4001 = auth required)
+			if websocket.IsCloseError(err, 4001) {
+				fmt.Println("[Control] ❌ Authentication required (401)")
+				c.authFailed = true
+				if c.onAuthFailed != nil {
+					c.onAuthFailed("Server requires authentication. Please set auth_token in your config.")
+				}
+				return
+			}
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				return
+			}
+			// Check error message for auth-related keywords
+			errStr := err.Error()
+			if strings.Contains(errStr, "4001") || strings.Contains(errStr, "Authentication") {
+				fmt.Println("[Control] ❌ Authentication failed")
+				c.authFailed = true
+				if c.onAuthFailed != nil {
+					c.onAuthFailed(errStr)
+				}
 				return
 			}
 			fmt.Printf("[Control] Read error: %v\n", err)
@@ -540,8 +617,29 @@ func (c *ControlPlaneClient) handleMessage(msg ControlMessage) {
 		// Respond with ack to confirm we're still here
 		c.sendMessage("heartbeat_ack", nil)
 
+	case "error":
+		// Handle server error messages
+		if errMsg, ok := msg.Payload["error"].(string); ok {
+			fmt.Printf("[Control] Server error: %s\n", errMsg)
+			// Check if it's an auth error
+			if strings.Contains(errMsg, "auth_token") || strings.Contains(errMsg, "authentication") || strings.Contains(errMsg, "Invalid") {
+				c.authFailed = true
+				if c.onAuthFailed != nil {
+					c.onAuthFailed(errMsg)
+				}
+			}
+		}
+
 	default:
-		fmt.Printf("[Control] Unknown message type: %s\n", msg.Type)
+		// Check if it's an inline error (server may send {"error": "..."} directly)
+		if errMsg, ok := msg.Payload["error"].(string); ok {
+			fmt.Printf("[Control] Server error: %s\n", errMsg)
+			if strings.Contains(errMsg, "auth_token") || strings.Contains(errMsg, "authentication") || strings.Contains(errMsg, "Invalid") {
+				c.authFailed = true
+			}
+		} else {
+			fmt.Printf("[Control] Unknown message type: %s\n", msg.Type)
+		}
 	}
 }
 
@@ -558,6 +656,9 @@ func parseConfigUpdate(payload map[string]interface{}) ConfigUpdate {
 	}
 	if v, ok := payload["language"].(string); ok {
 		update.Language = &v
+	}
+	if v, ok := payload["api_key"].(string); ok {
+		update.ApiKey = &v
 	}
 
 	return update
