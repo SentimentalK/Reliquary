@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Laptop, Keyboard, Loader2 } from 'lucide-react'
+import { Laptop, Keyboard } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { getKeyName, getRelativeTime } from '@/lib/utils'
@@ -15,7 +15,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
 
     return (
         <Card
-            className={`group relative cursor-pointer transition-all hover:shadow-lg ${device.connected ? 'border-green-500/50' : 'border-muted'
+            className={`group relative cursor-pointer transition-all hover:shadow-xl ${device.connected ? 'border-green-500/50' : 'border-muted'
                 }`}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -25,8 +25,8 @@ export function DeviceCard({ device }: DeviceCardProps) {
             <div className="absolute right-4 top-4">
                 <div
                     className={`h-3 w-3 rounded-full ${device.connected
-                            ? 'bg-green-500 animate-pulse-dot'
-                            : 'bg-muted-foreground/30'
+                        ? 'bg-green-500 animate-pulse-dot'
+                        : 'bg-muted-foreground/30'
                         }`}
                 />
             </div>

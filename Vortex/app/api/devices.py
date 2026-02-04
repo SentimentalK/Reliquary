@@ -327,10 +327,12 @@ async def learn_hotkey_and_wait(device_id: str, timeout: int = 30) -> Dict[str, 
     if not manager.is_connected(device_id):
         raise HTTPException(status_code=404, detail=f"Device {device_id} not connected")
     
-    # Create future for result
-    loop = asyncio.get_event_loop()
+    # Create future for result using running loop (important for FastAPI)
+    loop = asyncio.get_running_loop()
     future: asyncio.Future = loop.create_future()
     _pending_key_learning[device_id] = future
+    
+    print(f"[LearnHotkey] Started waiting for key from {device_id} (timeout={timeout}s)")
     
     try:
         # Send learning command
@@ -338,12 +340,16 @@ async def learn_hotkey_and_wait(device_id: str, timeout: int = 30) -> Dict[str, 
         if not success:
             raise HTTPException(status_code=500, detail="Failed to send learning command")
         
+        print(f"[LearnHotkey] Sent start_learning to {device_id}, waiting for key_detected...")
+        
         # Wait for key detection
         key_code = await asyncio.wait_for(future, timeout=timeout)
         
+        print(f"[LearnHotkey] Got key_code={key_code} from {device_id}")
         return {"success": True, "key_code": key_code}
     
     except asyncio.TimeoutError:
+        print(f"[LearnHotkey] Timeout waiting for {device_id}")
         return {"success": False, "error": f"Timeout waiting for key (>{timeout}s)"}
     except asyncio.CancelledError:
         return {"success": False, "error": "Device disconnected during learning"}

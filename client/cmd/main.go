@@ -198,8 +198,11 @@ func main() {
 		hotkeyHandler.EnableListeningMode(func(keyCode int) {
 			fmt.Printf("🔑 Detected: %s (code %d)\n", hotkey.GetKeyName(keyCode), keyCode)
 			// Report back to server
+			fmt.Println("[Control] Sending key_detected to server...")
 			if err := controlPlane.SendKeyDetected(keyCode); err != nil {
 				fmt.Printf("⚠️  Failed to report key: %v\n", err)
+			} else {
+				fmt.Println("[Control] key_detected sent successfully")
 			}
 		})
 	})
