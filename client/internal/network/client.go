@@ -116,27 +116,39 @@ func (c *StreamClient) StreamAudio(audioChan <-chan []byte) error {
 
 	chunkCount := 0
 	totalBytes := 0
-	
+	lastLoggedAt := 0
+
 	fmt.Println("[Stream] Starting audio streaming...")
-	
+
 	for chunk := range audioChan {
 		chunkCount++
 		totalBytes += len(chunk)
-		
+
 		// Set write deadline for each chunk
 		c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
-		
+
 		if err := c.conn.WriteMessage(websocket.BinaryMessage, chunk); err != nil {
 			fmt.Printf("[Stream] Failed at chunk %d (%d total bytes): %v\n", chunkCount, totalBytes, err)
 			return fmt.Errorf("failed to send audio chunk: %w", err)
 		}
-		
-		// Log progress every 50 chunks
-		if chunkCount%50 == 0 {
+
+		// Adaptive logging frequency to avoid spam:
+		// - First 500 chunks: log every 100
+		// - 500-2000 chunks: log every 500
+		// - 2000+ chunks: log every 1000
+		logInterval := 100
+		if chunkCount > 2000 {
+			logInterval = 1000
+		} else if chunkCount > 500 {
+			logInterval = 500
+		}
+
+		if chunkCount-lastLoggedAt >= logInterval {
 			fmt.Printf("[Stream] Sent %d chunks (%d bytes)\n", chunkCount, totalBytes)
+			lastLoggedAt = chunkCount
 		}
 	}
-	
+
 	fmt.Printf("[Stream] Completed: %d chunks, %d bytes\n", chunkCount, totalBytes)
 	return nil
 }
@@ -522,6 +534,11 @@ func (c *ControlPlaneClient) handleMessage(msg ControlMessage) {
 	case "ping":
 		// Respond with pong
 		c.sendMessage("pong", nil)
+
+	case "heartbeat":
+		// Server-side heartbeat to keep connection alive
+		// Respond with ack to confirm we're still here
+		c.sendMessage("heartbeat_ack", nil)
 
 	default:
 		fmt.Printf("[Control] Unknown message type: %s\n", msg.Type)
