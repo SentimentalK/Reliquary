@@ -7,6 +7,8 @@ export interface Device {
     connected_at?: string
     keycode?: number
     language?: string
+    server_url?: string
+    api_key?: string
 }
 
 interface DevicesState {

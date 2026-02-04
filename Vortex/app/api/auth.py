@@ -127,3 +127,28 @@ async def get_users(admin: UserInfo = Depends(get_admin_user)):
         ],
         count=len(users),
     )
+
+
+class VerifyResponse(BaseModel):
+    """Token verification response."""
+    valid: bool
+    user: UserResponse | None = None
+
+
+@router.get("/api/auth/verify")
+async def verify_token_endpoint(user: UserInfo = Depends(get_current_user)):
+    """
+    Verify an authentication token.
+    
+    Used by the web UI login flow to validate tokens.
+    """
+    return VerifyResponse(
+        valid=True,
+        user=UserResponse(
+            id=user.id,
+            display_name=user.display_name,
+            role=user.role,
+            created_at=user.created_at,
+        ),
+    )
+

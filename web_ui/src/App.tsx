@@ -1,13 +1,27 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Layout } from './components/Layout'
 import { Dashboard } from './pages/Dashboard'
 import { History } from './pages/History'
-import { Settings } from './pages/Settings'
+import { Login } from './pages/Login'
 import { useThemeStore } from './stores/theme'
+import { useAuthStore } from './stores/auth'
+
+// Protected route wrapper
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+    const { isAuthenticated } = useAuthStore()
+    const location = useLocation()
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />
+    }
+
+    return <>{children}</>
+}
 
 function App() {
     const { theme } = useThemeStore()
+    const { isAuthenticated } = useAuthStore()
 
     useEffect(() => {
         const root = window.document.documentElement
@@ -24,13 +38,40 @@ function App() {
     }, [theme])
 
     return (
-        <Layout>
-            <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/settings" element={<Settings />} />
-            </Routes>
-        </Layout>
+        <Routes>
+            {/* Public routes */}
+            <Route
+                path="/login"
+                element={
+                    isAuthenticated ? <Navigate to="/" replace /> : <Login />
+                }
+            />
+
+            {/* Protected routes */}
+            <Route
+                path="/"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <Dashboard />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/history"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <History />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Catch all - redirect to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
     )
 }
 

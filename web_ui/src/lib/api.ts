@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 // Create axios instance with base configuration
 export const api = axios.create({
@@ -9,14 +10,65 @@ export const api = axios.create({
     },
 })
 
+// Request interceptor to add auth token
+api.interceptors.request.use((config) => {
+    const token = useAuthStore.getState().token
+    if (token) {
+        config.headers['X-Vortex-Token'] = token
+    }
+    return config
+})
+
 // Response interceptor for error handling
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         console.error('[API Error]', error.response?.data || error.message)
+        // Auto logout on 401
+        if (error.response?.status === 401) {
+            useAuthStore.getState().logout()
+        }
         return Promise.reject(error)
     }
 )
+
+// ============== Auth API ==============
+
+export interface RegisterRequest {
+    display_name: string
+    invite_code: string
+}
+
+export interface RegisterResponse {
+    master_secret: string
+    display_name: string
+    role: string
+    message: string
+}
+
+export interface VerifyResponse {
+    valid: boolean
+    user?: {
+        id: string
+        display_name: string
+        role: string
+        created_at: string
+    }
+}
+
+export const authApi = {
+    register: async (data: RegisterRequest): Promise<RegisterResponse> => {
+        const { data: res } = await api.post<RegisterResponse>('/auth/register', data)
+        return res
+    },
+
+    verify: async (token: string): Promise<VerifyResponse> => {
+        const { data } = await api.get<VerifyResponse>('/auth/verify', {
+            headers: { 'X-Vortex-Token': token },
+        })
+        return data
+    },
+}
 
 // ============== Device API ==============
 
@@ -45,7 +97,7 @@ export const devicesApi = {
 
     pushConfig: async (
         deviceId: string,
-        config: { keycode?: number; server_url?: string; language?: string }
+        config: { keycode?: number; server_url?: string; language?: string; api_key?: string }
     ): Promise<void> => {
         await api.post(`/devices/${deviceId}/config`, config)
     },
@@ -105,21 +157,3 @@ export const logsApi = {
     },
 }
 
-// ============== Settings API ==============
-
-export interface ServerSettings {
-    groq_api_key?: string
-    storage_root?: string
-    default_pipeline?: string
-}
-
-export const settingsApi = {
-    get: async (): Promise<ServerSettings> => {
-        const { data } = await api.get<ServerSettings>('/settings')
-        return data
-    },
-
-    update: async (settings: Partial<ServerSettings>): Promise<void> => {
-        await api.patch('/settings', settings)
-    },
-}
