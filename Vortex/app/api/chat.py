@@ -14,6 +14,11 @@ from app.services.storage_service import get_storage_service
 
 router = APIRouter()
 
+# WebSocket timeout settings
+RECEIVE_TIMEOUT = 120  # 2 minutes max recording time
+KEEPALIVE_INTERVAL = 2  # Send heartbeat every 2 seconds
+MAX_BUFFER_SIZE = 25 * 1024 * 1024  # 25MB safety cutoff (Groq API limit)
+
 
 @router.post("/transcribe", response_class=PlainTextResponse)
 async def transcribe_audio(
@@ -22,11 +27,6 @@ async def transcribe_audio(
 ) -> str:
     """
     Transcribe uploaded audio file to text (Legacy HTTP endpoint).
-    
-    - **file**: Audio file (WAV, MP3, etc.)
-    - **pipeline**: Optional pipeline key (default: "raw")
-    
-    Returns plain text transcription.
     """
     settings = get_settings()
     pipeline_key = pipeline or settings.default_pipeline
@@ -76,135 +76,232 @@ def pcm_to_wav(pcm_data: bytes, sample_rate: int, channels: int = 1, bit_depth: 
     return header + pcm_data
 
 
+async def process_audio_buffer(
+    pcm_buffer: bytearray,
+    sample_rate: int,
+    user_id: str,
+    device_id: str,
+    start_time: float,
+    trigger: str = "eof"
+) -> tuple[str, str]:
+    """
+    Process the audio buffer and return (transcription, interaction_id).
+    
+    Args:
+        pcm_buffer: Raw PCM audio data
+        sample_rate: Audio sample rate
+        user_id: User identifier
+        device_id: Device identifier
+        start_time: Recording start timestamp
+        trigger: What triggered processing ("eof", "disconnect", "size_limit")
+    
+    Returns:
+        Tuple of (transcription_text, interaction_id)
+    """
+    storage = get_storage_service()
+    settings = get_settings()
+    manager = get_pipeline_manager()
+    
+    if len(pcm_buffer) < 100:
+        print(f"[WebSocket] Audio too short ({len(pcm_buffer)} bytes), skipping")
+        return "", ""
+    
+    print(f"[WebSocket] Processing audio: {len(pcm_buffer)} bytes, trigger={trigger}")
+    
+    wav_data = pcm_to_wav(bytes(pcm_buffer), sample_rate)
+    pipe = manager.get_pipeline(settings.default_pipeline)
+    
+    try:
+        transcription = await pipe.transcribe(wav_data, filename="stream.wav")
+    except Exception as e:
+        print(f"[WebSocket] Transcription failed: {e}")
+        transcription = f"[Transcription Error: {str(e)}]"
+    
+    end_time = time.time()
+    latency_ms = int((end_time - start_time) * 1000)
+    audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)
+    
+    # Log interaction with trigger info
+    interaction_id = await storage.log_interaction(
+        user_id=user_id,
+        device_id=device_id,
+        audio_duration_ms=audio_duration_ms,
+        audio_format="pcm_s16le",
+        raw_transcription=transcription,
+        final_transcription=transcription,
+        latency_ms=latency_ms,
+    )
+    
+    print(f"[WebSocket] Transcription complete ({trigger}): {transcription[:50]}...")
+    return transcription, interaction_id
+
+
 @router.websocket("/ws/audio")
 async def websocket_audio_stream(websocket: WebSocket):
     """
     WebSocket endpoint for streaming audio transcription.
     
-    Protocol:
-    1. Client sends config JSON: {
-         "sample_rate": 16000, 
-         "device_id": "mac-studio",
-         "user_id": "xinghan"  // Optional, defaults to settings.default_user_id
-       }
-    2. Client sends binary PCM chunks (Int16)
-    3. Client sends "EOF" string when done
-    4. Server sends {"status": "processing"} keep-alive during transcription
-    5. Server responds with {"text": "...", "id": "..."}
+    Features:
+    - Heartbeat during Groq processing
+    - Auto-process on disconnect (graceful degradation)
+    - 25MB buffer size limit (Groq API safety)
     """
     await websocket.accept()
     
-    storage = get_storage_service()
     settings = get_settings()
-    manager = get_pipeline_manager()
     
     pcm_buffer = bytearray()
     sample_rate: int = 16000
     
-    # Session identity (extracted from config frame)
+    # Session identity
     current_user_id: str = settings.default_user_id
     current_device_id: str = "unknown_device"
     
-    start_time: float = 0
+    start_time: float = time.time()
     client_connected = True
+    config_received = False
     
-    async def send_keepalive():
-        """Send periodic keep-alive messages during processing."""
+    async def send_heartbeat():
+        """Send periodic heartbeat messages during processing."""
         nonlocal client_connected
         while client_connected:
             try:
                 await websocket.send_json({"status": "processing"})
-                await asyncio.sleep(1)
+                await asyncio.sleep(KEEPALIVE_INTERVAL)
             except Exception:
                 client_connected = False
                 break
     
     try:
         # Step 1: Receive and parse config (Handshake)
-        config_data = await websocket.receive_text()
+        print("[WebSocket] Waiting for config...")
+        config_data = await asyncio.wait_for(
+            websocket.receive_text(),
+            timeout=10
+        )
         config = json.loads(config_data)
+        config_received = True
         
-        # Extract identity from config frame
         sample_rate = config.get("sample_rate", 16000)
         current_user_id = config.get("user_id", settings.default_user_id) or settings.default_user_id
         current_device_id = config.get("device_id", "unknown_device") or "unknown_device"
         
+        print(f"[WebSocket] Config received: user={current_user_id}, device={current_device_id}")
         start_time = time.time()
         
-        # Step 2: Receive PCM chunks until EOF or disconnect
+        # Step 2: Receive PCM chunks until EOF, disconnect, or size limit
+        chunk_count = 0
+        
         while True:
+            # Safety cutoff: 25MB limit
+            if len(pcm_buffer) >= MAX_BUFFER_SIZE:
+                print(f"[WebSocket] Buffer size limit reached ({MAX_BUFFER_SIZE} bytes), forcing process")
+                break
+            
             try:
-                message = await websocket.receive()
+                message = await asyncio.wait_for(
+                    websocket.receive(),
+                    timeout=RECEIVE_TIMEOUT
+                )
+                
+            except asyncio.TimeoutError:
+                print(f"[WebSocket] Recording timeout after {RECEIVE_TIMEOUT}s")
+                break
             except WebSocketDisconnect:
+                print(f"[WebSocket] Client disconnected during recording (got {chunk_count} chunks)")
                 client_connected = False
-                return
+                break
             
             # Check for disconnect message type
             if message.get("type") == "websocket.disconnect":
+                print(f"[WebSocket] Disconnect message received (got {chunk_count} chunks)")
                 client_connected = False
-                return
+                break
             
             if "text" in message:
                 text_data = message["text"]
                 if text_data == "EOF":
+                    print(f"[WebSocket] EOF received, got {chunk_count} chunks, {len(pcm_buffer)} bytes")
                     break
             elif "bytes" in message:
                 pcm_buffer.extend(message["bytes"])
+                chunk_count += 1
         
-        # Step 3: Check audio length
-        if len(pcm_buffer) < 100:
+        # Step 3: Process whatever we have in the buffer
+        if len(pcm_buffer) >= 100:
+            trigger = "eof" if client_connected else "disconnect"
+            if len(pcm_buffer) >= MAX_BUFFER_SIZE:
+                trigger = "size_limit"
+            
+            # Start heartbeat if client still connected
+            heartbeat_task = None
             if client_connected:
-                await websocket.send_json({"error": "Audio too short", "text": "", "id": ""})
-            return
-        
-        # Step 4: Start keep-alive and transcribe
-        wav_data = pcm_to_wav(bytes(pcm_buffer), sample_rate)
-        pipe = manager.get_pipeline(settings.default_pipeline)
-        
-        # Start keep-alive task
-        keepalive_task = asyncio.create_task(send_keepalive())
-        
-        try:
-            transcription = await pipe.transcribe(wav_data, filename="stream.wav")
-        finally:
-            # Stop keep-alive
-            client_connected = False
-            keepalive_task.cancel()
+                heartbeat_task = asyncio.create_task(send_heartbeat())
+            
             try:
-                await keepalive_task
-            except asyncio.CancelledError:
-                pass
+                transcription, interaction_id = await process_audio_buffer(
+                    pcm_buffer=pcm_buffer,
+                    sample_rate=sample_rate,
+                    user_id=current_user_id,
+                    device_id=current_device_id,
+                    start_time=start_time,
+                    trigger=trigger,
+                )
+            finally:
+                # Stop heartbeat but DON'T set client_connected=False yet
+                if heartbeat_task:
+                    heartbeat_task.cancel()
+                    try:
+                        await heartbeat_task
+                    except asyncio.CancelledError:
+                        pass
+            
+            # Send result if client still connected
+            if client_connected and transcription:
+                try:
+                    await websocket.send_json({
+                        "text": transcription,
+                        "id": interaction_id,
+                    })
+                    # Small delay to ensure client receives before close
+                    await asyncio.sleep(0.1)
+                except Exception:
+                    print("[WebSocket] Failed to send result (client disconnected)")
+        else:
+            print(f"[WebSocket] Audio too short ({len(pcm_buffer)} bytes), skipped")
         
-        end_time = time.time()
-        latency_ms = int((end_time - start_time) * 1000)
-        audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)
-        
-        # Step 5: Log interaction with user/device identity
-        interaction_id = await storage.log_interaction(
-            user_id=current_user_id,
-            device_id=current_device_id,
-            audio_duration_ms=audio_duration_ms,
-            audio_format="pcm_s16le",
-            raw_transcription=transcription,
-            final_transcription=transcription,
-            latency_ms=latency_ms,
-        )
-        
-        # Step 6: Send result
-        await websocket.send_json({
-            "text": transcription,
-            "id": interaction_id,
-        })
-        
+    except asyncio.TimeoutError:
+        print("[WebSocket] Connection timeout during handshake")
     except WebSocketDisconnect:
-        # Client disconnected - this is normal, don't treat as error
-        pass
+        # Disconnect during config or early phase
+        print(f"[WebSocket] Disconnected (buffer size: {len(pcm_buffer)})")
+        if config_received and len(pcm_buffer) >= 100:
+            # Still try to process what we have
+            await process_audio_buffer(
+                pcm_buffer=pcm_buffer,
+                sample_rate=sample_rate,
+                user_id=current_user_id,
+                device_id=current_device_id,
+                start_time=start_time,
+                trigger="disconnect",
+            )
     except json.JSONDecodeError:
         try:
             await websocket.send_json({"error": "Invalid config JSON", "text": "", "id": ""})
         except Exception:
             pass
     except Exception as e:
+        print(f"[WebSocket] Error: {e}")
+        # Try to process buffer on any error
+        if config_received and len(pcm_buffer) >= 100:
+            await process_audio_buffer(
+                pcm_buffer=pcm_buffer,
+                sample_rate=sample_rate,
+                user_id=current_user_id,
+                device_id=current_device_id,
+                start_time=start_time,
+                trigger="error",
+            )
         try:
             await websocket.send_json({"error": str(e), "text": "", "id": ""})
         except Exception:

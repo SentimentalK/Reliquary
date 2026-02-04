@@ -14,6 +14,14 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Timeout settings
+const (
+	ConnectTimeout    = 10 * time.Second
+	WriteTimeout      = 5 * time.Second
+	ReadTimeout       = 120 * time.Second // Long timeout for Groq processing
+	HeartbeatInterval = 30 * time.Second  // Ping interval to keep connection alive
+)
+
 // Identity holds user and device information for the session.
 type Identity struct {
 	UserID   string
@@ -56,13 +64,18 @@ func NewStreamClient(serverURL string, identity Identity) *StreamClient {
 // Connect establishes a WebSocket connection to the server.
 func (c *StreamClient) Connect() error {
 	dialer := websocket.Dialer{
-		HandshakeTimeout: 5 * time.Second,
+		HandshakeTimeout: ConnectTimeout,
 	}
 
 	conn, _, err := dialer.Dial(c.wsURL, http.Header{})
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", c.wsURL, err)
 	}
+
+	// Set ping handler to respond to server pings
+	conn.SetPingHandler(func(data string) error {
+		return conn.WriteControl(websocket.PongMessage, []byte(data), time.Now().Add(WriteTimeout))
+	})
 
 	c.conn = conn
 	return nil
@@ -74,6 +87,9 @@ func (c *StreamClient) SendConfig(sampleRate int) error {
 	if c.conn == nil {
 		return fmt.Errorf("not connected")
 	}
+
+	// Set write deadline
+	c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
 
 	// Handshake payload with identity
 	config := map[string]interface{}{
@@ -98,12 +114,30 @@ func (c *StreamClient) StreamAudio(audioChan <-chan []byte) error {
 		return fmt.Errorf("not connected")
 	}
 
+	chunkCount := 0
+	totalBytes := 0
+	
+	fmt.Println("[Stream] Starting audio streaming...")
+	
 	for chunk := range audioChan {
+		chunkCount++
+		totalBytes += len(chunk)
+		
+		// Set write deadline for each chunk
+		c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
+		
 		if err := c.conn.WriteMessage(websocket.BinaryMessage, chunk); err != nil {
+			fmt.Printf("[Stream] Failed at chunk %d (%d total bytes): %v\n", chunkCount, totalBytes, err)
 			return fmt.Errorf("failed to send audio chunk: %w", err)
 		}
+		
+		// Log progress every 50 chunks
+		if chunkCount%50 == 0 {
+			fmt.Printf("[Stream] Sent %d chunks (%d bytes)\n", chunkCount, totalBytes)
+		}
 	}
-
+	
+	fmt.Printf("[Stream] Completed: %d chunks, %d bytes\n", chunkCount, totalBytes)
 	return nil
 }
 
@@ -113,22 +147,43 @@ func (c *StreamClient) SendEOF() error {
 		return fmt.Errorf("not connected")
 	}
 
+	c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
 	return c.conn.WriteMessage(websocket.TextMessage, []byte("EOF"))
 }
 
 // ReceiveResult waits for and returns the transcription result.
-// It ignores intermediate status messages (keep-alive) and waits for final result.
+// It handles heartbeat/processing status messages and waits for final result.
 func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 	if c.conn == nil {
 		return nil, fmt.Errorf("not connected")
 	}
 
-	// Set read deadline (longer to account for Groq processing)
-	c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	// Set initial read deadline (long timeout for Groq processing)
+	c.conn.SetReadDeadline(time.Now().Add(ReadTimeout))
+	
+	var lastResult *TranscriptionResult
+	gotHeartbeat := false
 
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
+			// Check if we have a result to return despite connection close
+			if lastResult != nil && lastResult.Text != "" {
+				if gotHeartbeat {
+					fmt.Println() // Newline after dots
+				}
+				return lastResult, nil
+			}
+			
+			// Check for normal close (server sent result and closed)
+			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				if gotHeartbeat {
+					fmt.Println()
+				}
+				// Normal close but no result - might have been processed on server
+				return &TranscriptionResult{Text: "", ID: ""}, nil
+			}
+			
 			return nil, fmt.Errorf("failed to receive result: %w", err)
 		}
 
@@ -137,25 +192,48 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 			return nil, fmt.Errorf("failed to parse result: %w", err)
 		}
 
-		// Ignore keep-alive "processing" status messages
+		// Handle heartbeat/processing status messages
 		if result.Status == "processing" {
-			// Reset read deadline on each keep-alive
-			c.conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+			// Print dot to show activity
+			fmt.Print(".")
+			gotHeartbeat = true
+			// Reset read deadline on each heartbeat
+			c.conn.SetReadDeadline(time.Now().Add(ReadTimeout))
 			continue
 		}
-
-		// Got actual result or error
+		
+		// Got actual result - save it
+		if result.Text != "" || result.ID != "" {
+			lastResult = &result
+		}
+		
+		// Check for error
 		if result.Error != "" {
+			if gotHeartbeat {
+				fmt.Println()
+			}
 			return nil, fmt.Errorf("server error: %s", result.Error)
 		}
 
-		return &result, nil
+		// Got final result
+		if result.Text != "" {
+			if gotHeartbeat {
+				fmt.Println()
+			}
+			return &result, nil
+		}
 	}
 }
 
 // Close closes the WebSocket connection.
 func (c *StreamClient) Close() {
 	if c.conn != nil {
+		// Send close message gracefully
+		c.conn.WriteControl(
+			websocket.CloseMessage,
+			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
+			time.Now().Add(time.Second),
+		)
 		c.conn.Close()
 		c.conn = nil
 	}

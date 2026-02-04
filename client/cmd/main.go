@@ -212,8 +212,8 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 	state := StateIdle
 	var audioChan <-chan []byte
 	var streamClient *network.StreamClient
-	var streamErr error
 	var streamDone chan struct{}
+	var streamError error  // Track error from streaming goroutine
 	var recordingStartTime time.Time
 
 	// Minimum recording duration to avoid accidental taps (1 second)
@@ -231,11 +231,13 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					sound.PlayStart()
 					fmt.Println("🎤 Recording... (release key to stop)")
 					recordingStartTime = time.Now()
+					streamError = nil  // Reset error for new session
 
 					// Start streaming
-					audioChan, streamErr = app.recorder.StartStreaming()
-					if streamErr != nil {
-						log.Printf("Failed to start recording: %v", streamErr)
+					var err error
+					audioChan, err = app.recorder.StartStreaming()
+					if err != nil {
+						log.Printf("Failed to start recording: %v", err)
 						sound.PlayError()
 						continue
 					}
@@ -263,6 +265,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					go func() {
 						defer close(streamDone)
 						if err := streamClient.StreamAudio(audioChan); err != nil {
+							streamError = err  // Capture error for main loop
 							log.Printf("Stream error: %v", err)
 						}
 					}()
@@ -279,6 +282,17 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 
 					// Wait for stream to finish
 					<-streamDone
+
+					// Check if stream had an error (connection broke)
+					if streamError != nil {
+						fmt.Println("⚠️  Connection lost during recording (audio saved on server)")
+						streamClient.Close()
+						streamError = nil
+						state = StateIdle
+						sound.PlayError()
+						fmt.Println("\nReady for next recording...")
+						continue
+					}
 
 					// Check if recording was too short (accidental tap)
 					if recordingDuration < minRecordingDuration {
@@ -297,6 +311,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 						streamClient.Close()
 						sound.PlayError()
 						state = StateIdle
+						fmt.Println("\nReady for next recording...")
 						continue
 					}
 
@@ -308,12 +323,14 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 						log.Printf("Transcription failed: %v", err)
 						sound.PlayError()
 						state = StateIdle
+						fmt.Println("\nReady for next recording...")
 						continue
 					}
 
 					if result.Text == "" {
 						fmt.Println("⚠️  No speech detected")
 						state = StateIdle
+						fmt.Println("\nReady for next recording...")
 						continue
 					}
 

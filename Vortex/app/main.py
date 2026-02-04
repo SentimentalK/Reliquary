@@ -40,4 +40,7 @@ if __name__ == "__main__":
         host=settings.server_host,
         port=settings.server_port,
         reload=True,
+        ws_ping_interval=None,  # Disable ping - client may not respond during streaming
+        ws_ping_timeout=None,   # No timeout
+        timeout_keep_alive=300,  # Keep connections alive for 5 minutes
     )
