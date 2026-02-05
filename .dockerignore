@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Build outputs
+dist/
+Vortex/static/
+
+# Environment files (keep .env.example)
+.env
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Data (persistent volume in Docker)
+Vortex/data/
+
+# Temporary files
+*.tmp
+*.temp

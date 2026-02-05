@@ -16,7 +16,10 @@ import (
 type Config struct {
 	KeyCode   int    `json:"keycode"`
 	ServerURL string `json:"server_url"`
-	DeviceID  string `json:"device_id"`
+	// Security (Auto-enabled for localhost)
+	InsecureSkipVerify bool `json:"insecure_skip_verify,omitempty"`
+
+	DeviceID string `json:"device_id"`
 	// Authentication (v1.5 Multi-User)
 	AuthToken string `json:"auth_token,omitempty"` // sk-vortex-xxx format
 	// BYOK: Bring Your Own Key (optional)
@@ -30,13 +33,12 @@ type Config struct {
 // DefaultConfig returns the default configuration.
 func DefaultConfig() Config {
 	return Config{
-		KeyCode:   61, // Right Option on macOS
-		ServerURL: "http://localhost:8080",
+		KeyCode:   60, // Right Shift on macOS
+		ServerURL: "https://localhost:443",
 		DeviceID:  getDefaultDeviceID(),
-		AuthToken: "",   // Must be set after registration
-		ApiKey:    "",   // Optional BYOK
-		Language:  "zh", // Default to Chinese
-		Pipeline:  "",   // Empty means use server default
+		AuthToken: "", // Must be set after registration
+		ApiKey:    "", // Optional BYOK
+		Pipeline:  "", // Empty means use server default
 	}
 }
 
@@ -83,10 +85,10 @@ func GetConfigPath() string {
 	exe, err := os.Executable()
 	if err != nil {
 		// Fallback to current directory
-		return "voice_config.json"
+		return "config.json"
 	}
 	dir := filepath.Dir(exe)
-	return filepath.Join(dir, "voice_config.json")
+	return filepath.Join(dir, "config.json")
 }
 
 // Exists checks if the config file exists.
@@ -174,7 +176,7 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 
 	fmt.Printf("\n✅ Config saved to: %s\n", m.configPath)
 	if authToken == "" {
-		fmt.Println("⚠️  No auth token set. You can add it later to voice_config.json")
+		fmt.Println("⚠️  No auth token set. You can add it later to config.json")
 	}
 	fmt.Println()
 
@@ -314,7 +316,7 @@ func (m *Manager) StartWatching() {
 
 					newConfig := m.Get()
 					if newConfig != oldConfig {
-						fmt.Printf("[Config] Configuration changed: keycode=%d, server=%s\n", 
+						fmt.Printf("[Config] Configuration changed: keycode=%d, server=%s\n",
 							newConfig.KeyCode, newConfig.ServerURL)
 						if m.onChange != nil {
 							m.onChange(newConfig)

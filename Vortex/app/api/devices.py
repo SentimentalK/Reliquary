@@ -419,7 +419,7 @@ async def push_config_update(device_id: str, config: ConfigUpdateRequest) -> Dic
     """
     Push a configuration update to a device.
     
-    The device will update its in-memory config and persist to voice_config.json.
+    The device will update its in-memory config and persist to config.json.
     
     Args:
         device_id: Target device

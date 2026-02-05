@@ -11,8 +11,8 @@ export default defineConfig({
         },
     },
     build: {
-        // Output to FastAPI static directory
-        outDir: '../Vortex/static',
+        // Output to dist/ directory
+        outDir: 'dist',
         emptyOutDir: true,
     },
     server: {

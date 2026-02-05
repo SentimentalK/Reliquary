@@ -20,20 +20,38 @@ JSON, YAML, XML, CSV, Markdown, HTML, CSS, SQL, NoSQL,
 localhost, HTTP, HTTPS, WebSocket, SSH, SSL, TLS, OAuth, JWT,
 Linux, Ubuntu, macOS, Windows, terminal, shell, bash, zsh.
 """
-
+WHISPER_PROMPT = ''
 
 class RawWhisperPipeline(BasePipeline):
     """
     Direct transcription using Groq's Whisper-large-v3 model.
     
     Uses a prompt with technical keywords to improve recognition.
+    Supports BYOK (Bring Your Own Key) via per-request API key.
     """
     
     MODEL = "whisper-large-v3"
     
     def __init__(self):
-        settings = get_settings()
-        self.client = Groq(api_key=settings.groq_api_key)
+        # Global API key removed as per request - strictly BYOK
+        self._default_api_key = None
+    
+    def _get_client(self, api_key: str = None) -> Groq:
+        """Get Groq client with specified API key (Strict BYOK)."""
+        key = api_key
+        if not key:
+             # Check if we should fallback to server key? User requested strict removal.
+             # "I need you to completely remove this global API key logic"
+             pass
+
+        # To be absolutely sure, we can still load from env if we wanted, 
+        # but user said "if client doesn't give API key it theoretically shouldn't work".
+        if not key:
+            # Fallback to env ONLY IF explicitly not disabled, but user asked to remove logic.
+            # So we will raise error.
+            raise ValueError("Authentication error: valid API Key required (BYOK).")
+            
+        return Groq(api_key=key)
     
     async def transcribe(
         self, 
@@ -41,6 +59,7 @@ class RawWhisperPipeline(BasePipeline):
         filename: str = "audio.wav",
         language: str = None,
         prompt: str = None,
+        api_key: str = None,  # BYOK: Bring Your Own Key
     ) -> str:
         """
         Transcribe audio using Groq Whisper API.
@@ -50,10 +69,14 @@ class RawWhisperPipeline(BasePipeline):
             filename: Filename for format detection.
             language: Language code (e.g., "en", "zh", "ja").
             prompt: Optional custom prompt to guide recognition.
+            api_key: Optional API key override (BYOK).
             
         Returns:
             Raw transcription text.
         """
+        # Get client (with per-request API key if provided)
+        client = self._get_client(api_key)
+        
         # Create file-like object from bytes
         audio_file = io.BytesIO(audio_bytes)
         audio_file.name = filename
@@ -74,6 +97,7 @@ class RawWhisperPipeline(BasePipeline):
             api_kwargs["language"] = language
         
         # Call Groq API
-        transcription = self.client.audio.transcriptions.create(**api_kwargs)
+        transcription = client.audio.transcriptions.create(**api_kwargs)
         
         return transcription.strip() if isinstance(transcription, str) else transcription.text.strip()
+

@@ -3,6 +3,7 @@ package network
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,12 +26,13 @@ const (
 // Identity holds device and auth information for the session.
 // User identity is determined server-side from auth_token.
 type Identity struct {
-	DeviceID  string
-	AuthToken string // sk-vortex-xxx format (v1.5 Multi-User)
-	ApiKey    string // Optional BYOK for Groq API
-	Language  string // Config persistence
-	Pipeline  string // Config persistence
-	KeyCode   int    // Config persistence
+	DeviceID           string
+	AuthToken          string // sk-vortex-xxx format (v1.5 Multi-User)
+	ApiKey             string // Optional BYOK for Groq API
+	Language           string // Config persistence
+	Pipeline           string // Config persistence
+	KeyCode            int    // Config persistence
+	InsecureSkipVerify bool   // Config: skip SSL verify (dev/localhost)
 }
 
 // StreamClient handles WebSocket streaming to the transcription server.
@@ -68,8 +70,16 @@ func NewStreamClient(serverURL string, identity Identity) *StreamClient {
 
 // Connect establishes a WebSocket connection to the server.
 func (c *StreamClient) Connect() error {
+	// Intelligent SSL handling:
+	// 1. If explicit config is true -> Skip
+	// 2. If localhost/127.0.0.1 -> Skip (Dev convenience)
+	insecure := c.identity.InsecureSkipVerify ||
+		strings.Contains(c.httpURL, "localhost") ||
+		strings.Contains(c.httpURL, "127.0.0.1")
+
 	dialer := websocket.Dialer{
 		HandshakeTimeout: ConnectTimeout,
+		TLSClientConfig:  &tls.Config{InsecureSkipVerify: insecure},
 	}
 
 	conn, _, err := dialer.Dial(c.wsURL, http.Header{})
@@ -87,34 +97,25 @@ func (c *StreamClient) Connect() error {
 }
 
 // SendConfig sends the audio configuration and identity to the server.
-// This is the WebSocket handshake that includes device_id and auth credentials.
-// User identity is determined server-side from auth_token.
 func (c *StreamClient) SendConfig(sampleRate int) error {
 	if c.conn == nil {
 		return fmt.Errorf("not connected")
 	}
 
-	// Set write deadline
 	c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
 
-	// Handshake payload with device and auth (v1.5)
 	config := map[string]interface{}{
 		"sample_rate": sampleRate,
 		"client":      "go_vortex_v1.5",
 		"device_id":   c.identity.DeviceID,
 	}
 
-	// Add auth token if present (v1.5 Multi-User)
 	if c.identity.AuthToken != "" {
 		config["auth_token"] = c.identity.AuthToken
 	}
-
-	// Add API key if present (BYOK)
 	if c.identity.ApiKey != "" {
 		config["api_key"] = c.identity.ApiKey
 	}
-
-	// Add other config fields (Client as Source of Truth)
 	if c.identity.KeyCode != 0 {
 		config["keycode"] = c.identity.KeyCode
 	}
@@ -134,7 +135,6 @@ func (c *StreamClient) SendConfig(sampleRate int) error {
 }
 
 // StreamAudio reads from the audio channel and sends chunks to the server.
-// This should be run in a goroutine. It returns when the channel is closed.
 func (c *StreamClient) StreamAudio(audioChan <-chan []byte) error {
 	if c.conn == nil {
 		return fmt.Errorf("not connected")
@@ -150,18 +150,13 @@ func (c *StreamClient) StreamAudio(audioChan <-chan []byte) error {
 		chunkCount++
 		totalBytes += len(chunk)
 
-		// Set write deadline for each chunk
 		c.conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
 
 		if err := c.conn.WriteMessage(websocket.BinaryMessage, chunk); err != nil {
-			fmt.Printf("[Stream] Failed at chunk %d (%d total bytes): %v\n", chunkCount, totalBytes, err)
+			fmt.Printf("[Stream] Failed at chunk %d: %v\n", chunkCount, err)
 			return fmt.Errorf("failed to send audio chunk: %w", err)
 		}
 
-		// Adaptive logging frequency to avoid spam:
-		// - First 500 chunks: log every 100
-		// - 500-2000 chunks: log every 500
-		// - 2000+ chunks: log every 1000
 		logInterval := 100
 		if chunkCount > 2000 {
 			logInterval = 1000
@@ -190,13 +185,11 @@ func (c *StreamClient) SendEOF() error {
 }
 
 // ReceiveResult waits for and returns the transcription result.
-// It handles heartbeat/processing status messages and waits for final result.
 func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 	if c.conn == nil {
 		return nil, fmt.Errorf("not connected")
 	}
 
-	// Set initial read deadline (long timeout for Groq processing)
 	c.conn.SetReadDeadline(time.Now().Add(ReadTimeout))
 
 	var lastResult *TranscriptionResult
@@ -205,20 +198,17 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 	for {
 		_, message, err := c.conn.ReadMessage()
 		if err != nil {
-			// Check if we have a result to return despite connection close
 			if lastResult != nil && lastResult.Text != "" {
 				if gotHeartbeat {
-					fmt.Println() // Newline after dots
+					fmt.Println()
 				}
 				return lastResult, nil
 			}
 
-			// Check for normal close (server sent result and closed)
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				if gotHeartbeat {
 					fmt.Println()
 				}
-				// Normal close but no result - might have been processed on server
 				return &TranscriptionResult{Text: "", ID: ""}, nil
 			}
 
@@ -230,22 +220,17 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 			return nil, fmt.Errorf("failed to parse result: %w", err)
 		}
 
-		// Handle heartbeat/processing status messages
 		if result.Status == "processing" {
-			// Print dot to show activity
 			fmt.Print(".")
 			gotHeartbeat = true
-			// Reset read deadline on each heartbeat
 			c.conn.SetReadDeadline(time.Now().Add(ReadTimeout))
 			continue
 		}
 
-		// Got actual result - save it
 		if result.Text != "" || result.ID != "" {
 			lastResult = &result
 		}
 
-		// Check for error
 		if result.Error != "" {
 			if gotHeartbeat {
 				fmt.Println()
@@ -253,7 +238,6 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 			return nil, fmt.Errorf("server error: %s", result.Error)
 		}
 
-		// Got final result
 		if result.Text != "" {
 			if gotHeartbeat {
 				fmt.Println()
@@ -266,7 +250,6 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 // Close closes the WebSocket connection.
 func (c *StreamClient) Close() {
 	if c.conn != nil {
-		// Send close message gracefully
 		c.conn.WriteControl(
 			websocket.CloseMessage,
 			websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""),
@@ -287,21 +270,25 @@ type Client struct {
 
 // NewClient creates a new HTTP API client.
 func NewClient(baseURL string) *Client {
+	// Intelligent SSL handling for HTTP too
+	insecure := strings.Contains(baseURL, "localhost") || strings.Contains(baseURL, "127.0.0.1")
+
 	return &Client{
 		baseURL: baseURL,
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: insecure},
+			},
 		},
 	}
 }
 
 // Transcribe sends audio bytes to the server via HTTP POST (legacy).
 func (c *Client) Transcribe(audioData []byte) (string, error) {
-	// Create multipart form
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	// Add audio file
 	part, err := writer.CreateFormFile("file", "recording.wav")
 	if err != nil {
 		return "", fmt.Errorf("failed to create form file: %w", err)
@@ -315,7 +302,6 @@ func (c *Client) Transcribe(audioData []byte) (string, error) {
 		return "", fmt.Errorf("failed to close writer: %w", err)
 	}
 
-	// Create request
 	reqURL := fmt.Sprintf("%s/transcribe", c.baseURL)
 	req, err := http.NewRequest("POST", reqURL, body)
 	if err != nil {
@@ -324,14 +310,12 @@ func (c *Client) Transcribe(audioData []byte) (string, error) {
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	// Send request
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Read response
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response: %w", err)
@@ -494,8 +478,15 @@ func (c *ControlPlaneClient) ConnectWithRetry() {
 func (c *ControlPlaneClient) connect() error {
 	fmt.Printf("[Control] Connecting to %s...\n", c.wsURL)
 
+	// Intelligent SSL handling
+	// Note: We use c.wsURL to check for localhost, but it might be wss://localhost
+	insecure := c.identity.InsecureSkipVerify ||
+		strings.Contains(c.wsURL, "localhost") ||
+		strings.Contains(c.wsURL, "127.0.0.1")
+
 	dialer := websocket.Dialer{
 		HandshakeTimeout: ConnectTimeout,
+		TLSClientConfig:  &tls.Config{InsecureSkipVerify: insecure},
 	}
 
 	conn, _, err := dialer.Dial(c.wsURL, http.Header{})

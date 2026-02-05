@@ -4,7 +4,7 @@
 // via WebSocket to the Python backend for real-time transcription.
 //
 // Configuration:
-//   - Reads from voice_config.json in the same directory as executable
+//   - Reads from config.json in the same directory as executable
 //   - Config changes are applied in real-time without restart
 //
 // Platform Notes:
@@ -70,13 +70,14 @@ type App struct {
 	controlPlane  *network.ControlPlaneClient
 
 	// Current config values (may change via hot-reload)
-	serverURL string
-	deviceID  string
-	authToken string // v1.5 Multi-User authentication
-	apiKey    string // v1.5 BYOK (Bring Your Own Key)
-	language  string // Config persistence
-	pipeline  string // Config persistence
-	keyCode   int    // Config persistence
+	serverURL          string
+	deviceID           string
+	authToken          string // v1.5 Multi-User authentication
+	apiKey             string // v1.5 BYOK (Bring Your Own Key)
+	language           string // Config persistence
+	pipeline           string // Config persistence
+	keyCode            int    // Config persistence
+	insecureSkipVerify bool   // Config persistence
 
 	mu sync.RWMutex
 }
@@ -97,12 +98,13 @@ func (a *App) getIdentity() network.Identity {
 	a.mu.RLock()
 	defer a.mu.RUnlock()
 	return network.Identity{
-		DeviceID:  a.deviceID,
-		AuthToken: a.authToken,
-		ApiKey:    a.apiKey,
-		Language:  a.language,
-		Pipeline:  a.pipeline,
-		KeyCode:   a.keyCode,
+		DeviceID:           a.deviceID,
+		AuthToken:          a.authToken,
+		ApiKey:             a.apiKey,
+		Language:           a.language,
+		Pipeline:           a.pipeline,
+		KeyCode:            a.keyCode,
+		InsecureSkipVerify: a.insecureSkipVerify,
 	}
 }
 
@@ -164,17 +166,18 @@ func main() {
 	}
 
 	app := &App{
-		recorder:      recorder,
-		clipboardMgr:  clipboardMgr,
-		hotkeyHandler: hotkeyHandler,
-		configMgr:     configMgr,
-		serverURL:     cfg.ServerURL,
-		deviceID:      cfg.DeviceID,
-		authToken:     cfg.AuthToken,
-		apiKey:        cfg.ApiKey,
-		language:      cfg.Language,
-		pipeline:      cfg.Pipeline,
-		keyCode:       cfg.KeyCode,
+		recorder:           recorder,
+		clipboardMgr:       clipboardMgr,
+		hotkeyHandler:      hotkeyHandler,
+		configMgr:          configMgr,
+		serverURL:          cfg.ServerURL,
+		deviceID:           cfg.DeviceID,
+		authToken:          cfg.AuthToken,
+		apiKey:             cfg.ApiKey,
+		language:           cfg.Language,
+		pipeline:           cfg.Pipeline,
+		keyCode:            cfg.KeyCode,
+		insecureSkipVerify: cfg.InsecureSkipVerify,
 	}
 
 	// Setup config hot-reload (from local file changes)
@@ -191,6 +194,7 @@ func main() {
 		app.language = newCfg.Language
 		app.pipeline = newCfg.Pipeline
 		app.keyCode = newCfg.KeyCode
+		app.insecureSkipVerify = newCfg.InsecureSkipVerify
 		app.mu.Unlock()
 
 		fmt.Printf("✓ Config reloaded from file\n")
@@ -215,12 +219,13 @@ func main() {
 
 	// Setup Control Plane (real-time server push)
 	controlPlane := network.NewControlPlaneClient(cfg.ServerURL, network.Identity{
-		DeviceID:  cfg.DeviceID,
-		AuthToken: cfg.AuthToken,
-		ApiKey:    cfg.ApiKey,
-		Language:  cfg.Language,
-		Pipeline:  cfg.Pipeline,
-		KeyCode:   cfg.KeyCode,
+		DeviceID:           cfg.DeviceID,
+		AuthToken:          cfg.AuthToken,
+		ApiKey:             cfg.ApiKey,
+		Language:           cfg.Language,
+		Pipeline:           cfg.Pipeline,
+		KeyCode:            cfg.KeyCode,
+		InsecureSkipVerify: cfg.InsecureSkipVerify,
 	})
 	app.controlPlane = controlPlane
 
@@ -231,7 +236,7 @@ func main() {
 
 		if update.KeyCode != nil {
 			hotkeyHandler.SetTriggerKey(*update.KeyCode)
-			// Persist to cache (voice_config.json)
+			// Persist to cache (config.json)
 			if err := configMgr.SetKeyCode(*update.KeyCode); err != nil {
 				fmt.Printf("⚠️  Failed to save config: %v\n", err)
 			}

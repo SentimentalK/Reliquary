@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # Backend - FastAPI Python Service
+  # ==========================================================================
+  backend:
+    build:
+      context: ./Vortex
+      dockerfile: Dockerfile
+    container_name: vortex-backend
+    restart: unless-stopped
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - DEFAULT_PIPELINE=${DEFAULT_PIPELINE:-raw}
+      - ADMIN_INVITE_CODE=${ADMIN_INVITE_CODE:-vortex-admin-2026}
+      - USER_INVITE_CODE=${USER_INVITE_CODE:-vortex-user-2026}
+      - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
+      - STORAGE_ROOT=/app/data
+    volumes:
+      # Mount local Vortex/data directory for persistent storage
+      - ./Vortex/data:/app/data
+    expose:
+      - "8080"
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - vortex-network
+
+  # ==========================================================================
+  # Frontend - Nginx + Static React Files (HTTPS)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ./web_ui
+      dockerfile: Dockerfile
+    container_name: vortex-frontend
+    restart: unless-stopped
+    ports:
+      # HTTP (redirects to HTTPS)
+      - "${FRONTEND_PORT:-80}:80"
+      # HTTPS
+      - "${FRONTEND_HTTPS_PORT:-443}:443"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "--no-check-certificate", "https://localhost:443/" ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - vortex-network
+
+# ==========================================================================
+# Networks
+# ==========================================================================
+networks:
+  vortex-network:
+    driver: bridge

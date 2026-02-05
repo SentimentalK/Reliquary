@@ -5,3 +5,5 @@
 __pycache__
 *.jsonl
 */node_modules
+client/config.json
+client/vortex
