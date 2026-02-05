@@ -67,8 +67,8 @@ def get_device_config(device_id: str) -> Dict[str, Any]:
     """Get stored config for a device, or return defaults."""
     if device_id not in _device_configs:
         _device_configs[device_id] = {
-            "keycode": 61,  # Default: Right Option on macOS
-            "language": "zh",
+            "keycode": 60,  # Default: Right Shift on macOS
+            "language": "", # Default: Auto-detect
         }
     return _device_configs[device_id]
 
