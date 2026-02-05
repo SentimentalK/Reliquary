@@ -86,9 +86,9 @@ async def process_audio_buffer(
     api_key: str = None,  # BYOK: Bring Your Own Key
     user_info: object = None,  # UserInfo for proper storage path
     pipeline_name: str = "raw",
-) -> tuple[str, str]:
+) -> tuple[str, str, str | None]:
     """
-    Process the audio buffer and return (transcription, interaction_id).
+    Process the audio buffer and return (transcription, interaction_id, error).
     
     Args:
         pcm_buffer: Raw PCM audio data
@@ -102,7 +102,7 @@ async def process_audio_buffer(
         pipeline_name: Pipeline identifier (default: "raw")
     
     Returns:
-        Tuple of (transcription_text, interaction_id)
+        Tuple of (transcription_text, interaction_id, error_message)
     """
     storage = get_storage_service()
     settings = get_settings()
@@ -110,7 +110,7 @@ async def process_audio_buffer(
     
     if len(pcm_buffer) < 100:
         print(f"[WebSocket] Audio too short ({len(pcm_buffer)} bytes), skipping")
-        return "", ""
+        return "", "", None
     
     print(f"[WebSocket] Processing audio: {len(pcm_buffer)} bytes, trigger={trigger}, pipeline={pipeline_name}")
     
@@ -122,12 +122,14 @@ async def process_audio_buffer(
         print(f"[WebSocket] Invalid pipeline '{pipeline_name}', falling back to default")
         pipe = manager.get_pipeline(settings.default_pipeline)
     
+    error_msg = None
     try:
         # Pass api_key for BYOK support
         transcription = await pipe.transcribe(wav_data, filename="stream.wav", api_key=api_key)
     except Exception as e:
         print(f"[WebSocket] Transcription failed: {e}")
         transcription = f"[Transcription Error: {str(e)}]"
+        error_msg = str(e)
     
     end_time = time.time()
     latency_ms = int((end_time - start_time) * 1000)
@@ -146,7 +148,7 @@ async def process_audio_buffer(
     )
     
     print(f"[WebSocket] Transcription complete ({trigger}): {transcription[:50]}...")
-    return transcription, interaction_id
+    return transcription, interaction_id, error_msg
 
 
 @router.websocket("/ws/audio")
@@ -288,7 +290,7 @@ async def websocket_audio_stream(websocket: WebSocket):
                 heartbeat_task = asyncio.create_task(send_heartbeat())
             
             try:
-                transcription, interaction_id = await process_audio_buffer(
+                transcription, interaction_id, error = await process_audio_buffer(
                     pcm_buffer=pcm_buffer,
                     sample_rate=sample_rate,
                     user_id=current_user_id,
@@ -309,12 +311,20 @@ async def websocket_audio_stream(websocket: WebSocket):
                         pass
             
             # Send result if client still connected
-            if client_connected and transcription:
+            if client_connected:
                 try:
-                    await websocket.send_json({
-                        "text": transcription,
-                        "id": interaction_id,
-                    })
+                    if error:
+                        # Send error allows client to play error sound
+                        await websocket.send_json({
+                            "error": error,
+                            "id": interaction_id,
+                        })
+                    elif transcription:
+                        await websocket.send_json({
+                            "text": transcription,
+                            "id": interaction_id,
+                        })
+                    
                     # Small delay to ensure client receives before close
                     await asyncio.sleep(0.1)
                 except Exception:

@@ -184,6 +184,9 @@ export function DeviceConfigSheet() {
                                         <p className="text-sm text-muted-foreground">
                                             当前: <span className="font-medium">{getKeyName(keycode)}</span> (code: {keycode})
                                         </p>
+                                        <p className="text-xs text-amber-500 mt-1">
+                                            注意：仅支持单键触发（如 Right Shift, F9）。部分按键可能被系统或输入法拦截。
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -203,6 +206,7 @@ export function DeviceConfigSheet() {
                                             onChange={(e) => setLanguage(e.target.value)}
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
+                                            <option value="">自动检测 (Auto)</option>
                                             <option value="zh">中文 (Chinese)</option>
                                             <option value="en">英语 (English)</option>
                                             <option value="ja">日语 (Japanese)</option>

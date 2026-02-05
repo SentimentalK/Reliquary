@@ -440,6 +440,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					// Check if recording was too short (accidental tap)
 					if recordingDuration < minRecordingDuration {
 						fmt.Printf("⚠️  Recording too short (%.1fs < 1s), skipped\n", recordingDuration.Seconds())
+						sound.PlayError()
 						streamClient.Close()
 						state = StateIdle
 						continue

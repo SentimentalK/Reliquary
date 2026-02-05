@@ -64,23 +64,23 @@ export function getRelativeTime(dateStr: string): string {
  * Common key code mappings for display
  */
 export const KEY_CODE_NAMES: Record<number, string> = {
-    // macOS key codes
-    61: 'Right Option',
-    58: 'Left Option',
-    60: 'Right Shift',
-    56: 'Left Shift',
-    59: 'Left Control',
-    62: 'Right Control',
-    55: 'Left Command',
-    54: 'Right Command',
-    49: 'Space',
-    // Windows virtual key codes
-    0xa0: 'Left Shift',
-    0xa1: 'Right Shift',
-    0xa2: 'Left Ctrl',
-    0xa3: 'Right Ctrl',
-    0xa4: 'Left Alt',
-    0xa5: 'Right Alt',
+    // macOS key codes - Modifiers
+    61: 'Right Option', 58: 'Left Option',
+    60: 'Right Shift', 56: 'Left Shift',
+    59: 'Left Control', 62: 'Right Control',
+    55: 'Left Command', 54: 'Right Command',
+    57: 'Caps Lock', 49: 'Space',
+    36: 'Return', 48: 'Tab', 51: 'Delete', 53: 'Esc',
+    // Function Keys
+    122: 'F1', 120: 'F2', 99: 'F3', 118: 'F4', 96: 'F5', 97: 'F6',
+    98: 'F7', 100: 'F8', 101: 'F9', 109: 'F10', 103: 'F11', 111: 'F12',
+    // Arrows
+    123: 'Left', 124: 'Right', 125: 'Down', 126: 'Up',
+    // Windows virtual key codes (Common)
+    160: 'Left Shift', 161: 'Right Shift',
+    162: 'Left Ctrl', 163: 'Right Ctrl',
+    164: 'Left Alt', 165: 'Right Alt',
+    // We avoid mapping standard typing keys (A-Z) to prevent confusion
 }
 
 export function getKeyName(code: number): string {
