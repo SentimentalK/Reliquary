@@ -12,7 +12,6 @@ package hotkey
 #include <stdio.h>
 
 // Forward declaration for Go callback
-// Now receives: eventType (0=down, 1=up), keyCode (the actual key)
 extern void goKeyEventCallback(int eventType, int keyCode);
 
 // Static variables
@@ -20,32 +19,36 @@ static CFMachPortRef hotkeyEventTap = NULL;
 static CFRunLoopSourceRef hotkeyRunLoopSource = NULL;
 static int hotkeyLastState = 0;
 static int hotkeyTargetKeyCode = 61; // Default: Right Option
-static int hotkeyListeningMode = 0;  // When 1, report all modifier key presses
+static int hotkeyListeningMode = 0;  // When 1, report next key press
 
 // Update key code at runtime
 static void hotkeyUpdateKeyCode(int keyCode) {
     printf("[Hotkey] Updating key code: %d -> %d\n", hotkeyTargetKeyCode, keyCode);
     hotkeyTargetKeyCode = keyCode;
-    hotkeyLastState = 0; // Reset state to avoid stuck key
+    hotkeyLastState = 0;
 }
 
-// Enable/disable listening mode (for key learning)
+// Enable/disable listening mode
 static void hotkeySetListeningMode(int enabled) {
     printf("[Hotkey] Listening mode: %s\n", enabled ? "ON" : "OFF");
     hotkeyListeningMode = enabled;
 }
 
-// Check if a modifier key is pressed based on its key code
+// Check if a modifier key is pressed based on flags
 static int isModifierPressed(CGEventFlags flags, int keyCode) {
     switch (keyCode) {
-        case 61: case 58: // Option keys
+        case 61: case 58: // Option
             return (flags & kCGEventFlagMaskAlternate) != 0;
-        case 60: case 56: // Shift keys
+        case 60: case 56: // Shift
             return (flags & kCGEventFlagMaskShift) != 0;
-        case 59: case 62: // Control keys
+        case 59: case 62: // Control
             return (flags & kCGEventFlagMaskControl) != 0;
-        case 55: case 54: // Command keys
+        case 55: case 54: // Command
             return (flags & kCGEventFlagMaskCommand) != 0;
+        case 57: // Caps Lock
+            return (flags & kCGEventFlagMaskAlphaShift) != 0;
+        case 63: // Fn (Function)
+             return (flags & kCGEventFlagMaskSecondaryFn) != 0;
         default:
             return 0;
     }
@@ -60,32 +63,48 @@ static CGEventRef hotkeyEventCallback(CGEventTapProxy proxy, CGEventType type, C
         return event;
     }
 
-    // Get the key code
     CGKeyCode keyCode = (CGKeyCode)CGEventGetIntegerValueField(event, kCGKeyboardEventKeycode);
     CGEventFlags flags = CGEventGetFlags(event);
 
-    // Learning Mode: Report any modifier key press
-    if (hotkeyListeningMode && type == kCGEventFlagsChanged) {
-        // Check if this is a known modifier key being pressed
-        int isPressed = isModifierPressed(flags, keyCode);
-        if (isPressed) {
-            // Report the detected key and auto-disable listening mode
-            hotkeyListeningMode = 0;
-            goKeyEventCallback(2, keyCode);  // eventType 2 = learning mode detection
-            return event;
+    // Determine state change based on event type
+    int isDown = 0;
+    int isUp = 0;
+    int isModifier = 0;
+
+    if (type == kCGEventFlagsChanged) {
+        isModifier = 1;
+        // For modifiers, we have to check the flags to see if it was pressed or released
+        if (isModifierPressed(flags, keyCode)) {
+            isDown = 1;
+        } else {
+            isUp = 1;
         }
+    } else if (type == kCGEventKeyDown) {
+        isDown = 1;
+    } else if (type == kCGEventKeyUp) {
+        isUp = 1;
     }
 
-    // Normal mode: Check if it's our target key
-    if (type == kCGEventFlagsChanged && keyCode == hotkeyTargetKeyCode) {
-        int isPressed = isModifierPressed(flags, keyCode);
+    // LEARNING MODE: Capture any key press
+    if (hotkeyListeningMode) {
+        // We trigger learning on the "Down" event of any key
+        if (isDown) {
+            hotkeyListeningMode = 0;
+            goKeyEventCallback(2, keyCode);
+            return event;
+        }
+        // Don't interfere with other events
+        return event;
+    }
 
-        if (isPressed && !hotkeyLastState) {
+    // NORMAL MODE: Check target key
+    if (keyCode == hotkeyTargetKeyCode) {
+        if (isDown && !hotkeyLastState) {
             hotkeyLastState = 1;
-            goKeyEventCallback(0, keyCode);  // KeyDown
-        } else if (!isPressed && hotkeyLastState) {
+            goKeyEventCallback(0, keyCode); // KeyDown
+        } else if (isUp && hotkeyLastState) {
             hotkeyLastState = 0;
-            goKeyEventCallback(1, keyCode);  // KeyUp
+            goKeyEventCallback(1, keyCode); // KeyUp
         }
     }
 
@@ -98,8 +117,10 @@ static int hotkeyStartEventTap(int keyCode) {
 
     printf("[Hotkey] Starting with key code: %d\n", keyCode);
 
-    // Create event tap for modifier flags changes
-    CGEventMask eventMask = CGEventMaskBit(kCGEventFlagsChanged);
+    // Listen for Modifiers (FlagsChanged) AND Regular Keys (KeyDown/KeyUp)
+    CGEventMask eventMask = CGEventMaskBit(kCGEventFlagsChanged) |
+                            CGEventMaskBit(kCGEventKeyDown) |
+                            CGEventMaskBit(kCGEventKeyUp);
 
     hotkeyEventTap = CGEventTapCreate(
         kCGSessionEventTap,

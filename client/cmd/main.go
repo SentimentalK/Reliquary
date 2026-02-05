@@ -74,6 +74,9 @@ type App struct {
 	deviceID  string
 	authToken string // v1.5 Multi-User authentication
 	apiKey    string // v1.5 BYOK (Bring Your Own Key)
+	language  string // Config persistence
+	pipeline  string // Config persistence
+	keyCode   int    // Config persistence
 
 	mu sync.RWMutex
 }
@@ -97,6 +100,9 @@ func (a *App) getIdentity() network.Identity {
 		DeviceID:  a.deviceID,
 		AuthToken: a.authToken,
 		ApiKey:    a.apiKey,
+		Language:  a.language,
+		Pipeline:  a.pipeline,
+		KeyCode:   a.keyCode,
 	}
 }
 
@@ -134,7 +140,7 @@ func main() {
 	}
 	fmt.Println("╚═══════════════════════════════════════════╝")
 	fmt.Println()
-	
+
 	if isNewUser {
 		fmt.Println("🆕 First-time setup complete! Starting client...")
 		fmt.Println()
@@ -166,6 +172,9 @@ func main() {
 		deviceID:      cfg.DeviceID,
 		authToken:     cfg.AuthToken,
 		apiKey:        cfg.ApiKey,
+		language:      cfg.Language,
+		pipeline:      cfg.Pipeline,
+		keyCode:       cfg.KeyCode,
 	}
 
 	// Setup config hot-reload (from local file changes)
@@ -175,7 +184,31 @@ func main() {
 			hotkey.GetKeyName(newCfg.KeyCode), newCfg.KeyCode)
 
 		app.setServerURL(newCfg.ServerURL)
-		fmt.Printf("✓ Server updated to: %s\n", newCfg.ServerURL)
+
+		app.mu.Lock()
+		app.authToken = newCfg.AuthToken
+		app.apiKey = newCfg.ApiKey
+		app.language = newCfg.Language
+		app.pipeline = newCfg.Pipeline
+		app.keyCode = newCfg.KeyCode
+		app.mu.Unlock()
+
+		fmt.Printf("✓ Config reloaded from file\n")
+
+		// Push update to server (Client -> Server Sync)
+		if app.controlPlane != nil && app.controlPlane.IsConnected() {
+			update := network.ConfigUpdate{
+				KeyCode:   &newCfg.KeyCode,
+				ServerURL: &newCfg.ServerURL,
+				Language:  &newCfg.Language,
+				ApiKey:    &newCfg.ApiKey,
+				Pipeline:  &newCfg.Pipeline,
+			}
+			fmt.Println("[Control] Pushing config update to server...")
+			if err := app.controlPlane.SendConfigUpdate(update); err != nil {
+				fmt.Printf("⚠️  Failed to push config update: %v\n", err)
+			}
+		}
 	})
 	configMgr.StartWatching()
 	defer configMgr.StopWatching()
@@ -185,11 +218,17 @@ func main() {
 		DeviceID:  cfg.DeviceID,
 		AuthToken: cfg.AuthToken,
 		ApiKey:    cfg.ApiKey,
+		Language:  cfg.Language,
+		Pipeline:  cfg.Pipeline,
+		KeyCode:   cfg.KeyCode,
 	})
 	app.controlPlane = controlPlane
 
 	// Handle config updates from server (Config as Cache philosophy)
 	controlPlane.OnConfigUpdate(func(update network.ConfigUpdate) {
+		app.mu.Lock()
+		defer app.mu.Unlock()
+
 		if update.KeyCode != nil {
 			hotkeyHandler.SetTriggerKey(*update.KeyCode)
 			// Persist to cache (voice_config.json)
@@ -200,15 +239,32 @@ func main() {
 				hotkey.GetKeyName(*update.KeyCode), *update.KeyCode)
 		}
 		if update.ServerURL != nil {
-			app.setServerURL(*update.ServerURL)
+			app.serverURL = *update.ServerURL
+			if err := configMgr.Update(nil, update.ServerURL); err != nil {
+				fmt.Printf("⚠️  Failed to save server URL: %v\n", err)
+			}
 			fmt.Printf("✓ [Server] Server URL updated to: %s\n", *update.ServerURL)
 		}
 		if update.ApiKey != nil {
-			// Cache the API key from server
+			app.apiKey = *update.ApiKey
 			if err := configMgr.SetApiKey(*update.ApiKey); err != nil {
 				fmt.Printf("⚠️  Failed to save API key: %v\n", err)
 			}
 			fmt.Println("✓ [Server] API key updated (cached locally)")
+		}
+		if update.Language != nil {
+			app.language = *update.Language
+			if err := configMgr.SetLanguage(*update.Language); err != nil {
+				fmt.Printf("⚠️  Failed to save language: %v\n", err)
+			}
+			fmt.Printf("✓ [Server] Language updated to: %s\n", *update.Language)
+		}
+		if update.Pipeline != nil {
+			app.pipeline = *update.Pipeline
+			if err := configMgr.SetPipeline(*update.Pipeline); err != nil {
+				fmt.Printf("⚠️  Failed to save pipeline: %v\n", err)
+			}
+			fmt.Printf("✓ [Server] Pipeline updated to: %s\n", *update.Pipeline)
 		}
 	})
 
@@ -234,18 +290,18 @@ func main() {
 		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 		fmt.Printf("   Reason: %s\n", reason)
 		fmt.Println()
-		
+
 		// Delete the cache file so user can reconfigure
 		if err := os.Remove(*configPath); err != nil {
 			fmt.Printf("   ⚠️  Could not delete config: %v\n", err)
 		} else {
 			fmt.Printf("   🗑️  Deleted config cache: %s\n", *configPath)
 		}
-		
+
 		fmt.Println()
 		fmt.Println("   Please restart the client to reconfigure.")
 		fmt.Println()
-		
+
 		// Exit the application
 		os.Exit(1)
 	})
@@ -253,7 +309,6 @@ func main() {
 	// Start Control Plane in background with auto-reconnect
 	go controlPlane.ConnectWithRetry()
 	defer controlPlane.Stop()
-
 
 	// Setup context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
@@ -301,7 +356,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 	var audioChan <-chan []byte
 	var streamClient *network.StreamClient
 	var streamDone chan struct{}
-	var streamError error  // Track error from streaming goroutine
+	var streamError error // Track error from streaming goroutine
 	var recordingStartTime time.Time
 
 	// Minimum recording duration to avoid accidental taps (1 second)
@@ -319,7 +374,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					sound.PlayStart()
 					fmt.Println("🎤 Recording... (release key to stop)")
 					recordingStartTime = time.Now()
-					streamError = nil  // Reset error for new session
+					streamError = nil // Reset error for new session
 
 					// Start streaming
 					var err error
@@ -353,7 +408,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					go func() {
 						defer close(streamDone)
 						if err := streamClient.StreamAudio(audioChan); err != nil {
-							streamError = err  // Capture error for main loop
+							streamError = err // Capture error for main loop
 							log.Printf("Stream error: %v", err)
 						}
 					}()

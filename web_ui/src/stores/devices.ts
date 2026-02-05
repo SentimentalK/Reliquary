@@ -3,12 +3,14 @@ import { create } from 'zustand'
 export interface Device {
     device_id: string
     user_id: string
+    display_name?: string
     connected: boolean
     connected_at?: string
     keycode?: number
     language?: string
     server_url?: string
     api_key?: string
+    pipeline?: string
 }
 
 interface DevicesState {

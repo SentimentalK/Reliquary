@@ -28,6 +28,9 @@ type Identity struct {
 	DeviceID  string
 	AuthToken string // sk-vortex-xxx format (v1.5 Multi-User)
 	ApiKey    string // Optional BYOK for Groq API
+	Language  string // Config persistence
+	Pipeline  string // Config persistence
+	KeyCode   int    // Config persistence
 }
 
 // StreamClient handles WebSocket streaming to the transcription server.
@@ -111,6 +114,17 @@ func (c *StreamClient) SendConfig(sampleRate int) error {
 		config["api_key"] = c.identity.ApiKey
 	}
 
+	// Add other config fields (Client as Source of Truth)
+	if c.identity.KeyCode != 0 {
+		config["keycode"] = c.identity.KeyCode
+	}
+	if c.identity.Language != "" {
+		config["language"] = c.identity.Language
+	}
+	if c.identity.Pipeline != "" {
+		config["pipeline"] = c.identity.Pipeline
+	}
+
 	data, err := json.Marshal(config)
 	if err != nil {
 		return fmt.Errorf("failed to marshal config: %w", err)
@@ -184,7 +198,7 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 
 	// Set initial read deadline (long timeout for Groq processing)
 	c.conn.SetReadDeadline(time.Now().Add(ReadTimeout))
-	
+
 	var lastResult *TranscriptionResult
 	gotHeartbeat := false
 
@@ -198,7 +212,7 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 				}
 				return lastResult, nil
 			}
-			
+
 			// Check for normal close (server sent result and closed)
 			if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
 				if gotHeartbeat {
@@ -207,7 +221,7 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 				// Normal close but no result - might have been processed on server
 				return &TranscriptionResult{Text: "", ID: ""}, nil
 			}
-			
+
 			return nil, fmt.Errorf("failed to receive result: %w", err)
 		}
 
@@ -225,12 +239,12 @@ func (c *StreamClient) ReceiveResult() (*TranscriptionResult, error) {
 			c.conn.SetReadDeadline(time.Now().Add(ReadTimeout))
 			continue
 		}
-		
+
 		// Got actual result - save it
 		if result.Text != "" || result.ID != "" {
 			lastResult = &result
 		}
-		
+
 		// Check for error
 		if result.Error != "" {
 			if gotHeartbeat {
@@ -350,6 +364,7 @@ type ConfigUpdate struct {
 	ServerURL *string `json:"server_url,omitempty"`
 	Language  *string `json:"language,omitempty"`
 	ApiKey    *string `json:"api_key,omitempty"` // BYOK from server
+	Pipeline  *string `json:"pipeline,omitempty"`
 }
 
 // ControlPlaneClient handles the persistent control channel connection.
@@ -359,11 +374,11 @@ type ControlPlaneClient struct {
 	conn     *websocket.Conn
 
 	// Callbacks
-	onConfigUpdate   func(ConfigUpdate)
-	onStartLearning  func()
-	onConnected      func()
-	onDisconnected   func()
-	onAuthFailed     func(reason string) // Called on 401 (no retry)
+	onConfigUpdate  func(ConfigUpdate)
+	onStartLearning func()
+	onConnected     func()
+	onDisconnected  func()
+	onAuthFailed    func(reason string) // Called on 401 (no retry)
 
 	// State
 	connected  bool
@@ -453,7 +468,7 @@ func (c *ControlPlaneClient) ConnectWithRetry() {
 
 			fmt.Printf("[Control] Connection failed: %v (retrying in %v)\n", err, reconnectDelay)
 			time.Sleep(reconnectDelay)
-			
+
 			// Exponential backoff with cap
 			reconnectDelay = reconnectDelay * 2
 			if reconnectDelay > maxDelay {
@@ -490,13 +505,27 @@ func (c *ControlPlaneClient) connect() error {
 
 	// Send handshake with device and auth (v1.5)
 	// User identity is determined server-side from auth_token
-	handshake := map[string]string{
+	handshake := map[string]interface{}{
 		"device_id": c.identity.DeviceID,
 	}
 
 	// Add auth token if present (v1.5 Multi-User)
 	if c.identity.AuthToken != "" {
 		handshake["auth_token"] = c.identity.AuthToken
+	}
+
+	// Add persistent config fields (Client is Source of Truth)
+	if c.identity.ApiKey != "" {
+		handshake["api_key"] = c.identity.ApiKey
+	}
+	if c.identity.Language != "" {
+		handshake["language"] = c.identity.Language
+	}
+	if c.identity.Pipeline != "" {
+		handshake["pipeline"] = c.identity.Pipeline
+	}
+	if c.identity.KeyCode != 0 {
+		handshake["keycode"] = c.identity.KeyCode
 	}
 
 	conn.SetWriteDeadline(time.Now().Add(WriteTimeout))
@@ -507,7 +536,7 @@ func (c *ControlPlaneClient) connect() error {
 
 	c.conn = conn
 	c.connected = true
-	
+
 	authStatus := "unauthenticated"
 	if c.identity.AuthToken != "" {
 		authStatus = "authenticated"
@@ -517,7 +546,6 @@ func (c *ControlPlaneClient) connect() error {
 	if c.onConnected != nil {
 		c.onConnected()
 	}
-
 
 	return nil
 }
@@ -660,6 +688,9 @@ func parseConfigUpdate(payload map[string]interface{}) ConfigUpdate {
 	if v, ok := payload["api_key"].(string); ok {
 		update.ApiKey = &v
 	}
+	if v, ok := payload["pipeline"].(string); ok {
+		update.Pipeline = &v
+	}
 
 	return update
 }
@@ -684,6 +715,33 @@ func (c *ControlPlaneClient) SendKeyDetected(keyCode int) error {
 	return c.sendMessage("key_detected", map[string]interface{}{
 		"code": keyCode,
 	})
+}
+
+// SendConfigUpdate reports local config changes to the server (Client is Source of Truth).
+func (c *ControlPlaneClient) SendConfigUpdate(update ConfigUpdate) error {
+	payload := make(map[string]interface{})
+
+	if update.KeyCode != nil {
+		payload["keycode"] = *update.KeyCode
+	}
+	if update.ServerURL != nil {
+		payload["server_url"] = *update.ServerURL
+	}
+	if update.Language != nil {
+		payload["language"] = *update.Language
+	}
+	if update.ApiKey != nil {
+		payload["api_key"] = *update.ApiKey
+	}
+	if update.Pipeline != nil {
+		payload["pipeline"] = *update.Pipeline
+	}
+
+	if len(payload) == 0 {
+		return nil
+	}
+
+	return c.sendMessage("config_update", payload)
 }
 
 // IsConnected returns whether the control plane is connected.

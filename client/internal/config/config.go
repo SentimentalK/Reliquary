@@ -20,7 +20,11 @@ type Config struct {
 	// Authentication (v1.5 Multi-User)
 	AuthToken string `json:"auth_token,omitempty"` // sk-vortex-xxx format
 	// BYOK: Bring Your Own Key (optional)
+	// BYOK: Bring Your Own Key (optional)
 	ApiKey string `json:"api_key,omitempty"` // User's own Groq API key
+	// Settings
+	Language string `json:"language,omitempty"` // zh, en, etc.
+	Pipeline string `json:"pipeline,omitempty"` // geo_vortex_v1, raw_whisper, etc.
 }
 
 // DefaultConfig returns the default configuration.
@@ -29,8 +33,10 @@ func DefaultConfig() Config {
 		KeyCode:   61, // Right Option on macOS
 		ServerURL: "http://localhost:8080",
 		DeviceID:  getDefaultDeviceID(),
-		AuthToken: "", // Must be set after registration
-		ApiKey:    "", // Optional BYOK
+		AuthToken: "",   // Must be set after registration
+		ApiKey:    "",   // Optional BYOK
+		Language:  "zh", // Default to Chinese
+		Pipeline:  "",   // Empty means use server default
 	}
 }
 
@@ -189,6 +195,22 @@ func (m *Manager) SetAuthToken(token string) error {
 func (m *Manager) SetApiKey(apiKey string) error {
 	m.mu.Lock()
 	m.config.ApiKey = apiKey
+	m.mu.Unlock()
+	return m.Save()
+}
+
+// SetLanguage updates the language setting and saves to disk.
+func (m *Manager) SetLanguage(lang string) error {
+	m.mu.Lock()
+	m.config.Language = lang
+	m.mu.Unlock()
+	return m.Save()
+}
+
+// SetPipeline updates the pipeline setting and saves to disk.
+func (m *Manager) SetPipeline(pipeline string) error {
+	m.mu.Lock()
+	m.config.Pipeline = pipeline
 	m.mu.Unlock()
 	return m.Save()
 }

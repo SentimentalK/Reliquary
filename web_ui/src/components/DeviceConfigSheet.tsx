@@ -15,6 +15,7 @@ export function DeviceConfigSheet() {
 
     const [keycode, setKeycode] = useState(selectedDevice?.keycode ?? 61)
     const [language, setLanguage] = useState(selectedDevice?.language ?? 'zh')
+    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline ?? 'geo_vortex_v1')
     const [apiKey, setApiKey] = useState('')
     const [isLearning, setIsLearning] = useState(false)
 
@@ -23,6 +24,8 @@ export function DeviceConfigSheet() {
         if (selectedDevice) {
             setKeycode(selectedDevice.keycode ?? 61)
             setLanguage(selectedDevice.language ?? 'zh')
+            setPipeline(selectedDevice.pipeline ?? 'geo_vortex_v1')
+            setApiKey('') // Don't show existing API key for security
         }
     }, [selectedDevice])
 
@@ -30,9 +33,10 @@ export function DeviceConfigSheet() {
     const pushConfigMutation = useMutation({
         mutationFn: async () => {
             if (!selectedDevice) return
-            const config: { keycode: number; language: string; api_key?: string } = {
+            const config: { keycode: number; language: string; api_key?: string; pipeline?: string } = {
                 keycode,
                 language,
+                pipeline,
             }
             if (apiKey) {
                 config.api_key = apiKey
@@ -41,7 +45,7 @@ export function DeviceConfigSheet() {
         },
         onSuccess: () => {
             if (selectedDevice) {
-                updateDevice(selectedDevice.device_id, { keycode, language })
+                updateDevice(selectedDevice.device_id, { keycode, language, pipeline })
             }
             closeSheet()
         },
@@ -130,10 +134,13 @@ export function DeviceConfigSheet() {
                                     <div className="space-y-1">
                                         <Label className="text-xs text-muted-foreground">连接时间</Label>
                                         <p className="text-sm text-muted-foreground">
-                                            {selectedDevice.connected_at
-                                                ? new Date(selectedDevice.connected_at).toLocaleString('zh-CN')
-                                                : '-'
-                                            }
+                                            {(() => {
+                                                if (!selectedDevice.connected_at) return '-'
+                                                const date = typeof selectedDevice.connected_at === 'number' || !isNaN(Number(selectedDevice.connected_at))
+                                                    ? new Date(Number(selectedDevice.connected_at) * 1000)
+                                                    : new Date(selectedDevice.connected_at)
+                                                return date.toLocaleString('zh-CN')
+                                            })()}
                                         </p>
                                     </div>
                                 </div>
@@ -181,25 +188,39 @@ export function DeviceConfigSheet() {
                                 </div>
                             </div>
 
-                            {/* Language Settings */}
+                            {/* Language & Pipeline Settings */}
                             <div className="rounded-xl border bg-card p-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Globe className="h-5 w-5 text-muted-foreground" />
-                                    <h3 className="font-medium">语言设置</h3>
+                                    <h3 className="font-medium">语言与模型设置</h3>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="language">识别语言</Label>
-                                    <select
-                                        id="language"
-                                        value={language}
-                                        onChange={(e) => setLanguage(e.target.value)}
-                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    >
-                                        <option value="zh">中文</option>
-                                        <option value="en">English</option>
-                                        <option value="ja">日本語</option>
-                                        <option value="ko">한국어</option>
-                                    </select>
+                                <div className="grid gap-6 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="language">识别语言</Label>
+                                        <select
+                                            id="language"
+                                            value={language}
+                                            onChange={(e) => setLanguage(e.target.value)}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        >
+                                            <option value="zh">中文 (Chinese)</option>
+                                            <option value="en">英语 (English)</option>
+                                            <option value="ja">日语 (Japanese)</option>
+                                            <option value="ko">韩语 (Korean)</option>
+                                        </select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="pipeline">处理管道 (Pipeline)</Label>
+                                        <select
+                                            id="pipeline"
+                                            value={pipeline}
+                                            onChange={(e) => setPipeline(e.target.value)}
+                                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                        >
+                                            <option value="geo_vortex_v1">Geo Vortex (Standard)</option>
+                                            <option value="raw_whisper">Raw Whisper (Debug)</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 

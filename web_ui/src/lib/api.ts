@@ -75,6 +75,7 @@ export const authApi = {
 export interface DeviceInfo {
     device_id: string
     user_id: string
+    display_name?: string
     connected_at: string
 }
 
@@ -97,7 +98,7 @@ export const devicesApi = {
 
     pushConfig: async (
         deviceId: string,
-        config: { keycode?: number; server_url?: string; language?: string; api_key?: string }
+        config: { keycode?: number; server_url?: string; language?: string; api_key?: string; pipeline?: string }
     ): Promise<void> => {
         await api.post(`/devices/${deviceId}/config`, config)
     },

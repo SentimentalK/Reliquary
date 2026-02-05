@@ -85,6 +85,7 @@ async def process_audio_buffer(
     trigger: str = "eof",
     api_key: str = None,  # BYOK: Bring Your Own Key
     user_info: object = None,  # UserInfo for proper storage path
+    pipeline_name: str = "raw",
 ) -> tuple[str, str]:
     """
     Process the audio buffer and return (transcription, interaction_id).
@@ -98,6 +99,7 @@ async def process_audio_buffer(
         trigger: What triggered processing ("eof", "disconnect", "size_limit")
         api_key: Optional API key override (BYOK)
         user_info: UserInfo object for proper storage path
+        pipeline_name: Pipeline identifier (default: "raw")
     
     Returns:
         Tuple of (transcription_text, interaction_id)
@@ -110,10 +112,15 @@ async def process_audio_buffer(
         print(f"[WebSocket] Audio too short ({len(pcm_buffer)} bytes), skipping")
         return "", ""
     
-    print(f"[WebSocket] Processing audio: {len(pcm_buffer)} bytes, trigger={trigger}")
+    print(f"[WebSocket] Processing audio: {len(pcm_buffer)} bytes, trigger={trigger}, pipeline={pipeline_name}")
     
     wav_data = pcm_to_wav(bytes(pcm_buffer), sample_rate)
-    pipe = manager.get_pipeline(settings.default_pipeline)
+    
+    try:
+        pipe = manager.get_pipeline(pipeline_name)
+    except ValueError:
+        print(f"[WebSocket] Invalid pipeline '{pipeline_name}', falling back to default")
+        pipe = manager.get_pipeline(settings.default_pipeline)
     
     try:
         # Pass api_key for BYOK support
@@ -197,6 +204,7 @@ async def websocket_audio_stream(websocket: WebSocket):
         # Auth and BYOK support
         auth_token = config.get("auth_token")  # Optional authentication
         api_key = config.get("api_key")  # Bring Your Own Key (BYOK)
+        pipeline_name = config.get("pipeline") or settings.default_pipeline
         
         # Authentication - user_id comes ONLY from verified auth_token
         user_info = None
@@ -225,9 +233,9 @@ async def websocket_audio_stream(websocket: WebSocket):
             current_user_id = "guest"
         
         # Store BYOK api_key for later use (will be passed to pipeline)
-        session_api_key = api_key or settings.groq_api_key
+        session_api_key = api_key
         
-        print(f"[WebSocket] Config received: user={current_user_id}, device={current_device_id}, byok={bool(api_key)}")
+        print(f"[WebSocket] Config received: user={current_user_id}, device={current_device_id}, pipeline={pipeline_name}, byok={bool(api_key)}")
         start_time = time.time()
         
         # Step 2: Receive PCM chunks until EOF, disconnect, or size limit
@@ -289,6 +297,7 @@ async def websocket_audio_stream(websocket: WebSocket):
                     trigger=trigger,
                     api_key=session_api_key,
                     user_info=user_info,
+                    pipeline_name=pipeline_name,
                 )
             finally:
                 # Stop heartbeat but DON'T set client_connected=False yet
@@ -329,6 +338,7 @@ async def websocket_audio_stream(websocket: WebSocket):
                 trigger="disconnect",
                 api_key=session_api_key,
                 user_info=user_info,
+                pipeline_name=pipeline_name,
             )
     except json.JSONDecodeError:
         try:
@@ -348,6 +358,7 @@ async def websocket_audio_stream(websocket: WebSocket):
                 trigger="error",
                 api_key=session_api_key,
                 user_info=user_info,
+                pipeline_name=pipeline_name,
             )
         try:
             await websocket.send_json({"error": str(e), "text": "", "id": ""})

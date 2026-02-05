@@ -186,9 +186,16 @@ class ConnectionManager:
         conn = self._connections.get(device_id)
         if conn is None:
             return None
+        
+        # Determine display name
+        display_name = conn.user_id
+        if conn.user_info:
+            display_name = conn.user_info.display_name
+            
         return {
             "device_id": conn.device_id,
             "user_id": conn.user_id,
+            "display_name": display_name,
             "connected_at": conn.connected_at,
         }
     

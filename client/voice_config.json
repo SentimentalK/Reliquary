@@ -2,5 +2,8 @@
   "keycode": 60,
   "server_url": "http://localhost:8080",
   "device_id": "SentimentalKs-MacBook-Pro",
-  "auth_token": "sk-vortex-6e6b457a3fc7e4108753158f1dfec2f5"
+  "auth_token": "sk-vortex-55df3ae83cabada7bd26ab8041234503",
+  "api_key": "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",
+  "language": "zh",
+  "pipeline": "geo_vortex_v1"
 }

@@ -38,6 +38,8 @@ class ConfigUpdateRequest(BaseModel):
     keycode: int | None = None
     server_url: str | None = None
     language: str | None = None
+    api_key: str | None = None
+    pipeline: str | None = None
     # Add more config fields as needed
 
 
@@ -143,9 +145,9 @@ async def websocket_control_plane(websocket: WebSocket):
                 await websocket.send_json({"error": "Invalid auth_token"})
                 await websocket.close(code=4001, reason="Authentication failed")
                 return
-            # Use authenticated user's display name
-            user_id = user_info.display_name
-            print(f"[Control] Authenticated: {user_info.display_name} (role: {user_info.role})")
+            # Use authenticated user's ID
+            user_id = user_info.id
+            print(f"[Control] Authenticated: {user_info.display_name} (ID: {user_info.id})")
         elif settings.require_auth:
             await websocket.send_json({"error": "auth_token required"})
             await websocket.close(code=4001, reason="Authentication required")
@@ -153,6 +155,17 @@ async def websocket_control_plane(websocket: WebSocket):
         
         # Step 3: Register connection with user info
         await manager.connect(device_id, user_id, websocket, user_info)
+        
+        # Step 3.5: Sync config from Client (Source of Truth)
+        # If client reports specific settings, update server store
+        client_updates = {}
+        for field in ["language", "api_key", "pipeline", "keycode"]:
+            if handshake.get(field) is not None:  # Check for None explicitly to allow 0 or empty strings if valid
+                client_updates[field] = handshake[field]
+        
+        if client_updates:
+            print(f"[Control] Syncing config from client handshake: {client_updates}")
+            update_device_config(device_id, client_updates)
         
         # Step 4: Send acknowledgment with INITIAL CONFIG SYNC
         current_config = get_device_config(device_id)
@@ -288,6 +301,20 @@ async def handle_client_message(
         else:
             print(f"[Control] key_detected missing code field: {data}")
     
+    elif msg_type == "config_update":
+        # Client reporting config change (Source of Truth)
+        payload = data.get("payload", {})
+        print(f"[Control] Received config update from {device_id}: {payload}")
+        
+        # Filter out None values to prevent overwriting with null
+        updates = {k: v for k, v in payload.items() if v is not None}
+        
+        if updates:
+            update_device_config(device_id, updates)
+            
+            # Acknowledge? Not strictly necessary but good for debugging
+            # await websocket.send_json({"type": "ack", "id": data.get("id")})
+
     elif msg_type == "pong":
         # Keepalive response, no action needed
         pass
@@ -438,6 +465,9 @@ async def list_devices(user_id: str | None = None) -> Dict[str, Any]:
     for device_id in device_ids:
         info = manager.get_connection_info(device_id)
         if info:
+            # Merge with stored config
+            config = get_device_config(device_id)
+            info.update(config)
             devices.append(info)
     
     return {"devices": devices, "count": len(devices)}
@@ -453,5 +483,9 @@ async def get_device_status(device_id: str) -> Dict[str, Any]:
     info = manager.get_connection_info(device_id)
     if info is None:
         raise HTTPException(status_code=404, detail=f"Device {device_id} not connected")
+    
+    # Merge with stored config
+    config = get_device_config(device_id)
+    info.update(config)
     
     return {"connected": True, **info}

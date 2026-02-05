@@ -1,8 +1,9 @@
 import { Laptop, Keyboard } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
-import { getKeyName, getRelativeTime } from '@/lib/utils'
+import { getKeyName } from '@/lib/utils'
 import { useDevicesStore, type Device } from '@/stores/devices'
+import { useAuthStore } from '@/stores/auth'
 
 interface DeviceCardProps {
     device: Device
@@ -10,6 +11,7 @@ interface DeviceCardProps {
 
 export function DeviceCard({ device }: DeviceCardProps) {
     const { openSheet } = useDevicesStore()
+    const { user } = useAuthStore()
 
     return (
         <Card
@@ -33,11 +35,11 @@ export function DeviceCard({ device }: DeviceCardProps) {
                         <Laptop className="h-6 w-6" />
                     </div>
                     <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">
+                        <CardTitle className="text-base break-words">
                             {device.device_id}
                         </CardTitle>
-                        <p className="text-sm text-muted-foreground truncate">
-                            {device.user_id}
+                        <p className="text-sm text-muted-foreground break-words">
+                            {(user && user.id === device.user_id ? user.display_name : device.display_name) || device.user_id}
                         </p>
                     </div>
                 </div>
@@ -56,11 +58,20 @@ export function DeviceCard({ device }: DeviceCardProps) {
                         </span>
                     </div>
 
-                    {/* Last seen */}
+                    {/* Connection Time */}
                     {device.connected_at && (
                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">连接时间</span>
-                            <span>{getRelativeTime(device.connected_at)}</span>
+                            <span className="text-muted-foreground">建立连接</span>
+                            <span>
+                                {(() => {
+                                    if (!device.connected_at) return '-'
+                                    // Handle Unix timestamp (seconds) vs ISO string
+                                    const date = typeof device.connected_at === 'number' || !isNaN(Number(device.connected_at))
+                                        ? new Date(Number(device.connected_at) * 1000)
+                                        : new Date(device.connected_at)
+                                    return date.toLocaleString('zh-CN')
+                                })()}
+                            </span>
                         </div>
                     )}
                 </div>

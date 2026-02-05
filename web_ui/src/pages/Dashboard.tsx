@@ -13,7 +13,7 @@ export function Dashboard() {
     // Fetch devices
     const { data, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['devices'],
-        queryFn: devicesApi.list,
+        queryFn: () => devicesApi.list(),
         refetchInterval: 10000, // Refetch every 10 seconds for status updates
     })
 
@@ -21,10 +21,8 @@ export function Dashboard() {
     useEffect(() => {
         if (data?.devices) {
             const enrichedDevices: Device[] = data.devices.map((d) => ({
-                device_id: d.device_id,
-                user_id: d.user_id,
+                ...d, // Spread all fields from API (including keycode, language, etc.)
                 connected: true,
-                connected_at: d.connected_at,
             }))
             setDevices(enrichedDevices)
         }
@@ -53,7 +51,7 @@ export function Dashboard() {
 
             {/* Device Grid */}
             {isLoading ? (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                     {[1, 2, 3].map((i) => (
                         <DeviceCardSkeleton key={i} />
                     ))}
@@ -67,7 +65,7 @@ export function Dashboard() {
                     </p>
                 </div>
             ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
                     {devices.map((device) => (
                         <DeviceCard key={device.device_id} device={device} />
                     ))}
