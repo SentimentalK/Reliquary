@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     server_port: int = 8080
     
     # Storage settings (Multi-User Distributed Storage)
-    storage_root: str = "./data"  # Root path for all logs (can be NAS/Cloud mount)
+    storage_root: str = "../data"  # Root path for all logs (can be NAS/Cloud mount)
     
     # Authentication - Invite Codes
     admin_invite_code: str = "vortex-admin-2026"  # Override via ADMIN_INVITE_CODE env

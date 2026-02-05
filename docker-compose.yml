@@ -18,8 +18,8 @@ services:
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
       - STORAGE_ROOT=/app/data
     volumes:
-      # Mount local server/data directory for persistent storage
-      - ./server/data:/app/data
+      # Mount local data directory for persistent storage
+      - ./data:/app/data
     expose:
       - "8080"
     healthcheck:
