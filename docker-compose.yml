@@ -6,7 +6,7 @@ services:
   # ==========================================================================
   backend:
     build:
-      context: ./Vortex
+      context: ./server
       dockerfile: Dockerfile
     container_name: vortex-backend
     restart: unless-stopped
@@ -18,8 +18,8 @@ services:
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
       - STORAGE_ROOT=/app/data
     volumes:
-      # Mount local Vortex/data directory for persistent storage
-      - ./Vortex/data:/app/data
+      # Mount local server/data directory for persistent storage
+      - ./server/data:/app/data
     expose:
       - "8080"
     healthcheck:
@@ -36,7 +36,7 @@ services:
   # ==========================================================================
   frontend:
     build:
-      context: ./web_ui
+      context: ./web
       dockerfile: Dockerfile
     container_name: vortex-frontend
     restart: unless-stopped

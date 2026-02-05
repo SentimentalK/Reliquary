@@ -6,7 +6,7 @@ __pycache__/
 
 # Build outputs
 dist/
-Vortex/static/
+server/static/
 
 # Environment files (keep .env.example)
 .env
@@ -27,7 +27,7 @@ Thumbs.db
 logs/
 
 # Data (persistent volume in Docker)
-Vortex/data/
+server/data/
 
 # Temporary files
 *.tmp

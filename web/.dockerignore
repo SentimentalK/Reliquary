@@ -1,0 +1,3 @@
+# server Docker Build Artifacts
+web/dist/
+server/static/
