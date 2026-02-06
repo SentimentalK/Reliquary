@@ -8,6 +8,7 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
+    image: ghcr.io/sentimentalk/vortex-backend:latest
     container_name: vortex-backend
     restart: unless-stopped
     environment:
@@ -38,6 +39,7 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+    image: ghcr.io/sentimentalk/vortex-frontend:latest
     container_name: vortex-frontend
     restart: unless-stopped
     ports:
