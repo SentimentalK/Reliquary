@@ -41,15 +41,13 @@ services:
     container_name: vortex-frontend
     restart: unless-stopped
     ports:
-      # HTTP (redirects to HTTPS)
-      - "${FRONTEND_PORT:-80}:80"
-      # HTTPS
-      - "${FRONTEND_HTTPS_PORT:-443}:443"
+      # Internal HTTP Port (for local access or reverse proxy)
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       backend:
         condition: service_healthy
     healthcheck:
-      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "--no-check-certificate", "https://localhost:443/" ]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/" ]
       interval: 30s
       timeout: 3s
       retries: 3
