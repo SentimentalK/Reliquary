@@ -5,17 +5,16 @@ package clipboard
 
 import (
 	"syscall"
-	"unsafe"
 )
 
 var (
-	user32           = syscall.NewLazyDLL("user32.dll")
-	keybd_event      = user32.NewProc("keybd_event")
+	user32      = syscall.NewLazyDLL("user32.dll")
+	keybd_event = user32.NewProc("keybd_event")
 )
 
 const (
-	VK_CONTROL     = 0x11
-	VK_V           = 0x56
+	VK_CONTROL      = 0x11
+	VK_V            = 0x56
 	KEYEVENTF_KEYUP = 0x0002
 )
 
@@ -33,7 +32,7 @@ func (m *Manager) pasteWindows() error {
 	keybd_event.Call(uintptr(VK_V), 0, uintptr(KEYEVENTF_KEYUP), 0)
 	// Release Ctrl
 	keybd_event.Call(uintptr(VK_CONTROL), 0, uintptr(KEYEVENTF_KEYUP), 0)
-	
+
 	return nil
 }
 

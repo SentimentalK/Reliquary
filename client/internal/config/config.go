@@ -139,7 +139,7 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 	// First-time setup
 	fmt.Println("\n🎙️  Welcome to Vortex Voice Client!")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	fmt.Println("Let's set up your configuration.\n")
+	fmt.Println("Let's set up your configuration.")
 
 	// Get server URL
 	fmt.Print("Server URL [http://localhost:8080]: ")
