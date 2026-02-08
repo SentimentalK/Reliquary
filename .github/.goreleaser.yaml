@@ -3,7 +3,8 @@ project_name: reliquary
 
 builds:
   - binary: reliquary
-    main: ./client/cmd
+    dir: client
+    main: ./cmd
     env:
       - CGO_ENABLED=1
     goos:
