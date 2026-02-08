@@ -3,7 +3,6 @@ project_name: reliquary
 
 before:
   hooks:
-  hooks:
     - cmd: go mod tidy
       dir: client
 
