@@ -1,0 +1,105 @@
+name: Build Clients
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Build Binary
+        run: |
+          # Install dependencies for CGO (portaudio/miniaudio usually just needs clang which is present)
+          go mod download
+          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -v -o vortex_mac ./client/cmd
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vortex-macos
+          path: vortex_mac
+
+  build-windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Build Binary
+        run: |
+          go mod download
+          # Windows runner usually has gcc via MinGW or similar
+          $env:CGO_ENABLED="1"
+          $env:GOOS="windows"
+          $env:GOARCH="amd64"
+          go build -v -o vortex_win.exe ./client/cmd
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vortex-windows
+          path: vortex_win.exe
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          
+      - name: Install Gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          gomobile init
+          
+      - name: Setup Android NDK
+        # We use a specific version that Gomobile / Build script expects
+        uses: android-actions/setup-android@v3
+        with:
+          log-accepted-android-sdk-licenses: true
+          
+      - name: Install NDK
+        run: |
+          # Install specific NDK version used in script
+          sdkmanager --install "ndk;27.0.12077973"
+          
+      - name: Build APK
+        env:
+          ANDROID_NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
+        run: |
+          chmod +x client/build_android.sh
+          # Run from root as script expects
+          ./client/build_android.sh
+          
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vortex-android
+          path: client/android/app/build/outputs/apk/debug/app-debug.apk

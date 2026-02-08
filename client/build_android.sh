@@ -2,8 +2,8 @@
 set -e
 
 # Set Android Home / NDK
-export ANDROID_HOME=$HOME/Library/Android/sdk
-export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.0.12077973
+export ANDROID_HOME=${ANDROID_HOME:-$HOME/Library/Android/sdk}
+export ANDROID_NDK_HOME=${ANDROID_NDK_HOME:-$ANDROID_HOME/ndk/27.0.12077973}
 
 # Build the Android Bindings (Go -> AAR)
 echo "📦 Building Go bindings..."
