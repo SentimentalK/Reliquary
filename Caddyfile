@@ -1,0 +1,10 @@
+example.com {
+
+    encode gzip
+
+    reverse_proxy reliquary-frontend:3000
+
+    handle /api/* {
+        reverse_proxy reliquary-backend:8080
+    }
+}

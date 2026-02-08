@@ -5,6 +5,23 @@
 version: '3.8'
 
 services:
+  gateway:
+    image: caddy:alpine
+    container_name: reliquary-gateway
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - reliquary-network
+
   backend:
     image: ghcr.io/sentimentalk/reliquary-backend:latest
     container_name: reliquary-backend
@@ -18,8 +35,6 @@ services:
       - STORAGE_ROOT=/app/data
     volumes:
       - ./data:/app/data
-    expose:
-      - "8080"
     healthcheck:
       test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" ]
       interval: 30s
@@ -33,8 +48,6 @@ services:
     image: ghcr.io/sentimentalk/reliquary-frontend:latest
     container_name: reliquary-frontend
     restart: unless-stopped
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
       backend:
         condition: service_healthy
@@ -46,6 +59,11 @@ services:
       start_period: 5s
     networks:
       - reliquary-network
+
+volumes:
+  caddy_data:
+  caddy_config:
+
 
 networks:
   reliquary-network:
