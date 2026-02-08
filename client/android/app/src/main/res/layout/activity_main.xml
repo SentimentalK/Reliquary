@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:gravity="center"
+    android:background="#121212">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Vortex Voice"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="48dp"/>
+
+    <Button
+        android:id="@+id/btn_grant_permission"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1. Grant Microphone Permission"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btn_enable_ime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="2. Enable Keyboard"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp"/>
+    
+    <Button
+        android:id="@+id/btn_switch_ime"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="3. Switch to Vortex"
+        android:padding="16dp"/>
+
+    <TextView
+        android:id="@+id/tv_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Status: Waiting for setup..."
+        android:textColor="#AAAAAA"
+        android:layout_marginTop="32dp"/>
+
+</LinearLayout>

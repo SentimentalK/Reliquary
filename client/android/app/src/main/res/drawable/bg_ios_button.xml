@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="#E0E0E0"> <!-- 按下时的水波纹颜色 -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FFFFFF" />
+            <corners android:radius="14dp" /> <!-- iOS 风格圆角 -->
+        </shape>
+    </item>
+</ripple>

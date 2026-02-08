@@ -5,6 +5,21 @@
 __pycache__
 *.jsonl
 */node_modules
-client/config*.json
-client/vortex*
+
 data/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Android
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+client/android/.gradle
+client/android/build
+client/android/app/libs
+client/android/app/build
+client/android/app/src/main/assets/
