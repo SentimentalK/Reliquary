@@ -1,11 +1,6 @@
 version: 2
 project_name: reliquary
 
-before:
-  hooks:
-    - cmd: go mod tidy
-      dir: client
-
 builds:
   - binary: reliquary
     main: ./client/cmd
