@@ -1,0 +1,72 @@
+# .goreleaser.yaml
+version: 2
+project_name: reliquary
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: reliquary
+    main: ./client/cmd
+    env:
+      - CGO_ENABLED=1
+    goos:
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    # 针对 Windows 改名加 .exe，Mac 保持原样
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - format: tar.gz
+    # 这个名字决定了下载下来的包名叫什么
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "386" }}i386{{ else }}{{ .Arch }}{{ end }}
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+# --- 🍺 Homebrew 配置 (抢注生效) ---
+brews:
+  - repository:
+      owner: SentimentalK
+      name: homebrew-tap # 指向你刚建的仓库
+      token: "{{ .Env.GH_PAT }}" # 使用我们配的 Token
+    
+    # 这里的名字决定了用户 brew install [name] 敲什么
+    name: reliquary
+    
+    homepage: "https://github.com/SentimentalK/Reliquary"
+    description: "Your digital asset guardian."
+    license: "Private" 
+
+# --- 🍨 Scoop 配置 (抢注生效) ---
+scoops:
+  - repository:
+      owner: SentimentalK
+      name: scoop-bucket # 指向你刚建的仓库
+      token: "{{ .Env.GH_PAT }}"
+    
+    name: reliquary
+    homepage: "https://github.com/SentimentalK/Reliquary"
+    description: "Your digital asset guardian."
+    license: "Private"
