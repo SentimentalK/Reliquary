@@ -1,4 +1,4 @@
-package com.vortex.voice
+package com.reliquary.voice
 
 import android.Manifest
 import android.content.Intent

@@ -18,16 +18,16 @@ async def lifespan(app: FastAPI):
     # Startup
     from app.services.auth import init_db
     init_db()
-    print("[Vortex] Server started (Multi-User Mode)")
+    print("[Reliquary] Server started (Multi-User Mode)")
     
     yield
     
     # Shutdown
-    print("[Vortex] Server shutting down")
+    print("[Reliquary] Server shutting down")
 
 
 app = FastAPI(
-    title="Vortex API",
+    title="Reliquary API",
     description="Multi-User Voice Transcription Service with Zero-Trust Architecture",
     version="1.0.0",
     lifespan=lifespan,

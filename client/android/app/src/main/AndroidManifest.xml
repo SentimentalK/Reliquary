@@ -11,17 +11,17 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@drawable/ic_launcher"
-        android:label="Vortex Voice"
+        android:label="Reliquary Voice"
         android:roundIcon="@drawable/ic_launcher"
         android:supportsRtl="true"
-        android:theme="@style/Theme.VortexVoice"
+        android:theme="@style/Theme.ReliquaryVoice"
         tools:targetApi="31">
         
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="Vortex Setup"
-            android:theme="@style/Theme.VortexVoice">
+            android:label="Reliquary Setup"
+            android:theme="@style/Theme.ReliquaryVoice">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -29,8 +29,8 @@
         </activity>
 
         <service
-            android:name=".VortexIMEService"
-            android:label="Vortex Voice"
+            android:name=".ReliquaryIMEService"
+            android:label="Reliquary Voice"
             android:permission="android.permission.BIND_INPUT_METHOD"
             android:exported="true">
             <intent-filter>

@@ -97,7 +97,7 @@ def hash_secret(secret: str) -> str:
     Hash a secret using SHA256.
     
     Args:
-        secret: Plain text secret (e.g., "sk-vortex-abc123...")
+        secret: Plain text secret (e.g., "sk-reliquary-abc123...")
     
     Returns:
         Hex-encoded SHA256 hash
@@ -109,13 +109,13 @@ def generate_secret() -> str:
     """
     Generate a new master secret.
     
-    Format: sk-vortex-{32 random hex chars}
+    Format: sk-reliquary-{32 random hex chars}
     
     Returns:
         Plain text secret (only shown once)
     """
     random_part = secrets.token_hex(16)  # 32 hex characters
-    return f"sk-vortex-{random_part}"
+    return f"sk-reliquary-{random_part}"
 
 
 def get_short_hash(secret_hash: str, length: int = 6) -> str:
@@ -142,8 +142,8 @@ def register_user(display_name: str, invite_code: str) -> Optional[str]:
     settings = get_settings()
     
     # Verify invite code
-    admin_code = getattr(settings, 'admin_invite_code', None) or os.environ.get('ADMIN_INVITE_CODE', 'vortex-admin-2026')
-    user_code = getattr(settings, 'user_invite_code', None) or os.environ.get('USER_INVITE_CODE', 'vortex-user-2026')
+    admin_code = getattr(settings, 'admin_invite_code', None) or os.environ.get('ADMIN_INVITE_CODE', 'reliquary-admin-2026')
+    user_code = getattr(settings, 'user_invite_code', None) or os.environ.get('USER_INVITE_CODE', 'reliquary-user-2026')
     
     if invite_code == admin_code:
         role = "admin"
@@ -196,7 +196,7 @@ def verify_token(token: str) -> Optional[UserInfo]:
     Returns:
         UserInfo if valid, None if invalid
     """
-    if not token or not token.startswith("sk-vortex-"):
+    if not token or not token.startswith("sk-reliquary-"):
         return None
     
     token_hash = hash_secret(token)
@@ -288,14 +288,14 @@ from fastapi import Depends, Header, HTTPException, status
 
 async def get_current_user(
     authorization: Optional[str] = Header(None, alias="Authorization"),
-    x_vortex_token: Optional[str] = Header(None, alias="X-Vortex-Token"),
+    x_reliquary_token: Optional[str] = Header(None, alias="X-Reliquary-Token"),
 ) -> UserInfo:
     """
     FastAPI dependency to authenticate requests.
     
     Accepts token via:
-    - Authorization: Bearer sk-vortex-...
-    - X-Vortex-Token: sk-vortex-...
+    - Authorization: Bearer sk-reliquary-...
+    - X-Reliquary-Token: sk-reliquary-...
     
     Raises:
         HTTPException: 401 if not authenticated
@@ -306,9 +306,9 @@ async def get_current_user(
     if authorization and authorization.startswith("Bearer "):
         token = authorization[7:]  # Remove "Bearer " prefix
     
-    # Fallback to X-Vortex-Token header
-    if not token and x_vortex_token:
-        token = x_vortex_token
+    # Fallback to X-Reliquary-Token header
+    if not token and x_reliquary_token:
+        token = x_reliquary_token
     
     if not token:
         raise HTTPException(
@@ -343,15 +343,15 @@ async def get_admin_user(
 # Optional auth - returns None if not authenticated
 async def get_optional_user(
     authorization: Optional[str] = Header(None, alias="Authorization"),
-    x_vortex_token: Optional[str] = Header(None, alias="X-Vortex-Token"),
+    x_reliquary_token: Optional[str] = Header(None, alias="X-Reliquary-Token"),
 ) -> Optional[UserInfo]:
     """Optional authentication - returns None if not authenticated."""
     token = None
     
     if authorization and authorization.startswith("Bearer "):
         token = authorization[7:]
-    elif x_vortex_token:
-        token = x_vortex_token
+    elif x_reliquary_token:
+        token = x_reliquary_token
     
     if not token:
         return None

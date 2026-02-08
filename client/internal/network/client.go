@@ -27,7 +27,7 @@ const (
 // User identity is determined server-side from auth_token.
 type Identity struct {
 	DeviceID           string
-	AuthToken          string // sk-vortex-xxx format (v1.5 Multi-User)
+	AuthToken          string // sk-reliquary-xxx format (v1.5 Multi-User)
 	ApiKey             string // Optional BYOK for Groq API
 	Language           string // Config persistence
 	Pipeline           string // Config persistence
@@ -106,7 +106,7 @@ func (c *StreamClient) SendConfig(sampleRate int) error {
 
 	config := map[string]interface{}{
 		"sample_rate": sampleRate,
-		"client":      "go_vortex_v1.5",
+		"client":      "go_reliquary_v1.5",
 		"device_id":   c.identity.DeviceID,
 	}
 

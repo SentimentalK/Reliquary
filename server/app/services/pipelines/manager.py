@@ -11,7 +11,7 @@ from app.services.pipelines.raw_whisper import RawWhisperPipeline
 PIPELINE_REGISTRY: Dict[str, Type[BasePipeline]] = {
     "raw": RawWhisperPipeline,
     "raw_whisper": RawWhisperPipeline,
-    "geo_vortex_v1": RawWhisperPipeline, # TODO: Implement actual specialized pipeline
+    "geo_reliquary_v1": RawWhisperPipeline, # TODO: Implement actual specialized pipeline
     # Future pipelines can be added here:
     # "hotword": HotWordCorrectionPipeline,
     # "summarize": SummarizationPipeline,

@@ -35,7 +35,7 @@ export function Dashboard() {
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">设备管理</h1>
                     <p className="text-muted-foreground">
-                        管理已连接的 Vortex 客户端
+                        管理已连接的 Reliquary 客户端
                     </p>
                 </div>
                 <Button
@@ -61,7 +61,7 @@ export function Dashboard() {
                     <Monitor className="h-12 w-12 text-muted-foreground/50" />
                     <h3 className="mt-4 text-lg font-semibold">暂无设备</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        启动 Vortex 客户端后，设备会自动出现在这里
+                        启动 Reliquary 客户端后，设备会自动出现在这里
                     </p>
                 </div>
             ) : (

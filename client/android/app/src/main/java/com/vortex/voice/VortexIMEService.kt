@@ -1,4 +1,4 @@
-package com.vortex.voice
+package com.reliquary.voice
 
 import android.Manifest
 import android.content.Context
@@ -19,12 +19,12 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 // Gomobile binding classes
 import mobile.Mobile
-import mobile.Vortex
+import mobile.Reliquary
 import mobile.MobileCallback
 
-class VortexIMEService : InputMethodService(), MobileCallback {
+class ReliquaryIMEService : InputMethodService(), MobileCallback {
 
-    private var vortexClient: Vortex? = null
+    private var reliquaryClient: Reliquary? = null
     private var isRecording = false
     private var audioRecord: AudioRecord? = null
     private var recordingThread: Thread? = null
@@ -48,25 +48,25 @@ class VortexIMEService : InputMethodService(), MobileCallback {
         try {
             // Initialize Go Client
             // Loading config from hardcoded strings for now (TODO: Load from Settings Activity)
-            vortexClient = Mobile.newVortex(
+            reliquaryClient = Mobile.newReliquary(
                 "https://voice.sentimentalk.com",
                 "android_mobile_client", 
-                "sk-vortex-f2527a71f69620a1e2a560697dc5bb33",
+                "sk-reliquary-f2527a71f69620a1e2a560697dc5bb33",
                 "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",
                 this
             )
-            android.util.Log.d("VortexIME", "Go Client Initialized")
+            android.util.Log.d("ReliquaryIME", "Go Client Initialized")
         } catch (e: Throwable) {
             e.printStackTrace()
             Handler(Looper.getMainLooper()).post {
-                Toast.makeText(this, "Vortex Core Load Failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Reliquary Core Load Failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
     }
 
     override fun onCreateInputView(): View {
         // Fix: Use ContextThemeWrapper to apply App Theme (Material) to the IME context
-        val contextThemeWrapper = android.view.ContextThemeWrapper(this, R.style.Theme_VortexVoice)
+        val contextThemeWrapper = android.view.ContextThemeWrapper(this, R.style.Theme_ReliquaryVoice)
         val view = android.view.LayoutInflater.from(contextThemeWrapper).inflate(R.layout.ime_voice_bar, null)
         
         // Bind Icon for Visual Status
@@ -149,11 +149,11 @@ class VortexIMEService : InputMethodService(), MobileCallback {
             // Start Go Engine Session (Must be on background thread)
             Thread {
                 try {
-                    android.util.Log.d("VortexIME", "Starting Vortex Client...")
-                    vortexClient?.start()
-                    android.util.Log.d("VortexIME", "Vortex Client Started")
+                    android.util.Log.d("ReliquaryIME", "Starting Reliquary Client...")
+                    reliquaryClient?.start()
+                    android.util.Log.d("ReliquaryIME", "Reliquary Client Started")
                 } catch (e: Exception) {
-                    android.util.Log.e("VortexIME", "Start Failed Exception", e)
+                    android.util.Log.e("ReliquaryIME", "Start Failed Exception", e)
                     e.printStackTrace()
                     onError("Start Failed: ${e.message}")
                 }
@@ -162,15 +162,15 @@ class VortexIMEService : InputMethodService(), MobileCallback {
             // Start Reading Thread
             recordingThread = Thread {
                 val buffer = ByteArray(MIN_BUFFER_SIZE) // Read small chunks
-                android.util.Log.d("VortexIME", "Starting Audio Loop")
+                android.util.Log.d("ReliquaryIME", "Starting Audio Loop")
                 while (isRecording) {
                     val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
                     if (read > 0) {
                         // Pass data to Go
                         try {
-                            vortexClient?.writeAudio(buffer.sliceArray(0 until read))
+                            reliquaryClient?.writeAudio(buffer.sliceArray(0 until read))
                         } catch (e: Exception) {
-                            android.util.Log.e("VortexIME", "Write Audio Failed", e)
+                            android.util.Log.e("ReliquaryIME", "Write Audio Failed", e)
                             e.printStackTrace()
                         }
                     }
@@ -200,7 +200,7 @@ class VortexIMEService : InputMethodService(), MobileCallback {
 
         // Stop Go Engine (triggers processing)
         try {
-            vortexClient?.stop()
+            reliquaryClient?.stop()
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -230,7 +230,7 @@ class VortexIMEService : InputMethodService(), MobileCallback {
     // --- MobileCallback Implementation (Called from Go) ---
 
     override fun onText(text: String) {
-        android.util.Log.d("VortexIME", "onText: $text")
+        android.util.Log.d("ReliquaryIME", "onText: $text")
         Handler(Looper.getMainLooper()).post {
             val ic = currentInputConnection
             ic?.commitText(text, 1)
@@ -244,7 +244,7 @@ class VortexIMEService : InputMethodService(), MobileCallback {
     }
 
     override fun onError(err: String) {
-        android.util.Log.e("VortexIME", "onError: $err")
+        android.util.Log.e("ReliquaryIME", "onError: $err")
         Handler(Looper.getMainLooper()).post {
             Toast.makeText(this, err, Toast.LENGTH_SHORT).show()
             updateStatus("Error")
@@ -266,7 +266,7 @@ class VortexIMEService : InputMethodService(), MobileCallback {
     }
 
     override fun onStatus(status: String) {
-        android.util.Log.d("VortexIME", "onStatus: $status")
+        android.util.Log.d("ReliquaryIME", "onStatus: $status")
          Handler(Looper.getMainLooper()).post {
             // Engine sends detailed status, map to visual states
              if (status == "Ready") {

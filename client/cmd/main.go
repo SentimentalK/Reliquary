@@ -129,7 +129,7 @@ func main() {
 	}
 
 	fmt.Println("╔═══════════════════════════════════════════╗")
-	fmt.Println("║      Vortex Voice Client v1.5.0           ║")
+	fmt.Println("║      Reliquary Voice Client v1.5.0           ║")
 	fmt.Println("║        (Multi-User + BYOK)                ║")
 	fmt.Println("╠═══════════════════════════════════════════╣")
 	fmt.Printf("║  Hotkey: %-33s║\n", fmt.Sprintf("%s (code %d)", keyName, cfg.KeyCode))

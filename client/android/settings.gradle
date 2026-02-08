@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "VortexVoice"
+rootProject.name = "ReliquaryVoice"
 include ':app'

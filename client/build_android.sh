@@ -8,9 +8,9 @@ export ANDROID_NDK_HOME=${ANDROID_NDK_HOME:-$ANDROID_HOME/ndk/27.0.12077973}
 # Build the Android Bindings (Go -> AAR)
 echo "📦 Building Go bindings..."
 mkdir -p android/app/libs
-gomobile bind -target=android -androidapi 24 -ldflags='-extldflags "-Wl,-z,max-page-size=16384"' -o android/app/libs/vortex.aar ./mobile
+gomobile bind -target=android -androidapi 24 -ldflags='-extldflags "-Wl,-z,max-page-size=16384"' -o android/app/libs/reliquary.aar ./mobile
 
-echo "✅ AAR generated at client/android/app/libs/vortex.aar"
+echo "✅ AAR generated at client/android/app/libs/reliquary.aar"
 
 # Build the Android APK
 cd android

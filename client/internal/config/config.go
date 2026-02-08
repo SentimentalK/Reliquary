@@ -21,13 +21,13 @@ type Config struct {
 
 	DeviceID string `json:"device_id"`
 	// Authentication (v1.5 Multi-User)
-	AuthToken string `json:"auth_token,omitempty"` // sk-vortex-xxx format
+	AuthToken string `json:"auth_token,omitempty"` // sk-reliquary-xxx format
 	// BYOK: Bring Your Own Key (optional)
 	// BYOK: Bring Your Own Key (optional)
 	ApiKey string `json:"api_key,omitempty"` // User's own Groq API key
 	// Settings
 	Language string `json:"language,omitempty"` // zh, en, etc.
-	Pipeline string `json:"pipeline,omitempty"` // geo_vortex_v1, raw_whisper, etc.
+	Pipeline string `json:"pipeline,omitempty"` // geo_reliquary_v1, raw_whisper, etc.
 }
 
 // DefaultConfig returns the default configuration.
@@ -137,7 +137,7 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 	}
 
 	// First-time setup
-	fmt.Println("\n🎙️  Welcome to Vortex Voice Client!")
+	fmt.Println("\n🎙️  Welcome to Reliquary Voice Client!")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	fmt.Println("Let's set up your configuration.")
 
@@ -151,9 +151,9 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 
 	// Get auth token
 	fmt.Println("\nTo get your auth token:")
-	fmt.Println("  1. Open the Vortex web UI")
+	fmt.Println("  1. Open the Reliquary web UI")
 	fmt.Println("  2. Register with your invite code")
-	fmt.Println("  3. Copy your master secret (sk-vortex-xxx)")
+	fmt.Println("  3. Copy your master secret (sk-reliquary-xxx)")
 	fmt.Println()
 	fmt.Print("Auth Token (or press Enter to skip): ")
 	var authToken string

@@ -47,7 +47,7 @@ export function Layout({ children }: LayoutProps) {
                 {/* Logo */}
                 <div className="flex h-16 items-center gap-2 border-b px-4">
                     <AudioWaveform className="h-8 w-8 text-primary" />
-                    <span className="hidden text-xl font-bold md:block">Vortex</span>
+                    <span className="hidden text-xl font-bold md:block">Reliquary</span>
                 </div>
 
                 {/* Navigation */}

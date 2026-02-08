@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Vortex Voice"
+        android:text="Reliquary Voice"
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="#FFFFFF"
@@ -36,7 +36,7 @@
         android:id="@+id/btn_switch_ime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="3. Switch to Vortex"
+        android:text="3. Switch to Reliquary"
         android:padding="16dp"/>
 
     <TextView

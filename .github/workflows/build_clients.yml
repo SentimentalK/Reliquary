@@ -25,13 +25,13 @@ jobs:
         run: |
           # Install dependencies for CGO (portaudio/miniaudio usually just needs clang which is present)
           go mod download
-          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -v -o ../vortex_mac ./cmd
+          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -v -o ../reliquary_mac ./cmd
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vortex-macos
-          path: vortex_mac
+          name: reliquary-macos
+          path: reliquary_mac
 
   build-windows:
     name: Build Windows
@@ -53,13 +53,13 @@ jobs:
           $env:CGO_ENABLED="1"
           $env:GOOS="windows"
           $env:GOARCH="amd64"
-          go build -v -o ../vortex_win.exe ./cmd
+          go build -v -o ../reliquary_win.exe ./cmd
           
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vortex-windows
-          path: vortex_win.exe
+          name: reliquary-windows
+          path: reliquary_win.exe
 
   build-android:
     name: Build Android
@@ -107,5 +107,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vortex-android
+          name: reliquary-android
           path: client/android/app/build/outputs/apk/debug/app-debug.apk

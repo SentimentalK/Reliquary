@@ -80,7 +80,7 @@ export function Login() {
                 <div className="flex flex-col items-center">
                     <div className="flex items-center gap-3">
                         <AudioWaveform className="h-12 w-12 text-primary" />
-                        <span className="text-4xl font-bold">Vortex</span>
+                        <span className="text-4xl font-bold">Reliquary</span>
                     </div>
                     <p className="mt-2 text-muted-foreground">智能语音输入系统</p>
                 </div>
@@ -103,7 +103,7 @@ export function Login() {
                                         <Input
                                             id="token"
                                             type={showToken ? 'text' : 'password'}
-                                            placeholder="sk-vortex-..."
+                                            placeholder="sk-reliquary-..."
                                             value={loginToken}
                                             onChange={(e) => setLoginToken(e.target.value)}
                                             className="pr-10 font-mono"
@@ -258,7 +258,7 @@ export function Login() {
 
                 {/* Footer */}
                 <p className="text-center text-xs text-muted-foreground">
-                    Vortex v1.5 · Multi-User + BYOK
+                    Reliquary v1.5 · Multi-User + BYOK
                 </p>
             </div>
         </div>

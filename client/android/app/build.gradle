@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace 'com.vortex.voice'
+    namespace 'com.reliquary.voice'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.vortex.voice"
+        applicationId "com.reliquary.voice"
         minSdk 26
         targetSdk 34
         versionCode 1
@@ -39,5 +39,5 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     
     // Gomobile binding (manual copy)
-    implementation files('libs/vortex.aar')
+    implementation files('libs/reliquary.aar')
 }

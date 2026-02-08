@@ -1,7 +1,7 @@
-# Vortex
+# Reliquary
 
 <p align="center">
-  <img src="https://via.placeholder.com/150?text=Vortex+Logo" alt="Vortex Logo">
+  <img src="https://via.placeholder.com/150?text=Reliquary+Logo" alt="Reliquary Logo">
 </p>
 
 <p align="center">
@@ -24,14 +24,14 @@
 
 ## Table of Contents
 - [English Version](#-english-version)
-  - [What is Vortex?](#what-is-vortex)
-  - [The Vortex Constitution](#the-vortex-constitution)
+  - [What is Reliquary?](#what-is-reliquary)
+  - [The Reliquary Constitution](#the-reliquary-constitution)
   - [Why AGPL v3?](#why-agpl-v3)
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
 - [中文介绍](#-中文介绍)
-  - [Vortex 是什么？](#vortex-是什么)
-  - [Vortex 技术宪法](#vortex-技术宪法)
+  - [Reliquary 是什么？](#reliquary-是什么)
+  - [Reliquary 技术宪法](#reliquary-技术宪法)
   - [为什么使用 AGPL v3 协议？](#为什么使用-agpl-v3-协议)
 - [Roadmap](#roadmap-路线图)
 - [Contact](#contact--联系作者)
@@ -40,27 +40,27 @@
 
 ## 🇺🇸 English Version
 
-### What is Vortex?
+### What is Reliquary?
 
-Vortex is not just another wrapper around Whisper. It is a philosophy of **Data Sovereignty**.
+Reliquary is not just another wrapper around Whisper. It is a philosophy of **Data Sovereignty**.
 
-In an era where every keystroke and spoken word is harvested by cloud giants, Vortex stands as a **"Dumb Client, Smart Server"** architecture designed to keep your thoughts yours. It turns your voice into a structured, searchable, and locally stored "Pipeline Trace" — instant, context-aware, and strictly private.
+In an era where every keystroke and spoken word is harvested by cloud giants, Reliquary stands as a **"Dumb Client, Smart Server"** architecture designed to keep your thoughts yours. It turns your voice into a structured, searchable, and locally stored "Pipeline Trace" — instant, context-aware, and strictly private.
 
-### The Vortex Constitution (Core Philosophy)
+### The Reliquary Constitution (Core Philosophy)
 
 > [!IMPORTANT]
-> These are the core principles that guide the development of Vortex.
+> These are the core principles that guide the development of Reliquary.
 
 1.  **Speed is Feature #1**: From keypress to text on screen, latency must be imperceptible.
 2.  **Dumb Client, Smart Server**: The client is just a sensor (Mic + Hooks). The Server is the Brain (LLM + Storage).
 3.  **Data Sovereignty**: Your logs are your assets. Files are the database (`.jsonl`).
-4.  **Context Awareness**: No blind transcription. Vortex knows if you are coding in Python or writing a French diary, and adjusts the hotwords accordingly.
+4.  **Context Awareness**: No blind transcription. Reliquary knows if you are coding in Python or writing a French diary, and adjusts the hotwords accordingly.
 
 ### Why AGPL v3?
 
-Vortex is open source, but it is not open for exploitation.
+Reliquary is open source, but it is not open for exploitation.
 
-We believe that the tools defining human-AI interaction should be transparent. If you use Vortex code to build a service, you must share your improvements with the community. **We strictly prohibit closed-source SaaS wrappers of this project.**
+We believe that the tools defining human-AI interaction should be transparent. If you use Reliquary code to build a service, you must share your improvements with the community. **We strictly prohibit closed-source SaaS wrappers of this project.**
 
 ---
 
@@ -88,16 +88,16 @@ sequenceDiagram
 
 ## 🇨🇳 中文介绍
 
-### Vortex 是什么？
+### Reliquary 是什么？
 
-Vortex 不仅仅是一个语音转文字工具，它是对抗 AI 数据霸权的一次尝试。
+Reliquary 不仅仅是一个语音转文字工具，它是对抗 AI 数据霸权的一次尝试。
 
-在这个所有数据都被云端巨头收割的时代，Vortex 采用 **“哑终端，智中枢”** 架构，旨在将人类思维瞬时转化为数字行动，同时确保你的数据主权。它将你的语音转化为结构化、可搜索、本地存储的“全链路日志”——不仅速度极快，而且具备语境感知能力。
+在这个所有数据都被云端巨头收割的时代，Reliquary 采用 **“哑终端，智中枢”** 架构，旨在将人类思维瞬时转化为数字行动，同时确保你的数据主权。它将你的语音转化为结构化、可搜索、本地存储的“全链路日志”——不仅速度极快，而且具备语境感知能力。
 
-### Vortex 技术宪法 (The Constitution)
+### Reliquary 技术宪法 (The Constitution)
 
 > [!TIP]
-> 这是我们在开发 Vortex 时恪守的绝对原则：
+> 这是我们在开发 Reliquary 时恪守的绝对原则：
 
 *   **速度即正义 (Speed is Feature #1)**: 从按下按键到文字上屏必须是瞬时的。
 *   **哑终端，智中枢 (Dumb Client, Smart Server)**: 客户端只是传感器（麦克风+键盘钩子）。服务端才是大脑（LLM + 存储 + 路由）。
@@ -106,9 +106,9 @@ Vortex 不仅仅是一个语音转文字工具，它是对抗 AI 数据霸权的
 
 ### 为什么使用 AGPL v3 协议？
 
-Vortex 是开源的，但这不代表允许被白嫖和滥用。
+Reliquary 是开源的，但这不代表允许被白嫖和滥用。
 
-我们坚信定义人机交互的工具必须是透明的。任何基于 Vortex 代码构建的服务（即使通过网络分发），都必须向社区开源其源代码。**我们严厉禁止任何形式的闭源套壳商业行为。**
+我们坚信定义人机交互的工具必须是透明的。任何基于 Reliquary 代码构建的服务（即使通过网络分发），都必须向社区开源其源代码。**我们严厉禁止任何形式的闭源套壳商业行为。**
 
 ---
 

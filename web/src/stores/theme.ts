@@ -15,7 +15,7 @@ export const useThemeStore = create<ThemeState>()(
             setTheme: (theme) => set({ theme }),
         }),
         {
-            name: 'vortex-theme',
+            name: 'reliquary-theme',
         }
     )
 )

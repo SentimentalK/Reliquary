@@ -12,14 +12,14 @@ type MobileCallback interface {
 	OnStatus(status string)
 }
 
-// Vortex is the facade for the Android client.
-type Vortex struct {
+// Reliquary is the facade for the Android client.
+type Reliquary struct {
 	engine   *engine.Engine
 	callback MobileCallback
 }
 
-// NewVortex creates a new Vortex instance.
-func NewVortex(serverURL, deviceID, authToken, apiKey string, callback MobileCallback) *Vortex {
+// NewReliquary creates a new Reliquary instance.
+func NewReliquary(serverURL, deviceID, authToken, apiKey string, callback MobileCallback) *Reliquary {
 	// Default config for Android
 	cfg := engine.Config{
 		ServerURL:          serverURL,
@@ -33,25 +33,25 @@ func NewVortex(serverURL, deviceID, authToken, apiKey string, callback MobileCal
 	// Adapter to map engine.ResultHandler to MobileCallback
 	handler := &mobileAdapter{cb: callback}
 
-	return &Vortex{
+	return &Reliquary{
 		engine:   engine.NewEngine(cfg, handler),
 		callback: callback,
 	}
 }
 
 // Start begins a recording session.
-func (v *Vortex) Start() error {
+func (v *Reliquary) Start() error {
 	return v.engine.StartRecording()
 }
 
 // WriteAudio accepts raw PCM data from Android AudioRecord.
 // data: 16-bit PCM mono samples.
-func (v *Vortex) WriteAudio(data []byte) error {
+func (v *Reliquary) WriteAudio(data []byte) error {
 	return v.engine.WriteAudio(data)
 }
 
 // Stop ends the recording session and triggers processing.
-func (v *Vortex) Stop() {
+func (v *Reliquary) Stop() {
 	v.engine.StopRecording()
 }
 

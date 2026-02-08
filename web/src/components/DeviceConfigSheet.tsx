@@ -15,7 +15,7 @@ export function DeviceConfigSheet() {
 
     const [keycode, setKeycode] = useState(selectedDevice?.keycode ?? 61)
     const [language, setLanguage] = useState(selectedDevice?.language ?? 'zh')
-    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline ?? 'geo_vortex_v1')
+    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline ?? 'geo_reliquary_v1')
     const [apiKey, setApiKey] = useState('')
     const [isLearning, setIsLearning] = useState(false)
 
@@ -24,7 +24,7 @@ export function DeviceConfigSheet() {
         if (selectedDevice) {
             setKeycode(selectedDevice.keycode ?? 61)
             setLanguage(selectedDevice.language ?? 'zh')
-            setPipeline(selectedDevice.pipeline ?? 'geo_vortex_v1')
+            setPipeline(selectedDevice.pipeline ?? 'geo_reliquary_v1')
             setApiKey('') // Don't show existing API key for security
         }
     }, [selectedDevice])
@@ -221,7 +221,7 @@ export function DeviceConfigSheet() {
                                             onChange={(e) => setPipeline(e.target.value)}
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
-                                            <option value="geo_vortex_v1">Geo Vortex (Standard)</option>
+                                            <option value="geo_reliquary_v1">Geo Reliquary (Standard)</option>
                                             <option value="raw_whisper">Raw Whisper (Debug)</option>
                                         </select>
                                     </div>

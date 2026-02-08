@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
                 }),
         }),
         {
-            name: 'vortex-auth',
+            name: 'reliquary-auth',
         }
     )
 )

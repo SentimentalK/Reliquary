@@ -14,7 +14,7 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
     const token = useAuthStore.getState().token
     if (token) {
-        config.headers['X-Vortex-Token'] = token
+        config.headers['X-Reliquary-Token'] = token
     }
     return config
 })
@@ -64,7 +64,7 @@ export const authApi = {
 
     verify: async (token: string): Promise<VerifyResponse> => {
         const { data } = await api.get<VerifyResponse>('/auth/verify', {
-            headers: { 'X-Vortex-Token': token },
+            headers: { 'X-Reliquary-Token': token },
         })
         return data
     },

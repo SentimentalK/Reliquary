@@ -8,14 +8,14 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    image: ghcr.io/sentimentalk/vortex-backend:latest
-    container_name: vortex-backend
+    image: ghcr.io/sentimentalk/reliquary-backend:latest
+    container_name: reliquary-backend
     restart: unless-stopped
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
       - DEFAULT_PIPELINE=${DEFAULT_PIPELINE:-raw}
-      - ADMIN_INVITE_CODE=${ADMIN_INVITE_CODE:-vortex-admin-2026}
-      - USER_INVITE_CODE=${USER_INVITE_CODE:-vortex-user-2026}
+      - ADMIN_INVITE_CODE=${ADMIN_INVITE_CODE:-reliquary-admin-2026}
+      - USER_INVITE_CODE=${USER_INVITE_CODE:-reliquary-user-2026}
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
       - STORAGE_ROOT=/app/data
     volumes:
@@ -30,7 +30,7 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - vortex-network
+      - reliquary-network
 
   # ==========================================================================
   # Frontend - Nginx + Static React Files (HTTPS)
@@ -39,8 +39,8 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-    image: ghcr.io/sentimentalk/vortex-frontend:latest
-    container_name: vortex-frontend
+    image: ghcr.io/sentimentalk/reliquary-frontend:latest
+    container_name: reliquary-frontend
     restart: unless-stopped
     ports:
       # Internal HTTP Port (for local access or reverse proxy)
@@ -55,11 +55,11 @@ services:
       retries: 3
       start_period: 5s
     networks:
-      - vortex-network
+      - reliquary-network
 
 # ==========================================================================
 # Networks
 # ==========================================================================
 networks:
-  vortex-network:
+  reliquary-network:
     driver: bridge

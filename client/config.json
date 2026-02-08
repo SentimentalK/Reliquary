@@ -1,8 +1,0 @@
-{
-  "keycode": 60,
-  "server_url": "https://voice.sentimentalk.com",
-  "device_id": "SentimentalKs-MacBook-Pro",
-  "auth_token": "sk-vortex-f2527a71f69620a1e2a560697dc5bb33",
-  "api_key": "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",
-  "pipeline": "geo_vortex_v1"
-}
