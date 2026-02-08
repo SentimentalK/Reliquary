@@ -1,13 +1,11 @@
+# Production Docker Compose
+# Pull-only - no build context, images from GHCR
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
 version: '3.8'
 
 services:
-  # ==========================================================================
-  # Backend - FastAPI Python Service
-  # ==========================================================================
   backend:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
     image: ghcr.io/sentimentalk/reliquary-backend:latest
     container_name: reliquary-backend
     restart: unless-stopped
@@ -31,13 +29,7 @@ services:
     networks:
       - reliquary-network
 
-  # ==========================================================================
-  # Frontend - Nginx + Static React Files (HTTPS)
-  # ==========================================================================
   frontend:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
     image: ghcr.io/sentimentalk/reliquary-frontend:latest
     container_name: reliquary-frontend
     restart: unless-stopped
@@ -55,9 +47,6 @@ services:
     networks:
       - reliquary-network
 
-# ==========================================================================
-# Networks
-# ==========================================================================
 networks:
   reliquary-network:
     driver: bridge
