@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Calendar, MessageSquare, Clock, ChevronDown, ChevronRight } from 'lucide-react'
+import { format } from 'date-fns'
+import { MessageSquare, Clock, ChevronDown, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DatePicker } from '@/components/ui/date-picker'
 import { logsApi, type LogEntry } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
 
@@ -112,16 +114,16 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
 
 
 export function History() {
-    const [selectedDate, setSelectedDate] = useState(() => {
-        const today = new Date()
-        return today.toISOString().split('T')[0]
-    })
+    const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+
+    // Format date for API call
+    const dateString = format(selectedDate, 'yyyy-MM-dd')
 
     // Fetch logs for selected date
     const { data, isLoading, error } = useQuery({
-        queryKey: ['logs', selectedDate],
-        queryFn: () => logsApi.getByDate(selectedDate),
+        queryKey: ['logs', dateString],
+        queryFn: () => logsApi.getByDate(dateString),
         enabled: !!selectedDate,
     })
 
@@ -137,13 +139,6 @@ export function History() {
         })
     }
 
-    // Generate date options (last 7 days)
-    const dateOptions = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - i)
-        return date.toISOString().split('T')[0]
-    })
-
     return (
         <div className="space-y-6">
             {/* Header */}
@@ -155,21 +150,12 @@ export function History() {
                     </p>
                 </div>
 
-                {/* Date Selector */}
-                <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <select
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
-                        className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-                    >
-                        {dateOptions.map((date) => (
-                            <option key={date} value={date}>
-                                {date === dateOptions[0] ? '今天' : date}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {/* Date Picker */}
+                <DatePicker
+                    date={selectedDate}
+                    onDateChange={(date) => date && setSelectedDate(date)}
+                    disabledAfter={new Date()}
+                />
             </div>
 
             {/* Log List */}
@@ -193,7 +179,7 @@ export function History() {
                         </div>
                     ) : !data?.entries?.length ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {selectedDate} 暂无记录
+                            {dateString} 暂无记录
                         </div>
                     ) : (
                         <div>

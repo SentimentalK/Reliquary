@@ -25,3 +25,6 @@ client/android/build
 client/android/app/libs
 client/android/app/build
 client/android/app/src/main/assets/
+
+# Web
+web/dist/
