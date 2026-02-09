@@ -5,17 +5,28 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { logsApi, type LogEntry } from '@/lib/api'
-import { formatTime, formatDuration } from '@/lib/utils'
+import { formatTime } from '@/lib/utils'
 
 function LogEntryItem({ entry, isExpanded, onToggle }: {
     entry: LogEntry
     isExpanded: boolean
     onToggle: () => void
 }) {
-    const finalText = entry.result?.final_text || entry.pipeline_trace?.post_process_fix || '(空)'
-    const rawText = entry.pipeline_trace?.raw_whisper_output
-    const duration = entry.input_context?.audio_meta?.duration_ms
-    const latency = entry.result?.latency_ms
+    // Get all transcription pipeline keys
+    const pipelineKeys = Object.keys(entry.transcription || {})
+
+    // Find the primary text to display (prefer whisper raw, then first available)
+    const primaryKey = pipelineKeys.find(k => k.includes('whisper') && k.includes('raw'))
+        || pipelineKeys.find(k => k.includes('raw'))
+        || pipelineKeys[0]
+    const primaryText = primaryKey ? entry.transcription[primaryKey] : '(空)'
+
+    // Check if there are multiple pipelines
+    const hasMultiplePipelines = pipelineKeys.length > 1
+
+    // Latency stats
+    const totalLatency = entry.latency_stats?.total_ms
+    const asrLatency = entry.latency_stats?.asr_ms
 
     return (
         <div className="border-b last:border-0">
@@ -33,22 +44,23 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
                     <div className="flex items-start gap-2">
                         <MessageSquare className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
                         <p className="text-sm leading-relaxed break-words">
-                            {finalText}
+                            {primaryText}
                         </p>
                     </div>
 
-                    {/* Meta */}
+                    {/* Meta - shown in collapsed view */}
                     <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        {duration && (
+                        {totalLatency && (
                             <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {formatDuration(duration)}
+                                {totalLatency}ms
                             </span>
                         )}
-                        {latency && (
-                            <span>延迟 {latency}ms</span>
+                        {hasMultiplePipelines && (
+                            <span className="text-blue-500">
+                                +{pipelineKeys.length - 1} pipeline
+                            </span>
                         )}
-                        <span className="font-mono">{entry.device_id}</span>
                     </div>
                 </div>
 
@@ -66,19 +78,30 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
             {isExpanded && (
                 <div className="px-4 pb-4 pt-0">
                     <div className="ml-[5.5rem] rounded-lg bg-muted/50 p-4 text-sm space-y-3">
-                        {rawText && rawText !== finalText && (
-                            <div>
-                                <span className="text-muted-foreground">原始识别:</span>
-                                <p className="mt-1 font-mono text-amber-600 dark:text-amber-400">
-                                    {rawText}
+                        {/* Show all pipeline outputs */}
+                        {pipelineKeys.map((key) => (
+                            <div key={key}>
+                                <span className="text-muted-foreground text-xs font-mono">
+                                    {key}:
+                                </span>
+                                <p className={`mt-1 ${key === primaryKey ? '' : 'text-amber-600 dark:text-amber-400'}`}>
+                                    {entry.transcription[key]}
                                 </p>
                             </div>
-                        )}
-                        <div>
-                            <span className="text-muted-foreground">Pipeline Trace:</span>
-                            <pre className="mt-1 text-xs overflow-x-auto">
-                                {JSON.stringify(entry.pipeline_trace, null, 2)}
-                            </pre>
+                        ))}
+
+                        {/* Meta info in gray small text */}
+                        <div className="pt-2 border-t border-border/50 text-xs text-muted-foreground space-y-1">
+                            <div className="flex gap-4">
+                                {totalLatency && <span>总延迟: {totalLatency}ms</span>}
+                                {asrLatency && <span>ASR: {asrLatency}ms</span>}
+                            </div>
+                            {entry.audio_path && (
+                                <div className="font-mono truncate">
+                                    Audio Path: {entry.audio_path}
+                                </div>
+                            )}
+                            <div className="font-mono">ID: {entry.id}</div>
                         </div>
                     </div>
                 </div>
@@ -86,6 +109,7 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
         </div>
     )
 }
+
 
 export function History() {
     const [selectedDate, setSelectedDate] = useState(() => {

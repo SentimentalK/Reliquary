@@ -124,23 +124,16 @@ export const devicesApi = {
 export interface LogEntry {
     id: string
     timestamp: string
-    user_id: string
-    device_id: string
-    input_context?: {
-        client_config?: { lang?: string }
-        audio_meta?: { duration_ms?: number; size_bytes?: number }
+    audio_path?: string
+    // Dynamic transcription keys - pipeline names as keys
+    transcription: Record<string, string>
+    latency_stats?: {
+        total_ms: number
+        asr_ms: number
     }
-    pipeline_trace?: {
-        trigger_source?: string
-        detected_domain?: string
-        raw_whisper_output?: string
-        post_process_fix?: string
-    }
-    result?: {
-        final_text?: string
-        success?: boolean
-        latency_ms?: number
-    }
+    // Legacy fields (for backward compatibility)
+    user_id?: string
+    device_id?: string
 }
 
 export interface LogsResponse {
