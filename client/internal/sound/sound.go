@@ -4,9 +4,26 @@ package sound
 import (
 	"os/exec"
 	"runtime"
+	"time"
 )
 
-// PlayStart plays a sound indicating recording has started.
+// Sound durations (approximate, for delay calculation)
+const (
+	// Pop.aiff duration + buffer to ensure sound finishes before recording
+	popSoundDuration = 300 * time.Millisecond
+)
+
+// PlayStartAndWait plays a sound indicating recording has started,
+// and waits for the sound to finish before returning.
+// This prevents the activation sound from being recorded.
+func PlayStartAndWait() {
+	playPop()
+	// Wait for sound to finish before returning
+	time.Sleep(popSoundDuration)
+}
+
+// PlayStart plays a sound indicating recording has started (async, no wait).
+// Use PlayStartAndWait if you need to avoid recording the sound.
 func PlayStart() {
 	playPop()
 }

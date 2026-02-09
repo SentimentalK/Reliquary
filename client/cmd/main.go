@@ -376,7 +376,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 			switch event {
 			case hotkey.KeyDown:
 				if state == StateIdle {
-					sound.PlayStart()
+					sound.PlayStartAndWait() // Wait for sound to finish before recording
 					fmt.Println("🎤 Recording... (release key to stop)")
 					recordingStartTime = time.Now()
 					streamError = nil // Reset error for new session
@@ -515,7 +515,7 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 			switch event {
 			case hotkey.KeyDown:
 				if state == StateIdle {
-					sound.PlayStart()
+					sound.PlayStartAndWait() // Wait for sound to finish before recording
 					fmt.Println("🎤 Recording... (release key to stop)")
 					recordingStartTime = time.Now()
 					if err := app.recorder.Start(); err != nil {

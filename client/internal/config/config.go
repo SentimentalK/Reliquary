@@ -36,9 +36,9 @@ func DefaultConfig() Config {
 		KeyCode:   60, // Right Shift on macOS
 		ServerURL: "https://localhost:443",
 		DeviceID:  getDefaultDeviceID(),
-		AuthToken: "", // Must be set after registration
-		ApiKey:    "", // Optional BYOK
-		Pipeline:  "", // Empty means use server default
+		AuthToken: "",    // Must be set after registration
+		ApiKey:    "",    // Optional BYOK
+		Pipeline:  "raw", // Default to raw whisper
 	}
 }
 
@@ -162,11 +162,12 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 	// Create config
 	m.mu.Lock()
 	m.config = Config{
-		KeyCode:   61, // Right Option on macOS
+		KeyCode:   60, // Right Shift on macOS
 		ServerURL: serverURL,
 		DeviceID:  getDefaultDeviceID(),
 		AuthToken: authToken,
-		ApiKey:    "", // Can be set via web UI later
+		ApiKey:    "",    // Can be set via web UI later
+		Pipeline:  "raw", // Default to raw whisper
 	}
 	m.mu.Unlock()
 

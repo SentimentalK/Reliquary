@@ -3,6 +3,9 @@
 Supports multi-user distributed storage with path structure:
 {STORAGE_ROOT}/{DisplayName}_{SecretHash[:6]}/{YYYY-MM-DD}_{device_id}.jsonl
 
+Audio assets are stored in:
+{STORAGE_ROOT}/{DisplayName}_{SecretHash[:6]}/assets/{YYYYMMDD}/{uuid}.wav
+
 This format:
 - Is human-readable (contains display name)
 - Avoids collisions (short hash suffix)
@@ -14,7 +17,7 @@ import re
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Dict
 import aiofiles
 
 from app.config import get_settings
@@ -89,16 +92,60 @@ class StorageService:
         filename = f"{date_str}_{safe_device_id}.jsonl"
         return user_dir / filename
     
+    def _get_assets_dir(self, user_id: str, user_info: Optional[object] = None) -> Path:
+        """
+        Get the assets directory for a user for today's date.
+        
+        Path format: {STORAGE_ROOT}/{UserPrefix}/assets/{YYYYMMDD}/
+        """
+        user_dir = self._get_user_dir(user_id, user_info)
+        date_str = datetime.now().strftime("%Y%m%d")
+        return user_dir / "assets" / date_str
+    
+    async def save_audio_file(
+        self,
+        wav_data: bytes,
+        interaction_id: str,
+        user_id: str,
+        user_info: Optional[object] = None,
+    ) -> str:
+        """
+        Save WAV audio file to assets directory.
+        
+        Args:
+            wav_data: WAV audio data bytes
+            interaction_id: UUID for this interaction (used as filename)
+            user_id: User identifier
+            user_info: Optional UserInfo for proper storage path
+            
+        Returns:
+            Relative path to saved file (e.g., "assets/20260208/550e8400.wav")
+        """
+        assets_dir = self._get_assets_dir(user_id, user_info)
+        assets_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Use full UUID for filename to match log entry ID
+        filename = f"{interaction_id}.wav"
+        file_path = assets_dir / filename
+        
+        async with aiofiles.open(file_path, mode="wb") as f:
+            await f.write(wav_data)
+        
+        # Return relative path from user directory
+        user_dir = self._get_user_dir(user_id, user_info)
+        relative_path = file_path.relative_to(user_dir)
+        return str(relative_path)
+    
     async def log_interaction(
         self,
         user_id: str,
         device_id: str,
-        audio_duration_ms: int,
-        audio_format: str,
-        raw_transcription: str,
-        final_transcription: str,
-        latency_ms: int,
-        user_info: Optional[object] = None,  # UserInfo for proper storage path
+        wav_data: bytes,
+        pipeline_key: str,
+        transcription_text: str,
+        total_latency_ms: int,
+        asr_latency_ms: int,
+        user_info: Optional[object] = None,
     ) -> str:
         """
         Log an interaction to the user's JSONL file.
@@ -106,11 +153,11 @@ class StorageService:
         Args:
             user_id: User identifier (display name)
             device_id: Client-provided device identifier
-            audio_duration_ms: Duration of audio in milliseconds
-            audio_format: Audio format (e.g., "pcm_s16le")
-            raw_transcription: Raw text from Whisper
-            final_transcription: Final text (after any processing)
-            latency_ms: Total processing latency
+            wav_data: WAV audio data to save
+            pipeline_key: Pipeline name used (e.g., "raw", "raw_whisper")
+            transcription_text: Transcription result
+            total_latency_ms: Total processing latency (user-perceived)
+            asr_latency_ms: ASR-only latency (transcription time)
             user_info: Optional UserInfo object for proper storage path
             
         Returns:
@@ -118,24 +165,31 @@ class StorageService:
         """
         interaction_id = str(uuid.uuid4())
         
+        # Save audio file
+        audio_path = await self.save_audio_file(
+            wav_data=wav_data,
+            interaction_id=interaction_id,
+            user_id=user_id,
+            user_info=user_info,
+        )
+        
+        # Map pipeline key to descriptive transcription key
+        transcription_key = self._get_transcription_key(pipeline_key)
+        
         data = {
             "id": interaction_id,
             "timestamp": datetime.now().isoformat(),
-            "user_id": user_id,
-            "device_id": device_id,
-            "audio_meta": {
-                "duration_ms": audio_duration_ms,
-                "format": audio_format,
-            },
+            "audio_path": audio_path,
             "transcription": {
-                "raw": raw_transcription,
-                "final": final_transcription,
+                transcription_key: transcription_text,
             },
-            "latency_ms": latency_ms,
+            "latency_stats": {
+                "total_ms": total_latency_ms,
+                "asr_ms": asr_latency_ms,
+            },
         }
         
         # Get log path and ensure user directory exists
-        # Pass user_info to get proper {DisplayName}_{Hash[:6]}/ format
         log_path = self._get_log_path(user_id, device_id, user_info)
         log_path.parent.mkdir(parents=True, exist_ok=True)
         
@@ -146,6 +200,24 @@ class StorageService:
             await f.write(json_line)
         
         return interaction_id
+    
+    def _get_transcription_key(self, pipeline_key: str) -> str:
+        """
+        Map pipeline key to descriptive transcription key.
+        
+        Args:
+            pipeline_key: Pipeline identifier (e.g., "raw", "raw_whisper")
+            
+        Returns:
+            Descriptive key for transcription dict (e.g., "whisper_large_v3_raw")
+        """
+        # Map known pipelines to descriptive keys
+        pipeline_map = {
+            "raw": "whisper_large_v3_raw",
+            "raw_whisper": "whisper_large_v3_raw",
+            "geo_reliquary_v1": "geo_reliquary_v1",
+        }
+        return pipeline_map.get(pipeline_key, f"pipeline_{pipeline_key}")
 
 
 # Singleton instance

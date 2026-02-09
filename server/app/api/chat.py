@@ -123,6 +123,10 @@ async def process_audio_buffer(
         pipe = manager.get_pipeline(settings.default_pipeline)
     
     error_msg = None
+    transcription = ""
+    
+    # Track ASR latency separately
+    asr_start = time.time()
     try:
         # Pass api_key for BYOK support
         transcription = await pipe.transcribe(wav_data, filename="stream.wav", api_key=api_key)
@@ -130,20 +134,21 @@ async def process_audio_buffer(
         print(f"[WebSocket] Transcription failed: {e}")
         transcription = f"[Transcription Error: {str(e)}]"
         error_msg = str(e)
+    asr_end = time.time()
+    asr_latency_ms = int((asr_end - asr_start) * 1000)
     
     end_time = time.time()
-    latency_ms = int((end_time - start_time) * 1000)
-    audio_duration_ms = int(len(pcm_buffer) / (sample_rate * 2) * 1000)
+    total_latency_ms = int((end_time - start_time) * 1000)
     
-    # Log interaction with user_info for proper storage path
+    # Log interaction with WAV data for storage
     interaction_id = await storage.log_interaction(
         user_id=user_id,
         device_id=device_id,
-        audio_duration_ms=audio_duration_ms,
-        audio_format="pcm_s16le",
-        raw_transcription=transcription,
-        final_transcription=transcription,
-        latency_ms=latency_ms,
+        wav_data=wav_data,
+        pipeline_key=pipeline_name,
+        transcription_text=transcription,
+        total_latency_ms=total_latency_ms,
+        asr_latency_ms=asr_latency_ms,
         user_info=user_info,
     )
     
