@@ -1,50 +1,432 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
-    android:background="#121212">
+    android:fillViewport="true"
+    android:background="@drawable/bg_gradient">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Reliquary Voice"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="48dp"/>
-
-    <Button
-        android:id="@+id/btn_grant_permission"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="1. Grant Microphone Permission"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp"/>
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:paddingHorizontal="24dp"
+        android:paddingTop="48dp"
+        android:paddingBottom="32dp">
 
-    <Button
-        android:id="@+id/btn_enable_ime"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="2. Enable Keyboard"
-        android:padding="16dp"
-        android:layout_marginBottom="16dp"/>
-    
-    <Button
-        android:id="@+id/btn_switch_ime"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="3. Switch to Reliquary"
-        android:padding="16dp"/>
+        <!-- ===== Logo Section (matches web Login.tsx) ===== -->
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_audio_waveform"
+            android:contentDescription="Reliquary Logo"
+            android:layout_marginBottom="8dp" />
 
-    <TextView
-        android:id="@+id/tv_status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Status: Waiting for setup..."
-        android:textColor="#AAAAAA"
-        android:layout_marginTop="32dp"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reliquary"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="@color/foreground"
+            android:fontFamily="sans-serif-medium"
+            android:letterSpacing="0.02" />
 
-</LinearLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="智能语音输入系统"
+            android:textSize="14sp"
+            android:textColor="@color/muted_foreground"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="32dp" />
+
+        <!-- ===== Setup Card ===== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:paddingHorizontal="20dp"
+            android:paddingVertical="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="设置向导"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="@color/foreground"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="完成以下步骤以启用 Reliquary 语音输入"
+                android:textSize="13sp"
+                android:textColor="@color/muted_foreground"
+                android:layout_marginBottom="20dp" />
+
+            <!-- ===== Step 1: Microphone Permission ===== -->
+            <LinearLayout
+                android:id="@+id/step1_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_step_row"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:id="@+id/step1_number"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="1"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/foreground"
+                    android:background="@drawable/bg_step_circle" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="麦克风权限"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/foreground" />
+
+                    <TextView
+                        android:id="@+id/step1_desc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="授权后即可进行语音录入"
+                        android:textSize="12sp"
+                        android:textColor="@color/muted_foreground"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_grant_permission"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="授权"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary_foreground"
+                    android:background="@drawable/bg_button_primary"
+                    android:paddingHorizontal="16dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <!-- ===== Step 2: Enable Keyboard ===== -->
+            <LinearLayout
+                android:id="@+id/step2_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_step_row"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <TextView
+                    android:id="@+id/step2_number"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="2"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/foreground"
+                    android:background="@drawable/bg_step_circle" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="启用键盘"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/foreground" />
+
+                    <TextView
+                        android:id="@+id/step2_desc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="在系统设置中开启 Reliquary 键盘"
+                        android:textSize="12sp"
+                        android:textColor="@color/muted_foreground"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_enable_ime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="设置"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary_foreground"
+                    android:background="@drawable/bg_button_primary"
+                    android:paddingHorizontal="16dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <!-- ===== Step 3: Server URL ===== -->
+            <LinearLayout
+                android:id="@+id/step3_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_step_row"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/step3_number"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="3"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/foreground"
+                        android:background="@drawable/bg_step_circle" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="后端地址"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/foreground" />
+
+                        <TextView
+                            android:id="@+id/step3_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Reliquary 服务器 URL"
+                            android:textSize="12sp"
+                            android:textColor="@color/muted_foreground"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/et_server_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:hint="https://voice.example.com"
+                    android:textColorHint="#4A5568"
+                    android:textColor="@color/foreground"
+                    android:textSize="14sp"
+                    android:fontFamily="monospace"
+                    android:background="@drawable/bg_input_field"
+                    android:paddingHorizontal="12dp"
+                    android:inputType="textUri"
+                    android:singleLine="true"
+                    android:imeOptions="actionDone"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_save_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="保存地址"
+                    android:textSize="14sp"
+                    android:textColor="@color/primary_foreground"
+                    android:background="@drawable/bg_button_primary"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <!-- ===== Step 4: Auth Token ===== -->
+            <LinearLayout
+                android:id="@+id/step4_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_step_row"
+                android:padding="14dp"
+                android:layout_marginBottom="10dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:id="@+id/step4_number"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:gravity="center"
+                        android:text="4"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/foreground"
+                        android:background="@drawable/bg_step_circle" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:layout_marginStart="12dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="认证令牌"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:textColor="@color/foreground" />
+
+                        <TextView
+                            android:id="@+id/step4_desc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="输入您的 Master Secret 令牌"
+                            android:textSize="12sp"
+                            android:textColor="@color/muted_foreground"
+                            android:layout_marginTop="2dp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/et_auth_token"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:hint="sk-reliquary-..."
+                    android:textColorHint="#4A5568"
+                    android:textColor="@color/foreground"
+                    android:textSize="14sp"
+                    android:fontFamily="monospace"
+                    android:background="@drawable/bg_input_field"
+                    android:paddingHorizontal="12dp"
+                    android:inputType="textPassword"
+                    android:singleLine="true"
+                    android:imeOptions="actionDone"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_save_token"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:text="保存令牌"
+                    android:textSize="14sp"
+                    android:textColor="@color/primary_foreground"
+                    android:background="@drawable/bg_button_primary"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+            <!-- ===== Step 5: Switch to Keyboard ===== -->
+            <LinearLayout
+                android:id="@+id/step5_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/bg_step_row"
+                android:padding="14dp">
+
+                <TextView
+                    android:id="@+id/step5_number"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:gravity="center"
+                    android:text="5"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/foreground"
+                    android:background="@drawable/bg_step_circle" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="切换键盘"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/foreground" />
+
+                    <TextView
+                        android:id="@+id/step5_desc"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="将输入法切换为 Reliquary Voice"
+                        android:textSize="12sp"
+                        android:textColor="@color/muted_foreground"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <Button
+                    android:id="@+id/btn_switch_ime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:text="切换"
+                    android:textSize="13sp"
+                    android:textColor="@color/primary_foreground"
+                    android:background="@drawable/bg_button_primary"
+                    android:paddingHorizontal="16dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:textAllCaps="false"
+                    android:stateListAnimator="@null" />
+            </LinearLayout>
+
+        </LinearLayout>
+        <!-- END Setup Card -->
+
+        <!-- ===== Footer ===== -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Reliquary v1.5 · Multi-User + BYOK"
+            android:textSize="12sp"
+            android:textColor="@color/muted_foreground"
+            android:layout_marginTop="24dp" />
+
+    </LinearLayout>
+</ScrollView>

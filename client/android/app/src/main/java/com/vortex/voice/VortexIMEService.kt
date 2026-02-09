@@ -46,16 +46,31 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
         vibrator = getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
 
         try {
-            // Initialize Go Client
-            // Loading config from hardcoded strings for now (TODO: Load from Settings Activity)
+            // Load config from SharedPreferences (set in Setup Activity)
+            val prefs = getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
+            val serverUrl = prefs.getString(MainActivity.KEY_SERVER_URL, "") ?: ""
+            val authToken = prefs.getString(MainActivity.KEY_AUTH_TOKEN, "") ?: ""
+            val deviceId = android.provider.Settings.Secure.getString(
+                contentResolver, android.provider.Settings.Secure.ANDROID_ID
+            ) ?: "android_unknown"
+
+            if (serverUrl.isEmpty() || authToken.isEmpty()) {
+                android.util.Log.w("ReliquaryIME", "Server URL or Auth Token not configured. Please complete setup.")
+                Handler(Looper.getMainLooper()).post {
+                    Toast.makeText(this, "请先在 Reliquary 设置中配置后端地址和令牌", Toast.LENGTH_LONG).show()
+                }
+                return
+            }
+
+            // Initialize Go Client with config from SharedPreferences
             reliquaryClient = Mobile.newReliquary(
-                "https://voice.sentimentalk.com",
-                "android_mobile_client", 
-                "sk-reliquary-f2527a71f69620a1e2a560697dc5bb33",
-                "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",
+                serverUrl,
+                deviceId,
+                authToken,
+                "",  // API Key: empty by default, can be set via web UI (BYOK)
                 this
             )
-            android.util.Log.d("ReliquaryIME", "Go Client Initialized")
+            android.util.Log.d("ReliquaryIME", "Go Client Initialized (server: $serverUrl)")
         } catch (e: Throwable) {
             e.printStackTrace()
             Handler(Looper.getMainLooper()).post {
