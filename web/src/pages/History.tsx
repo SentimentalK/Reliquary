@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import { MessageSquare, Clock, ChevronDown, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -14,6 +15,7 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
     isExpanded: boolean
     onToggle: () => void
 }) {
+    const { t } = useTranslation()
     // Get all transcription pipeline keys
     const pipelineKeys = Object.keys(entry.transcription || {})
 
@@ -21,7 +23,7 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
     const primaryKey = pipelineKeys.find(k => k.includes('whisper') && k.includes('raw'))
         || pipelineKeys.find(k => k.includes('raw'))
         || pipelineKeys[0]
-    const primaryText = primaryKey ? entry.transcription[primaryKey] : '(空)'
+    const primaryText = primaryKey ? entry.transcription[primaryKey] : t('history.empty')
 
     // Check if there are multiple pipelines
     const hasMultiplePipelines = pipelineKeys.length > 1
@@ -95,7 +97,7 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
                         {/* Meta info in gray small text */}
                         <div className="pt-2 border-t border-border/50 text-xs text-muted-foreground space-y-1">
                             <div className="flex gap-4">
-                                {totalLatency && <span>总延迟: {totalLatency}ms</span>}
+                                {totalLatency && <span>{t('history.totalLatency')}: {totalLatency}ms</span>}
                                 {asrLatency && <span>ASR: {asrLatency}ms</span>}
                             </div>
                             {entry.audio_path && (
@@ -116,6 +118,7 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
 export function History() {
     const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+    const { t } = useTranslation()
 
     // Format date for API call
     const dateString = format(selectedDate, 'yyyy-MM-dd')
@@ -144,9 +147,9 @@ export function History() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">时光机</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('history.title')}</h1>
                     <p className="text-muted-foreground">
-                        查看语音识别历史记录
+                        {t('history.subtitle')}
                     </p>
                 </div>
 
@@ -175,11 +178,11 @@ export function History() {
                         </div>
                     ) : error ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            加载失败，请检查后端 API
+                            {t('history.errorLoad')}
                         </div>
                     ) : !data?.entries?.length ? (
                         <div className="p-8 text-center text-muted-foreground">
-                            {dateString} 暂无记录
+                            {dateString} {t('history.noRecords')}
                         </div>
                     ) : (
                         <div>

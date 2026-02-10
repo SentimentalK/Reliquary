@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import { DayPicker } from "react-day-picker"
-import { zhCN } from "date-fns/locale"
-import { addMonths, subMonths } from "date-fns"
+import { addMonths, subMonths, format } from "date-fns"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { getDateFnsLocale } from "@/lib/i18n-utils"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -17,6 +18,9 @@ function Calendar({
     showOutsideDays = true,
     ...props
 }: CalendarProps) {
+    const { t } = useTranslation()
+    const locale = getDateFnsLocale()
+
     const [displayMonth, setDisplayMonth] = React.useState<Date>(
         props.defaultMonth || new Date()
     )
@@ -24,12 +28,6 @@ function Calendar({
     // Generate year options (10 years back, 1 year forward)
     const currentYear = new Date().getFullYear()
     const years = Array.from({ length: 12 }, (_, i) => currentYear - 10 + i)
-
-    // Month names as numbers
-    const months = [
-        "1", "2", "3", "4", "5", "6",
-        "7", "8", "9", "10", "11", "12"
-    ]
 
     const handleYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newYear = parseInt(e.target.value)
@@ -55,7 +53,7 @@ function Calendar({
 
     return (
         <DayPicker
-            locale={zhCN}
+            locale={locale}
             showOutsideDays={showOutsideDays}
             month={displayMonth}
             onMonthChange={setDisplayMonth}
@@ -120,18 +118,18 @@ function Calendar({
                             >
                                 {years.map((year) => (
                                     <option key={year} value={year}>
-                                        {year}年
+                                        {year}{locale.code === 'zh-CN' ? '年' : ''}
                                     </option>
                                 ))}
                             </select>
                             <select
                                 value={displayMonth.getMonth()}
                                 onChange={handleMonthChange}
-                                className="h-7 w-[60px] rounded-md border border-input bg-background px-2 py-0 text-sm font-medium cursor-pointer hover:bg-accent focus:outline-none focus:ring-1 focus:ring-ring"
+                                className="h-7 rounded-md border border-input bg-background px-2 py-0 text-sm font-medium cursor-pointer hover:bg-accent focus:outline-none focus:ring-1 focus:ring-ring"
                             >
-                                {months.map((month, index) => (
-                                    <option key={month} value={index}>
-                                        {month}月
+                                {Array.from({ length: 12 }).map((_, index) => (
+                                    <option key={index} value={index}>
+                                        {format(new Date(2000, index, 1), t('common.monthFormat'), { locale })}
                                     </option>
                                 ))}
                             </select>

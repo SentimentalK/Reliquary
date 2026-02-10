@@ -2,8 +2,9 @@
 
 import * as React from "react"
 import { format } from "date-fns"
-import { zhCN } from "date-fns/locale"
+import { useTranslation } from "react-i18next"
 import { Calendar as CalendarIcon } from "lucide-react"
+import { getDateFnsLocale } from "@/lib/i18n-utils"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -28,11 +29,14 @@ interface DatePickerProps {
 export function DatePicker({
     date,
     onDateChange,
-    placeholder = "选择日期",
+    placeholder,
     className,
     disabledAfter,
 }: DatePickerProps) {
     const [open, setOpen] = React.useState(false)
+    const { t } = useTranslation()
+    const locale = getDateFnsLocale()
+    const dateFormat = t('common.dateFormat')
 
     const handleSelect = (selectedDate: Date | undefined) => {
         onDateChange(selectedDate)
@@ -55,9 +59,9 @@ export function DatePicker({
                 >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {date ? (
-                        format(date, "yyyy年MM月dd日", { locale: zhCN })
+                        format(date, dateFormat, { locale: locale })
                     ) : (
-                        <span>{placeholder}</span>
+                        <span>{placeholder || t('common.selectDate')}</span>
                     )}
                 </Button>
             </PopoverTrigger>

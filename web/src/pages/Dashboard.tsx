@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Monitor, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { DeviceCard, DeviceCardSkeleton } from '@/components/DeviceCard'
 import { DeviceConfigSheet } from '@/components/DeviceConfigSheet'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import { devicesApi } from '@/lib/api'
 
 export function Dashboard() {
     const { devices, setDevices } = useDevicesStore()
+    const { t } = useTranslation()
 
     // Fetch devices
     const { data, isLoading, refetch, isRefetching } = useQuery({
@@ -33,9 +35,9 @@ export function Dashboard() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">设备管理</h1>
+                    <h1 className="text-3xl font-bold tracking-tight">{t('dashboard.title')}</h1>
                     <p className="text-muted-foreground">
-                        管理已连接的 Reliquary 客户端
+                        {t('dashboard.subtitle')}
                     </p>
                 </div>
                 <Button
@@ -45,7 +47,7 @@ export function Dashboard() {
                     disabled={isRefetching}
                 >
                     <RefreshCw className={`mr-2 h-4 w-4 ${isRefetching ? 'animate-spin' : ''}`} />
-                    刷新
+                    {t('dashboard.refresh')}
                 </Button>
             </div>
 
@@ -59,9 +61,9 @@ export function Dashboard() {
             ) : devices.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16">
                     <Monitor className="h-12 w-12 text-muted-foreground/50" />
-                    <h3 className="mt-4 text-lg font-semibold">暂无设备</h3>
+                    <h3 className="mt-4 text-lg font-semibold">{t('dashboard.noDevices')}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">
-                        启动 Reliquary 客户端后，设备会自动出现在这里
+                        {t('dashboard.noDevicesDesc')}
                     </p>
                 </div>
             ) : (

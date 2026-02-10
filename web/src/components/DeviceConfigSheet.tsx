@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Loader2, Keyboard, Save, X, Monitor, Key, Globe, Settings, Smartphone } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
@@ -8,10 +9,12 @@ import { useDevicesStore } from '@/stores/devices'
 import { useAuthStore } from '@/stores/auth'
 import { devicesApi } from '@/lib/api'
 import { getKeyName } from '@/lib/utils'
+import { getIntlLocale } from '@/lib/i18n-utils'
 
 export function DeviceConfigSheet() {
     const { selectedDevice, sheetOpen, closeSheet, updateDevice } = useDevicesStore()
     const { user } = useAuthStore()
+    const { t } = useTranslation()
 
     const [keycode, setKeycode] = useState(selectedDevice?.keycode ?? 61)
     const [language, setLanguage] = useState(selectedDevice?.language ?? '')
@@ -54,7 +57,7 @@ export function DeviceConfigSheet() {
     // Learn hotkey mutation
     const learnMutation = useMutation({
         mutationFn: async () => {
-            if (!selectedDevice) throw new Error('No device selected')
+            if (!selectedDevice) throw new Error(t('config.errorNoDevice'))
             setIsLearning(true)
             const result = await devicesApi.learnHotkeyAndWait(selectedDevice.device_id, 30)
             if (result.success && result.key_code !== undefined) {
@@ -62,7 +65,7 @@ export function DeviceConfigSheet() {
                 updateDevice(selectedDevice.device_id, { keycode: result.key_code })
                 return result.key_code
             }
-            throw new Error(result.error || 'Failed to detect key')
+            throw new Error(result.error || t('config.errorDetectFailed'))
         },
         onSettled: () => {
             setIsLearning(false)
@@ -101,9 +104,9 @@ export function DeviceConfigSheet() {
                                 <h2 className="text-lg font-semibold">{selectedDevice.device_id}</h2>
                                 <p className="text-sm text-muted-foreground">
                                     {selectedDevice.connected ? (
-                                        <span className="text-green-500">● 在线</span>
+                                        <span className="text-green-500">● {t('config.statusOnline')}</span>
                                     ) : (
-                                        <span className="text-muted-foreground">○ 离线</span>
+                                        <span className="text-muted-foreground">○ {t('config.statusOffline')}</span>
                                     )}
                                 </p>
                             </div>
@@ -120,30 +123,30 @@ export function DeviceConfigSheet() {
                             <div className="rounded-xl border bg-card p-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Settings className="h-5 w-5 text-muted-foreground" />
-                                    <h3 className="font-medium">用户信息</h3>
+                                    <h3 className="font-medium">{t('config.userInfo')}</h3>
                                 </div>
                                 <div className="grid gap-4 sm:grid-cols-2">
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">显示名称</Label>
+                                        <Label className="text-xs text-muted-foreground">{t('config.displayName')}</Label>
                                         <p className="text-sm font-medium">{user?.display_name || '-'}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">角色</Label>
+                                        <Label className="text-xs text-muted-foreground">{t('config.role')}</Label>
                                         <p className="text-sm font-medium capitalize">{user?.role || '-'}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">设备 ID</Label>
+                                        <Label className="text-xs text-muted-foreground">{t('config.deviceId')}</Label>
                                         <p className="text-sm font-mono text-muted-foreground">{selectedDevice.device_id}</p>
                                     </div>
                                     <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground">连接时间</Label>
+                                        <Label className="text-xs text-muted-foreground">{t('config.connectedAt')}</Label>
                                         <p className="text-sm text-muted-foreground">
                                             {(() => {
                                                 if (!selectedDevice.connected_at) return '-'
                                                 const date = typeof selectedDevice.connected_at === 'number' || !isNaN(Number(selectedDevice.connected_at))
                                                     ? new Date(Number(selectedDevice.connected_at) * 1000)
                                                     : new Date(selectedDevice.connected_at)
-                                                return date.toLocaleString('zh-CN')
+                                                return date.toLocaleString(getIntlLocale())
                                             })()}
                                         </p>
                                     </div>
@@ -154,15 +157,15 @@ export function DeviceConfigSheet() {
                             <div className={`rounded-xl border bg-card p-6 ${selectedDevice.platform === 'android' ? 'opacity-50' : ''}`}>
                                 <div className="flex items-center gap-2 mb-4">
                                     <Keyboard className="h-5 w-5 text-muted-foreground" />
-                                    <h3 className="font-medium">快捷键设置</h3>
+                                    <h3 className="font-medium">{t('config.hotkeySettings')}</h3>
                                     {selectedDevice.platform === 'android' && (
-                                        <span className="text-xs text-muted-foreground ml-auto">移动设备不适用</span>
+                                        <span className="text-xs text-muted-foreground ml-auto">{t('config.mobileNotSupported')}</span>
                                     )}
                                 </div>
                                 {selectedDevice.platform !== 'android' && (
                                     <div className="space-y-4">
                                         <div className="space-y-2">
-                                            <Label htmlFor="keycode">触发键</Label>
+                                            <Label htmlFor="keycode">{t('config.triggerKey')}</Label>
                                             <div className="flex gap-2">
                                                 <Input
                                                     id="keycode"
@@ -179,21 +182,21 @@ export function DeviceConfigSheet() {
                                                     {isLearning ? (
                                                         <>
                                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                            按下按键...
+                                                            {t('config.pressKey')}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <Keyboard className="mr-2 h-4 w-4" />
-                                                            侦测
+                                                            {t('config.detect')}
                                                         </>
                                                     )}
                                                 </Button>
                                             </div>
                                             <p className="text-sm text-muted-foreground">
-                                                当前: <span className="font-medium">{getKeyName(keycode)}</span> (code: {keycode})
+                                                {t('config.current')}: <span className="font-medium">{getKeyName(keycode)}</span> (code: {keycode})
                                             </p>
                                             <p className="text-xs text-amber-500 mt-1">
-                                                注意：仅支持单键触发（如 Right Shift, F9）。部分按键可能被系统或输入法拦截。
+                                                {t('config.hotkeyWarning')}
                                             </p>
                                         </div>
                                     </div>
@@ -204,26 +207,26 @@ export function DeviceConfigSheet() {
                             <div className="rounded-xl border bg-card p-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Globe className="h-5 w-5 text-muted-foreground" />
-                                    <h3 className="font-medium">语言与模型设置</h3>
+                                    <h3 className="font-medium">{t('config.languageModel')}</h3>
                                 </div>
                                 <div className="grid gap-6 sm:grid-cols-2">
                                     <div className="space-y-2">
-                                        <Label htmlFor="language">识别语言</Label>
+                                        <Label htmlFor="language">{t('config.recognitionLang')}</Label>
                                         <select
                                             id="language"
                                             value={language}
                                             onChange={(e) => setLanguage(e.target.value)}
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
-                                            <option value="">自动检测 (Auto)</option>
-                                            <option value="zh">中文 (Chinese)</option>
-                                            <option value="en">英语 (English)</option>
-                                            <option value="ja">日语 (Japanese)</option>
-                                            <option value="ko">韩语 (Korean)</option>
+                                            <option value="">{t('config.langAuto')}</option>
+                                            <option value="zh">{t('config.langZh')}</option>
+                                            <option value="en">{t('config.langEn')}</option>
+                                            <option value="ja">{t('config.langJa')}</option>
+                                            <option value="ko">{t('config.langKo')}</option>
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="pipeline">处理管道 (Pipeline)</Label>
+                                        <Label htmlFor="pipeline">{t('config.pipeline')}</Label>
                                         <select
                                             id="pipeline"
                                             value={pipeline}
@@ -241,7 +244,7 @@ export function DeviceConfigSheet() {
                             <div className="rounded-xl border bg-card p-6">
                                 <div className="flex items-center gap-2 mb-4">
                                     <Key className="h-5 w-5 text-muted-foreground" />
-                                    <h3 className="font-medium">API 密钥 (BYOK)</h3>
+                                    <h3 className="font-medium">{t('config.apiKey')}</h3>
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="apiKey">Groq API Key</Label>
@@ -254,7 +257,7 @@ export function DeviceConfigSheet() {
                                         className="font-mono"
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        可选：使用自己的 Groq API Key 进行语音识别
+                                        {t('config.apiKeyDesc')}
                                     </p>
                                 </div>
                             </div>
@@ -272,16 +275,16 @@ export function DeviceConfigSheet() {
                                     ) : (
                                         <Save className="mr-2 h-4 w-4" />
                                     )}
-                                    保存配置
+                                    {t('config.save')}
                                 </Button>
                                 <Button variant="outline" size="lg" onClick={closeSheet}>
-                                    取消
+                                    {t('config.cancel')}
                                 </Button>
                             </div>
 
                             {!selectedDevice.connected && (
                                 <p className="text-center text-sm text-amber-500">
-                                    ⚠️ 设备离线，无法推送配置
+                                    {t('config.deviceOfflineWarning')}
                                 </p>
                             )}
                         </div>

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
 import { AudioWaveform, Loader2, Copy, Check, Eye, EyeOff } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,6 +14,7 @@ type Mode = 'login' | 'register' | 'success'
 export function Login() {
     const navigate = useNavigate()
     const { setAuth } = useAuthStore()
+    const { t } = useTranslation()
     const [mode, setMode] = useState<Mode>('login')
 
     // Login state
@@ -32,7 +34,7 @@ export function Login() {
         mutationFn: async () => {
             const result = await authApi.verify(loginToken)
             if (!result.valid || !result.user) {
-                throw new Error('无效的令牌')
+                throw new Error(t('login.errorToken'))
             }
             return result.user
         },
@@ -89,7 +91,7 @@ export function Login() {
                 <div className="rounded-2xl border bg-card/50 p-6 backdrop-blur-sm shadow-xl">
                     {mode === 'login' && (
                         <>
-                            <h2 className="text-xl font-semibold mb-6">登录</h2>
+                            <h2 className="text-xl font-semibold mb-6">{t('login.title')}</h2>
                             <form
                                 onSubmit={(e) => {
                                     e.preventDefault()
@@ -98,12 +100,12 @@ export function Login() {
                                 className="space-y-4"
                             >
                                 <div className="space-y-2">
-                                    <Label htmlFor="token">认证令牌</Label>
+                                    <Label htmlFor="token">{t('login.tokenLabel')}</Label>
                                     <div className="relative">
                                         <Input
                                             id="token"
                                             type={showToken ? 'text' : 'password'}
-                                            placeholder="sk-reliquary-..."
+                                            placeholder={t('login.tokenPlaceholder')}
                                             value={loginToken}
                                             onChange={(e) => setLoginToken(e.target.value)}
                                             className="pr-10 font-mono"
@@ -117,13 +119,13 @@ export function Login() {
                                         </button>
                                     </div>
                                     <p className="text-xs text-muted-foreground">
-                                        输入您的 Master Secret 令牌
+                                        {t('login.tokenPlaceholder')}
                                     </p>
                                 </div>
 
                                 {loginMutation.error && (
                                     <p className="text-sm text-destructive">
-                                        {(loginMutation.error as Error).message || '登录失败'}
+                                        {(loginMutation.error as Error).message || t('login.errorFailed')}
                                     </p>
                                 )}
 
@@ -135,7 +137,7 @@ export function Login() {
                                     {loginMutation.isPending && (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     )}
-                                    登录
+                                    {t('login.submit')}
                                 </Button>
                             </form>
 
@@ -144,7 +146,7 @@ export function Login() {
                                     onClick={() => setMode('register')}
                                     className="text-sm text-primary hover:underline"
                                 >
-                                    没有账户？注册
+                                    {t('login.registerLink')}
                                 </button>
                             </div>
                         </>
@@ -152,7 +154,7 @@ export function Login() {
 
                     {mode === 'register' && (
                         <>
-                            <h2 className="text-xl font-semibold mb-6">注册新账户</h2>
+                            <h2 className="text-xl font-semibold mb-6">{t('login.registerTitle')}</h2>
                             <form
                                 onSubmit={(e) => {
                                     e.preventDefault()
@@ -161,32 +163,32 @@ export function Login() {
                                 className="space-y-4"
                             >
                                 <div className="space-y-2">
-                                    <Label htmlFor="displayName">显示名称</Label>
+                                    <Label htmlFor="displayName">{t('login.displayNameLabel')}</Label>
                                     <Input
                                         id="displayName"
-                                        placeholder="例如：Xinghan"
+                                        placeholder={t('login.displayNamePlaceholder')}
                                         value={displayName}
                                         onChange={(e) => setDisplayName(e.target.value)}
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="inviteCode">邀请码</Label>
+                                    <Label htmlFor="inviteCode">{t('login.inviteCodeLabel')}</Label>
                                     <Input
                                         id="inviteCode"
                                         type="password"
-                                        placeholder="输入邀请码"
+                                        placeholder={t('login.inviteCodePlaceholder')}
                                         value={inviteCode}
                                         onChange={(e) => setInviteCode(e.target.value)}
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        联系管理员获取邀请码
+                                        {t('login.contactAdmin')}
                                     </p>
                                 </div>
 
                                 {registerMutation.error && (
                                     <p className="text-sm text-destructive">
-                                        {(registerMutation.error as Error).message || '注册失败'}
+                                        {(registerMutation.error as Error).message || t('login.errorRegister')}
                                     </p>
                                 )}
 
@@ -198,7 +200,7 @@ export function Login() {
                                     {registerMutation.isPending && (
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                     )}
-                                    注册
+                                    {t('login.registerSubmit')}
                                 </Button>
                             </form>
 
@@ -207,7 +209,7 @@ export function Login() {
                                     onClick={() => setMode('login')}
                                     className="text-sm text-primary hover:underline"
                                 >
-                                    已有账户？登录
+                                    {t('login.loginLink')}
                                 </button>
                             </div>
                         </>
@@ -219,16 +221,16 @@ export function Login() {
                                 <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                                     <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
                                 </div>
-                                <h2 className="mt-4 text-xl font-semibold">注册成功！</h2>
+                                <h2 className="mt-4 text-xl font-semibold">{t('login.successTitle')}</h2>
                                 <p className="mt-2 text-sm text-muted-foreground">
-                                    请保存您的 Master Secret，这是您唯一的登录凭证
+                                    {t('login.successDesc')}
                                 </p>
                             </div>
 
                             <div className="space-y-4">
                                 <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
                                     <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-                                        ⚠️ 重要：此令牌只显示一次，请妥善保存！
+                                        {t('login.tokenWarning')}
                                     </p>
                                     <div className="flex items-center gap-2">
                                         <code className="flex-1 rounded bg-background px-3 py-2 font-mono text-sm break-all">
@@ -249,7 +251,7 @@ export function Login() {
                                 </div>
 
                                 <Button onClick={proceedToLogin} className="w-full">
-                                    我已保存，继续登录
+                                    {t('login.saveAndLogin')}
                                 </Button>
                             </div>
                         </>

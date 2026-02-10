@@ -5,12 +5,14 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
 
+import { getIntlLocale } from '@/lib/i18n-utils'
+
 /**
  * Format a date string to a readable format
  */
 export function formatDate(dateStr: string): string {
     const date = new Date(dateStr)
-    return date.toLocaleDateString('zh-CN', {
+    return date.toLocaleDateString(getIntlLocale(), {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -22,7 +24,7 @@ export function formatDate(dateStr: string): string {
  */
 export function formatTime(dateStr: string): string {
     const date = new Date(dateStr)
-    return date.toLocaleTimeString('zh-CN', {
+    return date.toLocaleTimeString(getIntlLocale(), {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -45,19 +47,18 @@ export function formatDuration(ms: number): string {
 /**
  * Get relative time from now
  */
+import { formatDistanceToNow } from 'date-fns'
+import { getDateFnsLocale } from '@/lib/i18n-utils'
+
+/**
+ * Get relative time from now
+ */
 export function getRelativeTime(dateStr: string): string {
     const date = new Date(dateStr)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMins / 60)
-    const diffDays = Math.floor(diffHours / 24)
-
-    if (diffMins < 1) return '刚刚'
-    if (diffMins < 60) return `${diffMins}分钟前`
-    if (diffHours < 24) return `${diffHours}小时前`
-    if (diffDays < 7) return `${diffDays}天前`
-    return formatDate(dateStr)
+    return formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: getDateFnsLocale()
+    })
 }
 
 /**

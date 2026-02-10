@@ -58,9 +58,9 @@ class MainActivity : AppCompatActivity() {
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
             if (isGranted) {
-                Toast.makeText(this, "✅ 麦克风权限已授权", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.mic_granted), Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "麦克风权限是必需的", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, getString(R.string.mic_required), Toast.LENGTH_LONG).show()
             }
             updateAllSteps()
         }
@@ -120,15 +120,15 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_save_url).setOnClickListener {
             val url = etServerUrl.text.toString().trim()
             if (url.isEmpty()) {
-                Toast.makeText(this, "请输入后端地址", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.enter_url), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                Toast.makeText(this, "地址必须以 http:// 或 https:// 开头", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.invalid_url), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             prefs.edit().putString(KEY_SERVER_URL, url).apply()
-            Toast.makeText(this, "✅ 后端地址已保存", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.url_saved), Toast.LENGTH_SHORT).show()
             updateAllSteps()
         }
 
@@ -136,11 +136,11 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_save_token).setOnClickListener {
             val token = etAuthToken.text.toString().trim()
             if (token.isEmpty()) {
-                Toast.makeText(this, "请输入认证令牌", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.enter_token), Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             prefs.edit().putString(KEY_AUTH_TOKEN, token).apply()
-            Toast.makeText(this, "✅ 认证令牌已保存", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.token_saved), Toast.LENGTH_SHORT).show()
             updateAllSteps()
         }
 
@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity() {
                 this,
                 Manifest.permission.RECORD_AUDIO
             ) == PackageManager.PERMISSION_GRANTED -> {
-                Toast.makeText(this, "✅ 权限已授权", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.mic_granted), Toast.LENGTH_SHORT).show()
             }
             else -> {
                 requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
@@ -188,23 +188,23 @@ class MainActivity : AppCompatActivity() {
 
         // Step 1
         setStepComplete(step1Container, step1Number, step1Desc, hasPermission,
-            if (hasPermission) "✅ 麦克风权限已授权" else "授权后即可进行语音录入")
+            if (hasPermission) getString(R.string.mic_granted) else getString(R.string.step_mic_desc))
 
         // Step 2
         setStepComplete(step2Container, step2Number, step2Desc, isImeEnabled,
-            if (isImeEnabled) "✅ Reliquary 键盘已启用" else "在系统设置中开启 Reliquary 键盘")
+            if (isImeEnabled) getString(R.string.ime_enabled) else getString(R.string.step_enable_ime_desc))
 
         // Step 3
         setStepComplete(step3Container, step3Number, step3Desc, hasServerUrl,
-            if (hasServerUrl) "✅ 已配置: ${prefs.getString(KEY_SERVER_URL, "")}" else "Reliquary 服务器 URL")
+            if (hasServerUrl) getString(R.string.url_configured, prefs.getString(KEY_SERVER_URL, "")) else getString(R.string.step_server_url_desc))
 
         // Step 4
         setStepComplete(step4Container, step4Number, step4Desc, hasAuthToken,
-            if (hasAuthToken) "✅ 令牌已配置" else "输入您的 Master Secret 令牌")
+            if (hasAuthToken) getString(R.string.token_configured) else getString(R.string.step_auth_token_desc))
 
         // Step 5 - always pending (user needs to switch manually each time)
         setStepComplete(step5Container, step5Number, step5Desc, false,
-            "将输入法切换为 Reliquary Voice")
+            getString(R.string.step_switch_ime_desc))
 
         // Disable step 5 button if prerequisites are not met
         val allReady = hasPermission && isImeEnabled && hasServerUrl && hasAuthToken

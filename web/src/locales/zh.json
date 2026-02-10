@@ -1,0 +1,87 @@
+{
+  "layout": {
+    "dashboard": "设备管理",
+    "logs": "时光机",
+    "docs": "文档",
+    "logout": "退出登录",
+    "toggleLanguage": "中文",
+    "theme": "切换主题"
+  },
+  "nav": {
+    "devices": "设备管理",
+    "history": "时光机",
+    "logout": "退出登录"
+  },
+  "login": {
+    "title": "欢迎回来",
+    "subtitle": "输入凭据以访问您的账户",
+    "emailLabel": "邮箱",
+    "emailPlaceholder": "name@example.com",
+    "passwordLabel": "密码",
+    "passwordPlaceholder": "输入您的密码",
+    "signIn": "登录",
+    "register": "注册账户",
+    "haveAccount": "已有账户？去登录",
+    "noAccount": "没有账户？去注册",
+    "successTitle": "注册成功",
+    "successDesc": "您的账户不仅创建成功，还生成了一个专属访问令牌。",
+    "tokenWarning": "请务必保存此令牌。出于安全考虑，它将不会再次显示。",
+    "saveAndLogin": "保存令牌并登录"
+  },
+  "dashboard": {
+    "title": "设备管理",
+    "subtitle": "管理已连接的 Reliquary 客户端",
+    "refresh": "刷新",
+    "noDevices": "暂无设备",
+    "noDevicesDesc": "启动 Reliquary 客户端后，设备会自动出现在这里"
+  },
+  "history": {
+    "title": "时光机",
+    "subtitle": "查看语音识别历史记录",
+    "errorLoad": "加载失败，请检查后端 API",
+    "noRecords": "暂无记录",
+    "empty": "(空)",
+    "totalLatency": "总延迟"
+  },
+  "deviceCard": {
+    "hotkey": "热键",
+    "connected": "建立连接",
+    "configure": "配置设备"
+  },
+  "config": {
+    "errorNoDevice": "未选择设备",
+    "errorDetectFailed": "按键检测失败",
+    "statusOnline": "在线",
+    "statusOffline": "离线",
+    "userInfo": "用户信息",
+    "displayName": "显示名称",
+    "role": "角色",
+    "deviceId": "设备 ID",
+    "connectedAt": "连接时间",
+    "hotkeySettings": "快捷键设置",
+    "mobileNotSupported": "移动设备不适用",
+    "triggerKey": "触发键",
+    "pressKey": "按下按键...",
+    "detect": "侦测",
+    "current": "当前",
+    "hotkeyWarning": "注意：仅支持单键触发（如 Right Shift, F9）。部分按键可能被系统或输入法拦截。",
+    "languageModel": "语言与模型设置",
+    "recognitionLang": "识别语言",
+    "langAuto": "自动检测 (Auto)",
+    "langZh": "中文 (Chinese)",
+    "langEn": "英语 (English)",
+    "langJa": "日语 (Japanese)",
+    "langKo": "韩语 (Korean)",
+    "pipeline": "处理管道 (Pipeline)",
+    "apiKey": "API 密钥 (BYOK)",
+    "apiKeyDesc": "可选：使用自己的 Groq API Key 进行语音识别",
+    "save": "保存配置",
+    "cancel": "取消",
+    "deviceOfflineWarning": "⚠️ 设备离线，无法推送配置"
+  },
+  "common": {
+    "selectDate": "选择日期",
+    "dateFormat": "yyyy年MM月dd日",
+    "monthFormat": "M月"
+  }
+}

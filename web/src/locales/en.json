@@ -1,0 +1,87 @@
+{
+  "layout": {
+    "dashboard": "Dashboard",
+    "logs": "Time Machine",
+    "docs": "Documentation",
+    "logout": "Log out",
+    "toggleLanguage": "English",
+    "theme": "Toggle theme"
+  },
+  "nav": {
+    "devices": "Devices",
+    "history": "History",
+    "logout": "Log out"
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Enter your credentials to access your account",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "signIn": "Sign In",
+    "register": "Create Account",
+    "haveAccount": "Already have an account? Sign in",
+    "noAccount": "Don't have an account? Sign up",
+    "successTitle": "Registration Successful",
+    "successDesc": "Your account has been created successfully.",
+    "tokenWarning": "Please save this token securely. You won't be able to see it again.",
+    "saveAndLogin": "Save Token & Login"
+  },
+  "dashboard": {
+    "title": "Device Management",
+    "subtitle": "Manage connected Reliquary clients",
+    "refresh": "Refresh",
+    "noDevices": "No Devices",
+    "noDevicesDesc": "Start a Reliquary client to see it here"
+  },
+  "history": {
+    "title": "Time Machine",
+    "subtitle": "View voice recognition history",
+    "errorLoad": "Failed to load logs, please check backend API",
+    "noRecords": "No records found",
+    "empty": "(Empty)",
+    "totalLatency": "Total Latency"
+  },
+  "deviceCard": {
+    "hotkey": "Hotkey",
+    "connected": "Connected",
+    "configure": "Configure Device"
+  },
+  "config": {
+    "errorNoDevice": "No device selected",
+    "errorDetectFailed": "Failed to detect key",
+    "statusOnline": "Online",
+    "statusOffline": "Offline",
+    "userInfo": "User Info",
+    "displayName": "Display Name",
+    "role": "Role",
+    "deviceId": "Device ID",
+    "connectedAt": "Connected At",
+    "hotkeySettings": "Hotkey Settings",
+    "mobileNotSupported": "Not supported on mobile",
+    "triggerKey": "Trigger Key",
+    "pressKey": "Press key...",
+    "detect": "Detect",
+    "current": "Current",
+    "hotkeyWarning": "Note: Only single keys supported (e.g. Right Shift, F9). Some keys may be intercepted by system.",
+    "languageModel": "Language & Model Settings",
+    "recognitionLang": "Recognition Language",
+    "langAuto": "Auto Detect",
+    "langZh": "Chinese",
+    "langEn": "English",
+    "langJa": "Japanese",
+    "langKo": "Korean",
+    "pipeline": "Pipeline",
+    "apiKey": "API Key (BYOK)",
+    "apiKeyDesc": "Optional: Use your own Groq API Key",
+    "save": "Save Config",
+    "cancel": "Cancel",
+    "deviceOfflineWarning": "⚠️ Device offline, cannot push config"
+  },
+  "common": {
+    "selectDate": "Select date",
+    "dateFormat": "PPP",
+    "monthFormat": "MMM"
+  }
+}

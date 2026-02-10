@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Reliquary</string>
+    <string name="app_subtitle">智能语音输入系统</string>
+    <string name="setup_wizard">设置向导</string>
+    <string name="setup_desc">完成以下步骤以启用 Reliquary 语音输入</string>
+    
+    <!-- Steps -->
+    <string name="step_mic_permission">麦克风权限</string>
+    <string name="step_mic_desc">授权后即可进行语音录入</string>
+    <string name="step_enable_ime">启用键盘</string>
+    <string name="step_enable_ime_desc">在系统设置中开启 Reliquary 键盘</string>
+    <string name="step_server_url">后端地址</string>
+    <string name="step_server_url_desc">Reliquary 服务器 URL</string>
+    <string name="step_auth_token">认证令牌</string>
+    <string name="step_auth_token_desc">输入您的 Master Secret 令牌</string>
+    <string name="step_switch_ime">切换键盘</string>
+    <string name="step_switch_ime_desc">将输入法切换为 Reliquary Voice</string>
+
+    <!-- Buttons -->
+    <string name="btn_grant">授权</string>
+    <string name="btn_settings">设置</string>
+    <string name="btn_save_url">保存地址</string>
+    <string name="btn_save_token">保存令牌</string>
+    <string name="btn_switch">切换</string>
+
+    <!-- Hints -->
+    <string name="hint_server_url">https://voice.example.com</string>
+    <string name="hint_auth_token">sk-reliquary-...</string>
+
+    <!-- Toasts & Status -->
+    <string name="mic_granted">✅ 麦克风权限已授权</string>
+    <string name="mic_required">麦克风权限是必需的</string>
+    <string name="enter_url">请输入后端地址</string>
+    <string name="invalid_url">地址必须以 http:// 或 https:// 开头</string>
+    <string name="url_saved">✅ 后端地址已保存</string>
+    <string name="enter_token">请输入认证令牌</string>
+    <string name="token_saved">✅ 认证令牌已保存</string>
+    <string name="ime_enabled">✅ Reliquary 键盘已启用</string>
+    <string name="url_configured">✅ 已配置: %1$s</string>
+    <string name="token_configured">✅ 令牌已配置</string>
+    <string name="footer_text">Reliquary v1.5 · Multi-User + BYOK</string>
+
+    <!-- IME Service Status -->
+    <string name="status_ready">Ready</string>
+    <string name="status_listening">Listening...</string>
+    <string name="status_processing">Processing...</string>
+    <string name="status_not_initialized">Not Initialized</string>
+    <string name="error_mic_missing">Mic Permission Missing</string>
+    <string name="error_audio_init">Audio Init Failed</string>
+    <string name="error_recording">Recording Error</string>
+    
+    <!-- IME Errors -->
+    <string name="error_api_key">Groq API Key Required, check web UI</string>
+    <string name="error_ssl">SSL Certificate Error</string>
+    <string name="error_connection_refused">Connection Refused</string>
+    <string name="error_connection_failed">Connection Failed</string>
+    <string name="error_timeout">Request Timeout</string>
+    <string name="error_auth">Auth Failed</string>
+    <string name="error_permission">Permission Denied</string>
+    <string name="error_too_short">Too Short</string>
+</resources>

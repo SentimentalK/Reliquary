@@ -25,7 +25,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reliquary"
+            android:text="@string/app_name"
             android:textSize="32sp"
             android:textStyle="bold"
             android:textColor="@color/foreground"
@@ -35,7 +35,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="智能语音输入系统"
+            android:text="@string/app_subtitle"
             android:textSize="14sp"
             android:textColor="@color/muted_foreground"
             android:layout_marginTop="4dp"
@@ -53,7 +53,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="设置向导"
+                android:text="@string/setup_wizard"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/foreground"
@@ -62,7 +62,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="完成以下步骤以启用 Reliquary 语音输入"
+                android:text="@string/setup_desc"
                 android:textSize="13sp"
                 android:textColor="@color/muted_foreground"
                 android:layout_marginBottom="20dp" />
@@ -99,7 +99,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="麦克风权限"
+                        android:text="@string/step_mic_permission"
                         android:textSize="15sp"
                         android:textStyle="bold"
                         android:textColor="@color/foreground" />
@@ -108,7 +108,7 @@
                         android:id="@+id/step1_desc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="授权后即可进行语音录入"
+                        android:text="@string/step_mic_desc"
                         android:textSize="12sp"
                         android:textColor="@color/muted_foreground"
                         android:layout_marginTop="2dp" />
@@ -118,7 +118,7 @@
                     android:id="@+id/btn_grant_permission"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:text="授权"
+                    android:text="@string/btn_grant"
                     android:textSize="13sp"
                     android:textColor="@color/primary_foreground"
                     android:background="@drawable/bg_button_primary"
@@ -161,7 +161,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="启用键盘"
+                        android:text="@string/step_enable_ime"
                         android:textSize="15sp"
                         android:textStyle="bold"
                         android:textColor="@color/foreground" />
@@ -170,7 +170,7 @@
                         android:id="@+id/step2_desc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="在系统设置中开启 Reliquary 键盘"
+                        android:text="@string/step_enable_ime_desc"
                         android:textSize="12sp"
                         android:textColor="@color/muted_foreground"
                         android:layout_marginTop="2dp" />
@@ -180,7 +180,7 @@
                     android:id="@+id/btn_enable_ime"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:text="设置"
+                    android:text="@string/btn_settings"
                     android:textSize="13sp"
                     android:textColor="@color/primary_foreground"
                     android:background="@drawable/bg_button_primary"
@@ -229,7 +229,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="后端地址"
+                            android:text="@string/step_server_url"
                             android:textSize="15sp"
                             android:textStyle="bold"
                             android:textColor="@color/foreground" />
@@ -238,7 +238,7 @@
                             android:id="@+id/step3_desc"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Reliquary 服务器 URL"
+                            android:text="@string/step_server_url_desc"
                             android:textSize="12sp"
                             android:textColor="@color/muted_foreground"
                             android:layout_marginTop="2dp" />
@@ -249,7 +249,7 @@
                     android:id="@+id/et_server_url"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:hint="https://voice.example.com"
+                    android:hint="@string/hint_server_url"
                     android:textColorHint="#4A5568"
                     android:textColor="@color/foreground"
                     android:textSize="14sp"
@@ -265,7 +265,7 @@
                     android:id="@+id/btn_save_url"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
-                    android:text="保存地址"
+                    android:text="@string/btn_save_url"
                     android:textSize="14sp"
                     android:textColor="@color/primary_foreground"
                     android:background="@drawable/bg_button_primary"
@@ -311,7 +311,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="认证令牌"
+                            android:text="@string/step_auth_token"
                             android:textSize="15sp"
                             android:textStyle="bold"
                             android:textColor="@color/foreground" />
@@ -320,7 +320,7 @@
                             android:id="@+id/step4_desc"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="输入您的 Master Secret 令牌"
+                            android:text="@string/step_auth_token_desc"
                             android:textSize="12sp"
                             android:textColor="@color/muted_foreground"
                             android:layout_marginTop="2dp" />
@@ -331,7 +331,7 @@
                     android:id="@+id/et_auth_token"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:hint="sk-reliquary-..."
+                    android:hint="@string/hint_auth_token"
                     android:textColorHint="#4A5568"
                     android:textColor="@color/foreground"
                     android:textSize="14sp"
@@ -347,7 +347,7 @@
                     android:id="@+id/btn_save_token"
                     android:layout_width="match_parent"
                     android:layout_height="40dp"
-                    android:text="保存令牌"
+                    android:text="@string/btn_save_token"
                     android:textSize="14sp"
                     android:textColor="@color/primary_foreground"
                     android:background="@drawable/bg_button_primary"
@@ -386,7 +386,7 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="切换键盘"
+                        android:text="@string/step_switch_ime"
                         android:textSize="15sp"
                         android:textStyle="bold"
                         android:textColor="@color/foreground" />
@@ -395,7 +395,7 @@
                         android:id="@+id/step5_desc"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="将输入法切换为 Reliquary Voice"
+                        android:text="@string/step_switch_ime_desc"
                         android:textSize="12sp"
                         android:textColor="@color/muted_foreground"
                         android:layout_marginTop="2dp" />
@@ -405,7 +405,7 @@
                     android:id="@+id/btn_switch_ime"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
-                    android:text="切换"
+                    android:text="@string/btn_switch"
                     android:textSize="13sp"
                     android:textColor="@color/primary_foreground"
                     android:background="@drawable/bg_button_primary"
@@ -423,7 +423,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Reliquary v1.5 · Multi-User + BYOK"
+            android:text="@string/footer_text"
             android:textSize="12sp"
             android:textColor="@color/muted_foreground"
             android:layout_marginTop="24dp" />

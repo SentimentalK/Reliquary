@@ -136,9 +136,9 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
         if (initError != null) {
             updateStatusPill("error", initError!!)
         } else if (reliquaryClient != null) {
-            updateStatusPill("ready", "Ready")
+            updateStatusPill("ready", getString(R.string.status_ready))
         } else {
-            updateStatusPill("error", "Not Initialized")
+            updateStatusPill("error", getString(R.string.status_not_initialized))
         }
 
         // === Navigation Arrows (Up / Down only) ===
@@ -182,13 +182,13 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
                     isInErrorState = false  // Clear error on new recording attempt
                     v.background = ContextCompat.getDrawable(this, R.drawable.bg_kb_button_ptt_active)
                     startRecording()
-                    updateStatusPill("listening", "Listening...")
+                    updateStatusPill("listening", getString(R.string.status_listening))
                     true
                 }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     v.background = ContextCompat.getDrawable(this, R.drawable.bg_kb_button)
                     stopRecording()
-                    updateStatusPill("processing", "Processing...")
+                    updateStatusPill("processing", getString(R.string.status_processing))
                     true
                 }
                 else -> false
@@ -250,7 +250,7 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
 
     private fun startRecording() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            updateStatusPill("error", "Mic Permission Missing")
+            updateStatusPill("error", getString(R.string.error_mic_missing))
             return
         }
 
@@ -266,7 +266,7 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
             )
 
             if (audioRecord?.state != AudioRecord.STATE_INITIALIZED) {
-                updateStatusPill("error", "Audio Init Failed")
+                updateStatusPill("error", getString(R.string.error_audio_init))
                 return
             }
 
@@ -305,7 +305,7 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
         } catch (e: Exception) {
             e.printStackTrace()
             isRecording = false
-            updateStatusPill("error", "Recording Error")
+            updateStatusPill("error", getString(R.string.error_recording))
         }
     }
 
@@ -337,7 +337,7 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
         Handler(Looper.getMainLooper()).post {
             currentInputConnection?.commitText(text, 1)
             isInErrorState = false  // Clear error on success
-            updateStatusPill("ready", "Ready")
+            updateStatusPill("ready", getString(R.string.status_ready))
 
             // Success haptic
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -351,14 +351,14 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
         Handler(Looper.getMainLooper()).post {
             // Show meaningful error on status pill
             val displayMsg = when {
-                err.contains("API Key", ignoreCase = true) -> "Groq API Key Required, check web UI"
-                err.contains("certificate", ignoreCase = true) -> "SSL Certificate Error"
-                err.contains("connection refused", ignoreCase = true) -> "Connection Refused"
-                err.contains("connection", ignoreCase = true) -> "Connection Failed"
-                err.contains("timeout", ignoreCase = true) -> "Request Timeout"
-                err.contains("auth", ignoreCase = true) -> "Auth Failed"
-                err.contains("permission", ignoreCase = true) -> "Permission Denied"
-                err.contains("short", ignoreCase = true) -> "Too Short"
+                err.contains("API Key", ignoreCase = true) -> getString(R.string.error_api_key)
+                err.contains("certificate", ignoreCase = true) -> getString(R.string.error_ssl)
+                err.contains("connection refused", ignoreCase = true) -> getString(R.string.error_connection_refused)
+                err.contains("connection", ignoreCase = true) -> getString(R.string.error_connection_failed)
+                err.contains("timeout", ignoreCase = true) -> getString(R.string.error_timeout)
+                err.contains("auth", ignoreCase = true) -> getString(R.string.error_auth)
+                err.contains("permission", ignoreCase = true) -> getString(R.string.error_permission)
+                err.contains("short", ignoreCase = true) -> getString(R.string.error_too_short)
                 err.length > 30 -> err.substring(0, 30) + "..."
                 else -> err
             }
@@ -387,9 +387,9 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
                 return@post
             }
             when {
-                status == "Ready" -> updateStatusPill("ready", "Ready")
-                status.contains("Recording") -> updateStatusPill("listening", "Listening...")
-                status.contains("Processing") -> updateStatusPill("processing", "Processing...")
+                status == "Ready" -> updateStatusPill("ready", getString(R.string.status_ready))
+                status.contains("Recording") -> updateStatusPill("listening", getString(R.string.status_listening))
+                status.contains("Processing") -> updateStatusPill("processing", getString(R.string.status_processing))
                 else -> updateStatusPill("ready", status)
             }
         }

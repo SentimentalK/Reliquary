@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Reliquary</string>
+    <string name="app_subtitle">AI Voice Input System</string>
+    <string name="setup_wizard">Setup Wizard</string>
+    <string name="setup_desc">Complete steps to enable Reliquary</string>
+    
+    <!-- Steps -->
+    <string name="step_mic_permission">Mic Permission</string>
+    <string name="step_mic_desc">Grant permission to record audio</string>
+    <string name="step_enable_ime">Enable Keyboard</string>
+    <string name="step_enable_ime_desc">Enable Reliquary in System Settings</string>
+    <string name="step_server_url">Server URL</string>
+    <string name="step_server_url_desc">Reliquary Server Address</string>
+    <string name="step_auth_token">Auth Token</string>
+    <string name="step_auth_token_desc">Enter your Master Secret Token</string>
+    <string name="step_switch_ime">Switch Keyboard</string>
+    <string name="step_switch_ime_desc">Switch input method to Reliquary</string>
+
+    <!-- Buttons -->
+    <string name="btn_grant">Grant</string>
+    <string name="btn_settings">Settings</string>
+    <string name="btn_save_url">Save URL</string>
+    <string name="btn_save_token">Save Token</string>
+    <string name="btn_switch">Switch</string>
+
+    <!-- Hints -->
+    <string name="hint_server_url">https://voice.example.com</string>
+    <string name="hint_auth_token">sk-reliquary-...</string>
+
+    <!-- Toasts & Status -->
+    <string name="mic_granted">✅ Mic permission granted</string>
+    <string name="mic_required">Microphone permission is required</string>
+    <string name="enter_url">Please enter server URL</string>
+    <string name="invalid_url">URL must start with http:// or https://</string>
+    <string name="url_saved">✅ Server URL saved</string>
+    <string name="enter_token">Please enter auth token</string>
+    <string name="token_saved">✅ Auth token saved</string>
+    <string name="ime_enabled">✅ Reliquary Keyboard enabled</string>
+    <string name="url_configured">✅ Configured: %1$s</string>
+    <string name="token_configured">✅ Token configured</string>
+    <string name="footer_text">Reliquary v1.5 · Multi-User + BYOK</string>
+
+    <!-- IME Service Status -->
+    <string name="status_ready">Ready</string>
+    <string name="status_listening">Listening...</string>
+    <string name="status_processing">Processing...</string>
+    <string name="status_not_initialized">Not Initialized</string>
+    <string name="error_mic_missing">Mic Permission Missing</string>
+    <string name="error_audio_init">Audio Init Failed</string>
+    <string name="error_recording">Recording Error</string>
+    
+    <!-- IME Errors -->
+    <string name="error_api_key">Groq API Key Required, check web UI</string>
+    <string name="error_ssl">SSL Certificate Error</string>
+    <string name="error_connection_refused">Connection Refused</string>
+    <string name="error_connection_failed">Connection Failed</string>
+    <string name="error_timeout">Request Timeout</string>
+    <string name="error_auth">Auth Failed</string>
+    <string name="error_permission">Permission Denied</string>
+    <string name="error_too_short">Too Short</string>
+</resources>

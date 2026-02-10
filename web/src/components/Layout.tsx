@@ -8,29 +8,39 @@ import {
     AudioWaveform,
     LogOut,
     User,
+    Globe,
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from './ui/button'
 import { useThemeStore } from '@/stores/theme'
 import { useAuthStore } from '@/stores/auth'
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n-utils'
 
 interface LayoutProps {
     children: React.ReactNode
 }
 
-const navItems = [
-    { to: '/', icon: Monitor, label: '设备' },
-    { to: '/history', icon: History, label: '记录' },
-]
-
 export function Layout({ children }: LayoutProps) {
     const navigate = useNavigate()
     const { theme, setTheme } = useThemeStore()
     const { user, logout } = useAuthStore()
+    const { t, i18n } = useTranslation()
+
+    const navItems = [
+        { to: '/', icon: Monitor, label: t('nav.devices') },
+        { to: '/history', icon: History, label: t('nav.history') },
+    ]
 
     const cycleTheme = () => {
         if (theme === 'light') setTheme('dark')
         else if (theme === 'dark') setTheme('system')
         else setTheme('light')
+    }
+
+    const toggleLanguage = () => {
+        const currentIndex = SUPPORTED_LANGUAGES.indexOf(i18n.language)
+        const nextIndex = (currentIndex + 1) % SUPPORTED_LANGUAGES.length
+        i18n.changeLanguage(SUPPORTED_LANGUAGES[nextIndex])
     }
 
     const handleLogout = () => {
@@ -88,13 +98,13 @@ export function Layout({ children }: LayoutProps) {
                             className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
                         >
                             <LogOut className="h-4 w-4" />
-                            <span className="hidden md:block">退出登录</span>
+                            <span className="hidden md:block">{t('layout.logout')}</span>
                         </Button>
                     </div>
                 )}
 
-                {/* Theme Toggle */}
-                <div className="border-t p-4">
+                {/* Theme & Language Toggle */}
+                <div className="border-t p-4 space-y-2">
                     <Button
                         variant="ghost"
                         size="sm"
@@ -103,7 +113,19 @@ export function Layout({ children }: LayoutProps) {
                     >
                         <ThemeIcon className="h-5 w-5" />
                         <span className="hidden md:block">
-                            {theme === 'light' ? '浅色' : theme === 'dark' ? '深色' : '跟随系统'}
+                            {t('layout.theme')}
+                        </span>
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleLanguage}
+                        className="w-full justify-start gap-3"
+                    >
+                        <Globe className="h-5 w-5" />
+                        <span className="hidden md:block">
+                            {t('layout.toggleLanguage')}
                         </span>
                     </Button>
                 </div>
@@ -118,4 +140,5 @@ export function Layout({ children }: LayoutProps) {
         </div>
     )
 }
+
 

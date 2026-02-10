@@ -1,4 +1,5 @@
 import { Laptop, Keyboard, Smartphone } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { getKeyName } from '@/lib/utils'
@@ -12,6 +13,7 @@ interface DeviceCardProps {
 export function DeviceCard({ device }: DeviceCardProps) {
     const { openSheet } = useDevicesStore()
     const { user } = useAuthStore()
+    const { t } = useTranslation()
 
     return (
         <Card
@@ -56,7 +58,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
                         <div className="flex items-center justify-between">
                             <span className="text-muted-foreground flex items-center gap-1">
                                 <Keyboard className="h-4 w-4" />
-                                热键
+                                {t('deviceCard.hotkey')}
                             </span>
                             <span className="font-mono">
                                 {device.keycode ? getKeyName(device.keycode) : 'Right Option'}
@@ -67,7 +69,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
                     {/* Connection Time */}
                     {device.connected_at && (
                         <div className="flex items-center justify-between">
-                            <span className="text-muted-foreground">建立连接</span>
+                            <span className="text-muted-foreground">{t('deviceCard.connected')}</span>
                             <span>
                                 {(() => {
                                     if (!device.connected_at) return '-'
@@ -75,7 +77,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
                                     const date = typeof device.connected_at === 'number' || !isNaN(Number(device.connected_at))
                                         ? new Date(Number(device.connected_at) * 1000)
                                         : new Date(device.connected_at)
-                                    return date.toLocaleString('zh-CN')
+                                    return date.toLocaleString()
                                 })()}
                             </span>
                         </div>
@@ -85,7 +87,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
                 {/* Action Button - Always visible */}
                 <div className="mt-4">
                     <Button variant="secondary" size="sm" className="w-full">
-                        配置设备
+                        {t('deviceCard.configure')}
                     </Button>
                 </div>
             </CardContent>
