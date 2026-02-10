@@ -60,3 +60,61 @@ jobs:
           name: dist-snapshot
           path: dist/*
           retention-days: 7
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          check-latest: true
+
+      - name: Install Go Mobile Tools (Binaries)
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          go install golang.org/x/mobile/cmd/gobind@latest
+        env:
+          GOPROXY: https://proxy.golang.org,direct
+
+      - name: Setup Android NDK
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26b
+          add-to-path: true
+
+      - name: Initialize Gomobile
+        run: gomobile init
+
+      - name: Build Go Library (aar)
+        working-directory: client/mobile
+        run: |
+          gomobile bind -target=android -androidapi 26 -o mobile.aar .
+
+      - name: Move aar to Android Project
+        run: |
+          mkdir -p client/android/app/libs
+          mv client/mobile/mobile.aar client/android/app/libs/reliquary.aar
+
+      - name: Grant Execute Permission for Gradle
+        run: chmod +x client/android/gradlew
+
+      - name: Build Android APK (Debug)
+        working-directory: client/android
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: reliquary-android-debug.apk
+          path: client/android/app/build/outputs/apk/debug/app-debug.apk
+
