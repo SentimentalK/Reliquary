@@ -1,7 +1,10 @@
 # =============================================================================
 # Stage 1: Builder - Compile the frontend
+# We use --platform=$BUILDPLATFORM to always run the build on the native builder
+# architecture (usually amd64). This prevents slow/unstable QEMU emulation
+# when building for arm64, since the output (HTML/JS/CSS) is platform-agnostic.
 # =============================================================================
-FROM node:20-alpine AS builder
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 
 WORKDIR /app
 
