@@ -59,9 +59,8 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
             val prefs = getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
             val serverUrl = prefs.getString(MainActivity.KEY_SERVER_URL, "") ?: ""
             val authToken = prefs.getString(MainActivity.KEY_AUTH_TOKEN, "") ?: ""
-            val deviceId = android.provider.Settings.Secure.getString(
-                contentResolver, android.provider.Settings.Secure.ANDROID_ID
-            ) ?: "android_unknown"
+            val deviceId = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim()
+                .ifEmpty { "Android Device" }
 
             if (serverUrl.isEmpty() || authToken.isEmpty()) {
                 val msg = if (serverUrl.isEmpty()) "Server URL not configured" else "Auth Token not configured"

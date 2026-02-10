@@ -77,6 +77,7 @@ export interface DeviceInfo {
     user_id: string
     display_name?: string
     connected_at: string
+    platform?: string
 }
 
 export interface DevicesResponse {
