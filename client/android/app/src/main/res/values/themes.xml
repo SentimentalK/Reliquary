@@ -16,7 +16,7 @@
         <!-- Status bar: Light background -> Dark icons -->
         <item name="android:statusBarColor">@color/status_bar</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">@color/background</item>
+        <item name="android:navigationBarColor">#F3F4F6</item>
         <item name="android:windowLightNavigationBar">true</item>
         <!-- No action bar -->
         <item name="windowActionBar">false</item>
