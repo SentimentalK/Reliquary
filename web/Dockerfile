@@ -22,18 +22,8 @@ RUN npm run build
 # =============================================================================
 FROM nginx:alpine AS runner
 
-# Install openssl for self-signed certificate generation
-RUN apk add --no-cache openssl
-
 # Remove default nginx config
 RUN rm /etc/nginx/conf.d/default.conf
-
-# Create SSL directory and generate self-signed certificate
-RUN mkdir -p /etc/nginx/ssl && \
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-    -keyout /etc/nginx/ssl/server.key \
-    -out /etc/nginx/ssl/server.crt \
-    -subj "/C=US/ST=State/L=City/O=server/OU=Dev/CN=localhost"
 
 # Copy custom nginx config
 COPY nginx.conf /etc/nginx/conf.d/default.conf
@@ -41,12 +31,12 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Copy built assets from builder stage (Vite outputs to 'dist/')
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose ports 80 (HTTP redirect) and 443 (HTTPS)
-EXPOSE 80 443
+# Expose port 3000 (Internal HTTP)
+EXPOSE 3000
 
-# Health check on HTTPS
+# Health check on HTTP port 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --quiet --tries=1 --spider --no-check-certificate https://localhost:443/ || exit 1
+    CMD wget --quiet --tries=1 --spider http://localhost:3000/ || exit 1
 
 # Start nginx
 CMD ["nginx", "-g", "daemon off;"]
