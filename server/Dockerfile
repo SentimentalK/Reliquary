@@ -14,6 +14,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install Python dependencies

@@ -30,6 +30,7 @@ services:
       - USER_INVITE_CODE=${USER_INVITE_CODE:-reliquary-user-2026}
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
       - STORAGE_ROOT=/app/data
+      - TZ=America/Toronto
     volumes:
       - ./data:/app/data
     healthcheck:

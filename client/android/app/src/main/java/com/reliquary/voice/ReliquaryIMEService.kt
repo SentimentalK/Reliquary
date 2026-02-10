@@ -152,14 +152,46 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
         }
 
         // === Backspace (handles both selection and single char) ===
-        view.findViewById<ImageButton>(R.id.btn_backspace).setOnClickListener {
-            hapticLight()
-            val ic = currentInputConnection ?: return@setOnClickListener
-            val selected = ic.getSelectedText(0)
-            if (selected != null && selected.isNotEmpty()) {
-                ic.commitText("", 1)
-            } else {
-                ic.deleteSurroundingText(1, 0)
+        // === Backspace (Continuous) ===
+        val btnBackspace = view.findViewById<ImageButton>(R.id.btn_backspace)
+        val handler = Handler(Looper.getMainLooper())
+        
+        val deleteRunnable = object : Runnable {
+            override fun run() {
+                val ic = currentInputConnection ?: return
+                val selected = ic.getSelectedText(0)
+                if (selected != null && selected.isNotEmpty()) {
+                    ic.commitText("", 1)
+                } else {
+                    ic.deleteSurroundingText(1, 0)
+                }
+                hapticLight()
+                handler.postDelayed(this, 50) // Repeat every 50ms
+            }
+        }
+
+        btnBackspace.setOnTouchListener { _, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    // Initial delete
+                    hapticLight()
+                    val ic = currentInputConnection
+                    val selected = ic?.getSelectedText(0)
+                    if (selected != null && selected.isNotEmpty()) {
+                        ic.commitText("", 1)
+                    } else {
+                        ic?.deleteSurroundingText(1, 0)
+                    }
+                    
+                    // Start repeating after delay
+                    handler.postDelayed(deleteRunnable, 400)
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    handler.removeCallbacks(deleteRunnable)
+                    true
+                }
+                else -> false
             }
         }
 
