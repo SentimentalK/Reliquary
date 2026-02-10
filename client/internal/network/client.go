@@ -33,6 +33,7 @@ type Identity struct {
 	Pipeline           string // Config persistence
 	KeyCode            int    // Config persistence
 	InsecureSkipVerify bool   // Config: skip SSL verify (dev/localhost)
+	Platform           string // "android", "macos", "windows" etc.
 }
 
 // StreamClient handles WebSocket streaming to the transcription server.
@@ -517,6 +518,9 @@ func (c *ControlPlaneClient) connect() error {
 	}
 	if c.identity.KeyCode != 0 {
 		handshake["keycode"] = c.identity.KeyCode
+	}
+	if c.identity.Platform != "" {
+		handshake["platform"] = c.identity.Platform
 	}
 
 	conn.SetWriteDeadline(time.Now().Add(WriteTimeout))

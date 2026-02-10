@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Keyboard, Save, X, Monitor, Key, Globe, Settings } from 'lucide-react'
+import { Loader2, Keyboard, Save, X, Monitor, Key, Globe, Settings, Smartphone } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -14,8 +14,8 @@ export function DeviceConfigSheet() {
     const { user } = useAuthStore()
 
     const [keycode, setKeycode] = useState(selectedDevice?.keycode ?? 61)
-    const [language, setLanguage] = useState(selectedDevice?.language ?? 'zh')
-    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline ?? 'geo_reliquary_v1')
+    const [language, setLanguage] = useState(selectedDevice?.language ?? '')
+    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline ?? 'raw_whisper')
     const [apiKey, setApiKey] = useState('')
     const [isLearning, setIsLearning] = useState(false)
 
@@ -23,8 +23,8 @@ export function DeviceConfigSheet() {
     useEffect(() => {
         if (selectedDevice) {
             setKeycode(selectedDevice.keycode ?? 61)
-            setLanguage(selectedDevice.language ?? 'zh')
-            setPipeline(selectedDevice.pipeline ?? 'geo_reliquary_v1')
+            setLanguage(selectedDevice.language ?? '')
+            setPipeline(selectedDevice.pipeline ?? 'raw_whisper')
             setApiKey('') // Don't show existing API key for security
         }
     }, [selectedDevice])
@@ -91,7 +91,11 @@ export function DeviceConfigSheet() {
                     <div className="flex items-center justify-between border-b px-6 py-4">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                                <Monitor className="h-5 w-5 text-primary" />
+                                {selectedDevice.platform === 'android' ? (
+                                    <Smartphone className="h-5 w-5 text-primary" />
+                                ) : (
+                                    <Monitor className="h-5 w-5 text-primary" />
+                                )}
                             </div>
                             <div>
                                 <h2 className="text-lg font-semibold">{selectedDevice.device_id}</h2>
@@ -146,49 +150,54 @@ export function DeviceConfigSheet() {
                                 </div>
                             </div>
 
-                            {/* Hotkey Settings */}
-                            <div className="rounded-xl border bg-card p-6">
+                            {/* Hotkey Settings - disabled for mobile */}
+                            <div className={`rounded-xl border bg-card p-6 ${selectedDevice.platform === 'android' ? 'opacity-50' : ''}`}>
                                 <div className="flex items-center gap-2 mb-4">
                                     <Keyboard className="h-5 w-5 text-muted-foreground" />
                                     <h3 className="font-medium">快捷键设置</h3>
+                                    {selectedDevice.platform === 'android' && (
+                                        <span className="text-xs text-muted-foreground ml-auto">移动设备不适用</span>
+                                    )}
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="keycode">触发键</Label>
-                                        <div className="flex gap-2">
-                                            <Input
-                                                id="keycode"
-                                                type="number"
-                                                value={keycode}
-                                                onChange={(e) => setKeycode(parseInt(e.target.value) || 61)}
-                                                className="flex-1"
-                                            />
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => learnMutation.mutate()}
-                                                disabled={isLearning || !selectedDevice.connected}
-                                            >
-                                                {isLearning ? (
-                                                    <>
-                                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                                        按下按键...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Keyboard className="mr-2 h-4 w-4" />
-                                                        侦测
-                                                    </>
-                                                )}
-                                            </Button>
+                                {selectedDevice.platform !== 'android' && (
+                                    <div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="keycode">触发键</Label>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    id="keycode"
+                                                    type="number"
+                                                    value={keycode}
+                                                    onChange={(e) => setKeycode(parseInt(e.target.value) || 61)}
+                                                    className="flex-1"
+                                                />
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => learnMutation.mutate()}
+                                                    disabled={isLearning || !selectedDevice.connected}
+                                                >
+                                                    {isLearning ? (
+                                                        <>
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            按下按键...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Keyboard className="mr-2 h-4 w-4" />
+                                                            侦测
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                                当前: <span className="font-medium">{getKeyName(keycode)}</span> (code: {keycode})
+                                            </p>
+                                            <p className="text-xs text-amber-500 mt-1">
+                                                注意：仅支持单键触发（如 Right Shift, F9）。部分按键可能被系统或输入法拦截。
+                                            </p>
                                         </div>
-                                        <p className="text-sm text-muted-foreground">
-                                            当前: <span className="font-medium">{getKeyName(keycode)}</span> (code: {keycode})
-                                        </p>
-                                        <p className="text-xs text-amber-500 mt-1">
-                                            注意：仅支持单键触发（如 Right Shift, F9）。部分按键可能被系统或输入法拦截。
-                                        </p>
                                     </div>
-                                </div>
+                                )}
                             </div>
 
                             {/* Language & Pipeline Settings */}

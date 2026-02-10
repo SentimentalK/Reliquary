@@ -127,6 +127,7 @@ async def websocket_control_plane(websocket: WebSocket):
         device_id = handshake.get("device_id")
         user_id = handshake.get("user_id", "unknown_user")
         auth_token = handshake.get("auth_token")  # Optional authentication
+        platform = handshake.get("platform")  # "android", "macos", "windows" etc.
         
         if not device_id:
             await websocket.send_json({"error": "device_id required in handshake"})
@@ -153,8 +154,8 @@ async def websocket_control_plane(websocket: WebSocket):
             await websocket.close(code=4001, reason="Authentication required")
             return
         
-        # Step 3: Register connection with user info
-        await manager.connect(device_id, user_id, websocket, user_info)
+        # Step 3: Register connection with user info and platform
+        await manager.connect(device_id, user_id, websocket, user_info, platform)
         
         # Step 3.5: Sync config from Client (Source of Truth)
         # If client reports specific settings, update server store

@@ -74,6 +74,13 @@ func NewEngine(cfg Config, handler ResultHandler) *Engine {
 	}
 }
 
+// GetConfig returns a copy of the current engine configuration.
+func (e *Engine) GetConfig() Config {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.config
+}
+
 // UpdateConfig updates the engine configuration dynamically.
 func (e *Engine) UpdateConfig(cfg Config) {
 	e.mu.Lock()

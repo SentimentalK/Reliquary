@@ -1,4 +1,4 @@
-import { Laptop, Keyboard } from 'lucide-react'
+import { Laptop, Keyboard, Smartphone } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
 import { getKeyName } from '@/lib/utils'
@@ -32,7 +32,11 @@ export function DeviceCard({ device }: DeviceCardProps) {
             <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-muted p-2">
-                        <Laptop className="h-6 w-6" />
+                        {device.platform === 'android' ? (
+                            <Smartphone className="h-6 w-6" />
+                        ) : (
+                            <Laptop className="h-6 w-6" />
+                        )}
                     </div>
                     <div className="flex-1 min-w-0">
                         <CardTitle className="text-base break-words">
@@ -47,16 +51,18 @@ export function DeviceCard({ device }: DeviceCardProps) {
 
             <CardContent className="pt-0">
                 <div className="space-y-2 text-sm">
-                    {/* Hotkey */}
-                    <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground flex items-center gap-1">
-                            <Keyboard className="h-4 w-4" />
-                            热键
-                        </span>
-                        <span className="font-mono">
-                            {device.keycode ? getKeyName(device.keycode) : 'Right Option'}
-                        </span>
-                    </div>
+                    {/* Hotkey - hidden for mobile devices */}
+                    {device.platform !== 'android' && (
+                        <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground flex items-center gap-1">
+                                <Keyboard className="h-4 w-4" />
+                                热键
+                            </span>
+                            <span className="font-mono">
+                                {device.keycode ? getKeyName(device.keycode) : 'Right Option'}
+                            </span>
+                        </div>
+                    )}
 
                     {/* Connection Time */}
                     {device.connected_at && (

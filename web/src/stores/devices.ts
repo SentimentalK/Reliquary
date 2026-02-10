@@ -11,6 +11,7 @@ export interface Device {
     server_url?: string
     api_key?: string
     pipeline?: string
+    platform?: string  // "android", "macos", "windows" etc.
 }
 
 interface DevicesState {

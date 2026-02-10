@@ -23,6 +23,9 @@ class MainActivity : AppCompatActivity() {
         const val PREFS_NAME = "reliquary_config"
         const val KEY_SERVER_URL = "server_url"
         const val KEY_AUTH_TOKEN = "auth_token"
+        const val KEY_API_KEY = "api_key"
+        const val KEY_LANGUAGE = "language"
+        const val KEY_PIPELINE = "pipeline"
     }
 
     private lateinit var prefs: SharedPreferences

@@ -70,20 +70,47 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
                 return
             }
 
+            // Read cached config (set via web UI through Control Plane)
+            val apiKey = prefs.getString(MainActivity.KEY_API_KEY, "") ?: ""
+            val language = prefs.getString(MainActivity.KEY_LANGUAGE, "") ?: ""
+            val pipeline = prefs.getString(MainActivity.KEY_PIPELINE, "") ?: ""
+
             // Initialize Go Client with config from SharedPreferences
             reliquaryClient = Mobile.newReliquary(
                 serverUrl,
                 deviceId,
                 authToken,
-                "",  // API Key: empty by default, can be set via web UI (BYOK)
+                apiKey,
                 this
             )
-            android.util.Log.d("ReliquaryIME", "Go Client Initialized (server: $serverUrl)")
+
+            // Apply cached language/pipeline if set
+            if (language.isNotEmpty() || pipeline.isNotEmpty()) {
+                reliquaryClient?.updateConfig(apiKey, language, pipeline)
+            }
+
+            android.util.Log.d("ReliquaryIME", "Go Client Initialized (server: $serverUrl, lang: $language, pipe: $pipeline, byok: ${apiKey.isNotEmpty()})")
         } catch (e: Throwable) {
             e.printStackTrace()
             initError = "Core Init Failed: ${e.message}"
             android.util.Log.e("ReliquaryIME", initError!!)
         }
+    }
+
+    // === Keyboard Window Lifecycle ===
+    // Control Plane connects when keyboard is shown, disconnects when hidden.
+    // This ensures no background network activity when user is not using the keyboard.
+
+    override fun onWindowShown() {
+        super.onWindowShown()
+        android.util.Log.d("ReliquaryIME", "Keyboard shown — connecting control plane")
+        reliquaryClient?.connectControl()
+    }
+
+    override fun onWindowHidden() {
+        super.onWindowHidden()
+        android.util.Log.d("ReliquaryIME", "Keyboard hidden — disconnecting control plane")
+        reliquaryClient?.disconnectControl()
     }
 
     override fun onCreateInputView(): View {
@@ -367,5 +394,37 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
                 else -> updateStatusPill("ready", status)
             }
         }
+    }
+
+    // === Control Plane Callbacks ===
+
+    override fun onControlConnected() {
+        android.util.Log.d("ReliquaryIME", "Control Plane: Connected")
+    }
+
+    override fun onControlDisconnected() {
+        android.util.Log.d("ReliquaryIME", "Control Plane: Disconnected")
+    }
+
+    override fun onConfigUpdate(apiKey: String?, language: String?, pipeline: String?) {
+        android.util.Log.d("ReliquaryIME", "Config update from server: lang=$language, pipe=$pipeline, byok=${!apiKey.isNullOrEmpty()}")
+
+        // Persist to SharedPreferences so config survives restarts
+        val prefs = getSharedPreferences(MainActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+
+        if (!apiKey.isNullOrEmpty()) {
+            editor.putString(MainActivity.KEY_API_KEY, apiKey)
+        }
+        // Language: empty string = auto detect, which is a valid value to persist
+        if (language != null) {
+            editor.putString(MainActivity.KEY_LANGUAGE, language)
+        }
+        if (!pipeline.isNullOrEmpty()) {
+            editor.putString(MainActivity.KEY_PIPELINE, pipeline)
+        }
+
+        editor.apply()
+        android.util.Log.d("ReliquaryIME", "Config persisted to SharedPreferences")
     }
 }

@@ -25,6 +25,7 @@ class DeviceConnection:
     connected_at: float
     # Authenticated user info (from auth service)
     user_info: Optional[Any] = None  # UserInfo from auth.py
+    platform: Optional[str] = None  # "android", "macos", "windows" etc.
 
 
 class ConnectionManager:
@@ -63,7 +64,8 @@ class ConnectionManager:
         device_id: str,
         user_id: str,
         websocket: WebSocket,
-        user_info: Optional[Any] = None
+        user_info: Optional[Any] = None,
+        platform: Optional[str] = None
     ) -> None:
         """
         Register a new device connection.
@@ -75,6 +77,7 @@ class ConnectionManager:
             user_id: User identifier
             websocket: FastAPI WebSocket instance
             user_info: Authenticated user info (from auth service)
+            platform: Client platform ("android", "macos", "windows" etc.)
         """
         import time
         
@@ -94,8 +97,9 @@ class ConnectionManager:
                 websocket=websocket,
                 connected_at=time.time(),
                 user_info=user_info,
+                platform=platform,
             )
-            print(f"[ConnectionManager] Device {device_id} connected (user: {user_id})")
+            print(f"[ConnectionManager] Device {device_id} connected (user: {user_id}, platform: {platform or 'desktop'})")
     
     async def disconnect(self, device_id: str) -> None:
         """
@@ -197,6 +201,7 @@ class ConnectionManager:
             "user_id": conn.user_id,
             "display_name": display_name,
             "connected_at": conn.connected_at,
+            "platform": conn.platform,
         }
     
     def list_devices(self, user_id: Optional[str] = None) -> list[str]:
@@ -240,6 +245,7 @@ class ConnectionManager:
                     "device_id": conn.device_id,
                     "user_id": conn.user_id,
                     "connected_at": conn.connected_at,
+                    "platform": conn.platform,
                 })
         
         return connections
