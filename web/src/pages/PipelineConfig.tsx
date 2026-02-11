@@ -9,21 +9,25 @@ import { pipelineConfigApi, type PipelineSchema, type StepSchema } from '@/lib/a
 
 function StepConfigForm({
     step,
-    keywords,
+    keywordsText,
     userPrompt,
-    onKeywordsChange,
+    onKeywordsTextChange,
     onUserPromptChange,
 }: {
     step: StepSchema
-    keywords: string[]
+    keywordsText: string
     userPrompt: string
-    onKeywordsChange: (keywords: string[]) => void
+    onKeywordsTextChange: (text: string) => void
     onUserPromptChange: (prompt: string) => void
 }) {
     const { t } = useTranslation()
 
-    // Convert keywords array to textarea text (one per line)
-    const keywordsText = keywords.join('\n')
+    // Count keywords from raw text (for display only)
+    const keywordCount = keywordsText
+        .split(/[\n,;，；]+/)
+        .map(l => l.trim())
+        .filter(Boolean)
+        .length
 
     return (
         <div className="space-y-4 border rounded-lg p-4 bg-card">
@@ -57,17 +61,10 @@ function StepConfigForm({
                     className="w-full rounded-md border bg-background px-3 py-2 text-sm font-mono min-h-[100px] resize-y focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder={t('pipelineConfig.keywordsPlaceholder')}
                     value={keywordsText}
-                    onChange={(e) => {
-                        // Support any separator: newline, comma, space
-                        const lines = e.target.value
-                            .split(/[\n,;，；]+/)
-                            .map(l => l.trim())
-                            .filter(Boolean)
-                        onKeywordsChange(lines.slice(0, 10))
-                    }}
+                    onChange={(e) => onKeywordsTextChange(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
-                    {keywords.length}/10
+                    {keywordCount}/10
                 </p>
             </div>
 
@@ -91,13 +88,28 @@ function StepConfigForm({
 }
 
 
+/** Parse raw keywords text into clean array (max 10) */
+function parseKeywords(text: string): string[] {
+    return text
+        .split(/[\n,;，；]+/)
+        .map(l => l.trim())
+        .filter(Boolean)
+        .slice(0, 10)
+}
+
+/** Convert keywords array from server into editable text */
+function keywordsToText(keywords: string[]): string {
+    return keywords.join('\n')
+}
+
+
 export function PipelineConfig() {
     const { t } = useTranslation()
     const queryClient = useQueryClient()
 
-    // State
+    // State — keywords stored as raw text for free-form editing
     const [selectedPipeline, setSelectedPipeline] = useState<string>('')
-    const [localConfig, setLocalConfig] = useState<Record<string, Record<string, { keywords: string[]; user_prompt: string }>>>({})
+    const [localConfig, setLocalConfig] = useState<Record<string, Record<string, { keywordsText: string; user_prompt: string }>>>({})
     const [hasChanges, setHasChanges] = useState(false)
 
     // Fetch schema (available pipelines & steps)
@@ -112,9 +124,22 @@ export function PipelineConfig() {
         queryFn: pipelineConfigApi.get,
     })
 
-    // Save mutation
+    // Save mutation — parse keywords text into array before sending
     const saveMutation = useMutation({
-        mutationFn: pipelineConfigApi.update,
+        mutationFn: (config: Record<string, Record<string, { keywordsText: string; user_prompt: string }>>) => {
+            // Convert local format (keywordsText) to API format (keywords[])
+            const apiConfig: Record<string, Record<string, { keywords: string[]; user_prompt: string }>> = {}
+            for (const [pk, steps] of Object.entries(config)) {
+                apiConfig[pk] = {}
+                for (const [sn, sc] of Object.entries(steps)) {
+                    apiConfig[pk][sn] = {
+                        keywords: parseKeywords(sc.keywordsText),
+                        user_prompt: sc.user_prompt,
+                    }
+                }
+            }
+            return pipelineConfigApi.update(apiConfig)
+        },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['pipeline-config'] })
             setHasChanges(false)
@@ -132,10 +157,20 @@ export function PipelineConfig() {
         }
     }, [pipelineKeys, selectedPipeline])
 
-    // Initialize local config from server data
+    // Initialize local config from server data (convert keywords[] → keywordsText)
     useEffect(() => {
         if (configData?.config) {
-            setLocalConfig(configData.config)
+            const converted: Record<string, Record<string, { keywordsText: string; user_prompt: string }>> = {}
+            for (const [pk, steps] of Object.entries(configData.config)) {
+                converted[pk] = {}
+                for (const [sn, sc] of Object.entries(steps)) {
+                    converted[pk][sn] = {
+                        keywordsText: keywordsToText(sc.keywords),
+                        user_prompt: sc.user_prompt,
+                    }
+                }
+            }
+            setLocalConfig(converted)
         }
     }, [configData])
 
@@ -143,10 +178,10 @@ export function PipelineConfig() {
     const steps = selectedSchema?.steps || []
 
     const getStepConfig = (stepName: string) => {
-        return localConfig[selectedPipeline]?.[stepName] || { keywords: [], user_prompt: '' }
+        return localConfig[selectedPipeline]?.[stepName] || { keywordsText: '', user_prompt: '' }
     }
 
-    const updateStepConfig = (stepName: string, field: 'keywords' | 'user_prompt', value: string[] | string) => {
+    const updateStepConfig = (stepName: string, field: 'keywordsText' | 'user_prompt', value: string) => {
         setLocalConfig(prev => ({
             ...prev,
             [selectedPipeline]: {
@@ -213,9 +248,9 @@ export function PipelineConfig() {
                                     <StepConfigForm
                                         key={step.step_name}
                                         step={step}
-                                        keywords={cfg.keywords}
+                                        keywordsText={cfg.keywordsText}
                                         userPrompt={cfg.user_prompt}
-                                        onKeywordsChange={(kw) => updateStepConfig(step.step_name, 'keywords', kw)}
+                                        onKeywordsTextChange={(text) => updateStepConfig(step.step_name, 'keywordsText', text)}
                                         onUserPromptChange={(p) => updateStepConfig(step.step_name, 'user_prompt', p)}
                                     />
                                 )

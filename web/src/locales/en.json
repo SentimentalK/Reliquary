@@ -75,7 +75,7 @@
     "langKo": "Korean",
     "pipeline": "Pipeline",
     "apiKey": "API Key (BYOK)",
-    "apiKeyDesc": "Optional: Use your own Groq API Key",
+    "apiKeyDesc": "Groq API Key, get from https://console.groq.com/keys",
     "save": "Save Config",
     "cancel": "Cancel",
     "deviceOfflineWarning": "⚠️ Device offline, cannot push config"

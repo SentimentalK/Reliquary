@@ -75,7 +75,7 @@
     "langKo": "韩语 (Korean)",
     "pipeline": "识别链路",
     "apiKey": "API 密钥 (BYOK)",
-    "apiKeyDesc": "可选：使用自己的 Groq API Key 进行语音识别",
+    "apiKeyDesc": "Groq API Key, 访问 https://console.groq.com/keys",
     "save": "保存配置",
     "cancel": "取消",
     "deviceOfflineWarning": "⚠️ 设备离线，无法推送配置"
