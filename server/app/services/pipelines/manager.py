@@ -5,16 +5,13 @@ from functools import lru_cache
 
 from app.services.pipelines.base import BasePipeline
 from app.services.pipelines.raw_whisper import RawWhisperPipeline
+from app.services.pipelines.whisper_fixer import WhisperFixerPipeline
 
 
 # Registry of available pipelines
 PIPELINE_REGISTRY: Dict[str, Type[BasePipeline]] = {
-    "raw": RawWhisperPipeline,
     "raw_whisper": RawWhisperPipeline,
-    "geo_reliquary_v1": RawWhisperPipeline, # TODO: Implement actual specialized pipeline
-    # Future pipelines can be added here:
-    # "hotword": HotWordCorrectionPipeline,
-    # "summarize": SummarizationPipeline,
+    "whisper_fixer": WhisperFixerPipeline,
 }
 
 
@@ -24,19 +21,19 @@ class PipelineManager:
     
     Usage:
         manager = PipelineManager()
-        pipeline = manager.get_pipeline("raw")
+        pipeline = manager.get_pipeline("raw_whisper")
         text = await pipeline.transcribe(audio_bytes)
     """
     
     def __init__(self):
         self._instances: Dict[str, BasePipeline] = {}
     
-    def get_pipeline(self, key: str = "raw") -> BasePipeline:
+    def get_pipeline(self, key: str = "raw_whisper") -> BasePipeline:
         """
         Get a pipeline instance by key.
         
         Args:
-            key: Pipeline identifier (default: "raw").
+            key: Pipeline identifier (default: "raw_whisper").
             
         Returns:
             Pipeline instance.

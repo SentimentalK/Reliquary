@@ -141,10 +141,8 @@ class StorageService:
         user_id: str,
         device_id: str,
         wav_data: bytes,
-        pipeline_key: str,
-        transcription_text: str,
+        step_results: list,
         total_latency_ms: int,
-        asr_latency_ms: int,
         user_info: Optional[object] = None,
     ) -> str:
         """
@@ -154,10 +152,8 @@ class StorageService:
             user_id: User identifier (display name)
             device_id: Client-provided device identifier
             wav_data: WAV audio data to save
-            pipeline_key: Pipeline name used (e.g., "raw", "raw_whisper")
-            transcription_text: Transcription result
+            step_results: Ordered list of StepResult from pipeline
             total_latency_ms: Total processing latency (user-perceived)
-            asr_latency_ms: ASR-only latency (transcription time)
             user_info: Optional UserInfo object for proper storage path
             
         Returns:
@@ -173,19 +169,19 @@ class StorageService:
             user_info=user_info,
         )
         
-        # Map pipeline key to descriptive transcription key
-        transcription_key = self._get_transcription_key(pipeline_key)
+        # Serialize step results as ordered array (includes per-step latency)
+        transcription = [
+            {"step": r.step, "text": r.text, "latency_ms": r.latency_ms}
+            for r in step_results
+        ]
         
         data = {
             "id": interaction_id,
             "timestamp": datetime.now().isoformat(),
             "audio_path": audio_path,
-            "transcription": {
-                transcription_key: transcription_text,
-            },
+            "transcription": transcription,
             "latency_stats": {
                 "total_ms": total_latency_ms,
-                "asr_ms": asr_latency_ms,
             },
         }
         
@@ -200,24 +196,6 @@ class StorageService:
             await f.write(json_line)
         
         return interaction_id
-    
-    def _get_transcription_key(self, pipeline_key: str) -> str:
-        """
-        Map pipeline key to descriptive transcription key.
-        
-        Args:
-            pipeline_key: Pipeline identifier (e.g., "raw", "raw_whisper")
-            
-        Returns:
-            Descriptive key for transcription dict (e.g., "whisper_large_v3_raw")
-        """
-        # Map known pipelines to descriptive keys
-        pipeline_map = {
-            "raw": "whisper_large_v3_raw",
-            "raw_whisper": "whisper_large_v3_raw",
-            "geo_reliquary_v1": "geo_reliquary_v1",
-        }
-        return pipeline_map.get(pipeline_key, f"pipeline_{pipeline_key}")
 
 
 # Singleton instance

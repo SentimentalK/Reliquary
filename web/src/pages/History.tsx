@@ -16,21 +16,17 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
     onToggle: () => void
 }) {
     const { t } = useTranslation()
-    // Get all transcription pipeline keys
-    const pipelineKeys = Object.keys(entry.transcription || {})
+    const steps = entry.transcription || []
 
-    // Find the primary text to display (prefer whisper raw, then first available)
-    const primaryKey = pipelineKeys.find(k => k.includes('whisper') && k.includes('raw'))
-        || pipelineKeys.find(k => k.includes('raw'))
-        || pipelineKeys[0]
-    const primaryText = primaryKey ? entry.transcription[primaryKey] : t('history.empty')
+    // Last step is the final output (shown in collapsed card)
+    const finalStep = steps.length > 0 ? steps[steps.length - 1] : null
+    const primaryText = finalStep?.text || t('history.empty')
 
-    // Check if there are multiple pipelines
-    const hasMultiplePipelines = pipelineKeys.length > 1
+    // Multiple steps means chain pipeline
+    const hasMultipleSteps = steps.length > 1
 
     // Latency stats
     const totalLatency = entry.latency_stats?.total_ms
-    const asrLatency = entry.latency_stats?.asr_ms
 
     return (
         <div className="border-b last:border-0">
@@ -60,9 +56,9 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
                                 {totalLatency}ms
                             </span>
                         )}
-                        {hasMultiplePipelines && (
+                        {hasMultipleSteps && (
                             <span className="text-blue-500">
-                                +{pipelineKeys.length - 1} pipeline
+                                {steps.length} steps
                             </span>
                         )}
                     </div>
@@ -82,24 +78,30 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
             {isExpanded && (
                 <div className="px-4 pb-4 pt-0">
                     <div className="ml-[5.5rem] rounded-lg bg-muted/50 p-4 text-sm space-y-3">
-                        {/* Show all pipeline outputs */}
-                        {pipelineKeys.map((key) => (
-                            <div key={key}>
-                                <span className="text-muted-foreground text-xs font-mono">
-                                    {key}:
-                                </span>
-                                <p className={`mt-1 ${key === primaryKey ? '' : 'text-amber-600 dark:text-amber-400'}`}>
-                                    {entry.transcription[key]}
+                        {/* Show all pipeline step outputs in order */}
+                        {steps.map((step, index) => (
+                            <div key={index}>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-muted-foreground text-xs font-mono">
+                                        {index + 1}. {step.step}
+                                    </span>
+                                    {step.latency_ms > 0 && (
+                                        <span className="text-muted-foreground text-xs">
+                                            ({step.latency_ms}ms)
+                                        </span>
+                                    )}
+                                </div>
+                                <p className={`mt-1 ${index === steps.length - 1 ? '' : 'text-amber-600 dark:text-amber-400'}`}>
+                                    {step.text}
                                 </p>
                             </div>
                         ))}
 
-                        {/* Meta info in gray small text */}
+                        {/* Meta info */}
                         <div className="pt-2 border-t border-border/50 text-xs text-muted-foreground space-y-1">
-                            <div className="flex gap-4">
-                                {totalLatency && <span>{t('history.totalLatency')}: {totalLatency}ms</span>}
-                                {asrLatency && <span>ASR: {asrLatency}ms</span>}
-                            </div>
+                            {totalLatency && (
+                                <div>{t('history.totalLatency')}: {totalLatency}ms</div>
+                            )}
                             {entry.audio_path && (
                                 <div className="font-mono truncate">
                                     Audio Path: {entry.audio_path}

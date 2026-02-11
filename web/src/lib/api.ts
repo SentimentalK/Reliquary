@@ -126,11 +126,10 @@ export interface LogEntry {
     id: string
     timestamp: string
     audio_path?: string
-    // Dynamic transcription keys - pipeline names as keys
-    transcription: Record<string, string>
+    // Ordered pipeline step results
+    transcription: Array<{ step: string; text: string; latency_ms: number }>
     latency_stats?: {
         total_ms: number
-        asr_ms: number
     }
     // Legacy fields (for backward compatibility)
     user_id?: string

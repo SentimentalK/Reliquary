@@ -27,7 +27,7 @@ type Config struct {
 	ApiKey string `json:"api_key,omitempty"` // User's own Groq API key
 	// Settings
 	Language string `json:"language,omitempty"` // zh, en, etc.
-	Pipeline string `json:"pipeline,omitempty"` // geo_reliquary_v1, raw_whisper, etc.
+	Pipeline string `json:"pipeline,omitempty"` // raw_whisper, whisper_fixer, etc.
 }
 
 // DefaultConfig returns the default configuration.
@@ -36,9 +36,9 @@ func DefaultConfig() Config {
 		KeyCode:   60, // Right Shift on macOS
 		ServerURL: "https://localhost:443",
 		DeviceID:  getDefaultDeviceID(),
-		AuthToken: "",    // Must be set after registration
-		ApiKey:    "",    // Optional BYOK
-		Pipeline:  "raw", // Default to raw whisper
+		AuthToken: "",            // Must be set after registration
+		ApiKey:    "",            // Optional BYOK
+		Pipeline:  "raw_whisper", // Default to raw whisper
 	}
 }
 
@@ -166,8 +166,8 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 		ServerURL: serverURL,
 		DeviceID:  getDefaultDeviceID(),
 		AuthToken: authToken,
-		ApiKey:    "",    // Can be set via web UI later
-		Pipeline:  "raw", // Default to raw whisper
+		ApiKey:    "",            // Can be set via web UI later
+		Pipeline:  "raw_whisper", // Default to raw whisper
 	}
 	m.mu.Unlock()
 

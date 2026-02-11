@@ -42,7 +42,8 @@ async def transcribe_audio(
         
         text = await pipe.transcribe(audio_bytes, filename=file.filename or "audio.wav")
         
-        return text
+        # Return the final step's text
+        return text[-1].text if text else ""
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -85,10 +86,10 @@ async def process_audio_buffer(
     trigger: str = "eof",
     api_key: str = None,  # BYOK: Bring Your Own Key
     user_info: object = None,  # UserInfo for proper storage path
-    pipeline_name: str = "raw",
-) -> tuple[str, str, str | None]:
+    pipeline_name: str = "raw_whisper",
+) -> tuple[list, str, str | None]:
     """
-    Process the audio buffer and return (transcription, interaction_id, error).
+    Process the audio buffer and return (step_results, interaction_id, error).
     
     Args:
         pcm_buffer: Raw PCM audio data
@@ -99,10 +100,10 @@ async def process_audio_buffer(
         trigger: What triggered processing ("eof", "disconnect", "size_limit")
         api_key: Optional API key override (BYOK)
         user_info: UserInfo object for proper storage path
-        pipeline_name: Pipeline identifier (default: "raw")
+        pipeline_name: Pipeline identifier (default: "raw_whisper")
     
     Returns:
-        Tuple of (transcription_text, interaction_id, error_message)
+        Tuple of (step_results, interaction_id, error_message)
     """
     storage = get_storage_service()
     settings = get_settings()
@@ -110,7 +111,7 @@ async def process_audio_buffer(
     
     if len(pcm_buffer) < 100:
         print(f"[WebSocket] Audio too short ({len(pcm_buffer)} bytes), skipping")
-        return "", "", None
+        return [], "", None
     
     print(f"[WebSocket] Processing audio: {len(pcm_buffer)} bytes, trigger={trigger}, pipeline={pipeline_name}")
     
@@ -123,19 +124,16 @@ async def process_audio_buffer(
         pipe = manager.get_pipeline(settings.default_pipeline)
     
     error_msg = None
-    transcription = ""
+    step_results = []
     
-    # Track ASR latency separately
-    asr_start = time.time()
     try:
-        # Pass api_key for BYOK support
-        transcription = await pipe.transcribe(wav_data, filename="stream.wav", api_key=api_key)
+        # Each step internally tracks its own latency
+        step_results = await pipe.transcribe(wav_data, filename="stream.wav", api_key=api_key)
     except Exception as e:
         print(f"[WebSocket] Transcription failed: {e}")
-        transcription = f"[Transcription Error: {str(e)}]"
+        from app.services.pipelines.base import StepResult
+        step_results = [StepResult(step="error", text=f"[Transcription Error: {str(e)}]", latency_ms=0)]
         error_msg = str(e)
-    asr_end = time.time()
-    asr_latency_ms = int((asr_end - asr_start) * 1000)
     
     end_time = time.time()
     total_latency_ms = int((end_time - start_time) * 1000)
@@ -145,15 +143,14 @@ async def process_audio_buffer(
         user_id=user_id,
         device_id=device_id,
         wav_data=wav_data,
-        pipeline_key=pipeline_name,
-        transcription_text=transcription,
+        step_results=step_results,
         total_latency_ms=total_latency_ms,
-        asr_latency_ms=asr_latency_ms,
         user_info=user_info,
     )
     
-    print(f"[WebSocket] Transcription complete ({trigger}): {transcription[:50]}...")
-    return transcription, interaction_id, error_msg
+    final_text = step_results[-1].text if step_results else ""
+    print(f"[WebSocket] Transcription complete ({trigger}): {final_text[:50]}...")
+    return step_results, interaction_id, error_msg
 
 
 @router.websocket("/ws/audio")
@@ -295,7 +292,7 @@ async def websocket_audio_stream(websocket: WebSocket):
                 heartbeat_task = asyncio.create_task(send_heartbeat())
             
             try:
-                transcription, interaction_id, error = await process_audio_buffer(
+                step_results, interaction_id, error = await process_audio_buffer(
                     pcm_buffer=pcm_buffer,
                     sample_rate=sample_rate,
                     user_id=current_user_id,
@@ -318,15 +315,16 @@ async def websocket_audio_stream(websocket: WebSocket):
             # Send result if client still connected
             if client_connected:
                 try:
+                    final_text = step_results[-1].text if step_results else ""
                     if error:
                         # Send error allows client to play error sound
                         await websocket.send_json({
                             "error": error,
                             "id": interaction_id,
                         })
-                    elif transcription:
+                    elif final_text:
                         await websocket.send_json({
-                            "text": transcription,
+                            "text": final_text,
                             "id": interaction_id,
                         })
                     

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     
     # Pipeline settings
-    default_pipeline: str = "raw"
+    default_pipeline: str = "raw_whisper"
     
     # Server settings
     server_host: str = "0.0.0.0"
