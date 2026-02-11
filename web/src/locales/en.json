@@ -100,5 +100,43 @@
     "save": "Save",
     "saved": "Saved ✓",
     "saveFailed": "Save failed"
+  },
+  "landing": {
+    "title": "Reclaim Your",
+    "titleStrong": "Digital Voice Sovereignty",
+    "subtitle": "A local-first, completely free, Chain of Responsibility based AI voice interface.",
+    "subtitle2": "Let data return to its essence, let thinking be uninterrupted.",
+    "version": "v1.0.0 Stable Available",
+    "download": "Download Client",
+    "docker": "Docker Deploy",
+    "ready": "Ready to start?",
+    "community": "Fully open source, community driven. Join us to reshape the future of human-computer interaction.",
+    "sourceCode": "View Source on GitHub",
+    "features": {
+      "mic": {
+        "title": "Uninterrupted Thought Flow",
+        "desc": "AI needs context, not fragments. Reliquary provides a 'Thinking Buffer' allowing you to organize your logic calmly during Thinking Aloud, feeding a complete high-quality Prompt at once, maximizing AI execution efficiency."
+      },
+      "sovereignty": {
+        "title": "Digital Sovereignty",
+        "desc": "Reject Vendor Lock-in. Your voice data is completely under your control. Carry your complete data assets to switch to any more advanced AI model at any time, making the model a replaceable backend, not your dependency."
+      },
+      "pipeline": {
+        "title": "Pipeline Architecture",
+        "desc": "Handle voice like building blocks. Based on the Responsible Chain pattern. Through visual configuration, freely define correction rules, hot word replacement, and text cleaning logic, perfectly adapting to personal habits."
+      },
+      "lightweight": {
+        "title": "Lightweight & Ubiquitous",
+        "desc": "Logic at the back, experience seamless. All heavy logic is concentrated in the backend, the frontend remains extremely lightweight and fast. Supports Windows, Linux, macOS, and Android platforms."
+      },
+      "speed": {
+        "title": "Groq Powered Speed",
+        "desc": "Built on Groq chips, experience extreme generation speeds of 500+ Tokens per second. Call top open-source models like Llama 3 or Mixtral at zero cost, say goodbye to latency, free and powerful."
+      },
+      "docker": {
+        "title": "One-Click Fortress",
+        "desc": "One command to build a digital fortress. Reject complex configurations, achieve one-click deployment via Docker Compose. Instantly launch your private voice service locally or in the cloud."
+      }
+    }
   }
 }

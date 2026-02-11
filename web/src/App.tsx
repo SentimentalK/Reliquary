@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import { Layout } from './components/Layout'
 import { Dashboard } from './pages/Dashboard'
+import LandingPage from './pages/LandingPage'
 import { History } from './pages/History'
 import { PipelineConfig } from './pages/PipelineConfig'
 import { Login } from './pages/Login'
@@ -41,16 +42,17 @@ function App() {
     return (
         <Routes>
             {/* Public routes */}
+            <Route path="/" element={<LandingPage />} />
             <Route
                 path="/login"
                 element={
-                    isAuthenticated ? <Navigate to="/" replace /> : <Login />
+                    isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
                 }
             />
 
             {/* Protected routes */}
             <Route
-                path="/"
+                path="/dashboard"
                 element={
                     <ProtectedRoute>
                         <Layout>

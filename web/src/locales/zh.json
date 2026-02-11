@@ -100,5 +100,43 @@
     "save": "保存",
     "saved": "已保存 ✓",
     "saveFailed": "保存失败"
+  },
+  "landing": {
+    "title": "夺回你的",
+    "titleStrong": "数字语音主权",
+    "subtitle": "一个本地优先、完全免费、基于责任链模式的 AI 语音接口。",
+    "subtitle2": "让数据回归本质，让思考不再被打断。",
+    "version": "v1.0.0 Stable Available",
+    "download": "下载客户端",
+    "docker": "Docker 部署",
+    "ready": "准备好开始了吗？",
+    "community": "完全开源，社区驱动。加入我们，重塑人机交互的未来。",
+    "sourceCode": "在 GitHub 上查看源码",
+    "features": {
+      "mic": {
+        "title": "完整思维流",
+        "desc": "AI 需要语境，而不是碎片。Reliquary 提供“思考缓冲”，让你在 Thinking Aloud 中从容理清逻辑，一次性投喂完整的高质量 Prompt，最大化 AI 执行效率。"
+      },
+      "sovereignty": {
+        "title": "数据主权与解耦",
+        "desc": "拒绝 Vendor Lock-in。你的语音数据完全由你掌控。随时携带完整数据资产切换至任何更先进的 AI 模型，让模型成为可替换的后端，而不是你的依赖。"
+      },
+      "pipeline": {
+        "title": "责任链式管道",
+        "desc": "像搭积木一样处理语音。基于 Responsible Chain 模式。通过可视化配置，自由定义修正规则、热词替换和文本清洗逻辑，精准适配个人习惯。"
+      },
+      "lightweight": {
+        "title": "全平台轻量化",
+        "desc": "逻辑后置，体验无感。所有重型逻辑集中于后端，前端保持极致轻量与极速响应。支持 Windows, Linux, macOS 及 Android 全平台。"
+      },
+      "speed": {
+        "title": "Groq 光速推理",
+        "desc": "基于 Groq 芯片构建，体验每秒 500+ Tokens 的极致生成速度。零成本调用 Llama 3 或 Mixtral 等顶级开源模型，告别延迟，免费且强大。"
+      },
+      "docker": {
+        "title": "Docker 一键私有化",
+        "desc": "一条指令，构建数字堡垒。拒绝复杂配置，通过 Docker Compose 实现一键部署。在本地或云端瞬间拉起属于你的私有语音服务。"
+      }
+    }
   }
 }
