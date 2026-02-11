@@ -235,6 +235,7 @@ export function DeviceConfigSheet() {
                                         >
                                             <option value="raw_whisper">Raw Whisper</option>
                                             <option value="whisper_chinese_fixer">Whisper + Chinese Fixer</option>
+                                            <option value="whisper_english_fixer">Whisper + English Fixer</option>
                                         </select>
                                     </div>
                                 </div>

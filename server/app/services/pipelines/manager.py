@@ -6,13 +6,14 @@ from functools import lru_cache
 from app.services.pipelines.base import BasePipeline
 from app.services.pipelines.raw_whisper import RawWhisperPipeline
 from app.services.pipelines.whisper_fixer import WhisperFixerPipeline
-from app.services.pipelines.fixers import ChineseFixer
+from app.services.pipelines.fixers import ChineseFixer, EnglishFixer
 
 
 # Registry of available pipelines (pre-built instances)
 PIPELINE_REGISTRY: Dict[str, BasePipeline] = {
     "raw_whisper": RawWhisperPipeline(),
     "whisper_chinese_fixer": WhisperFixerPipeline(ChineseFixer()),
+    "whisper_english_fixer": WhisperFixerPipeline(EnglishFixer()),
 }
 
 
