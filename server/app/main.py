@@ -9,6 +9,7 @@ from app.api.auth import router as auth_router
 from app.api.chat import router as chat_router
 from app.api.devices import router as devices_router
 from app.api.logs import router as logs_router
+from app.api.pipeline_config import router as pipeline_config_router
 from app.config import get_settings
 
 
@@ -47,6 +48,7 @@ app.include_router(auth_router, tags=["authentication"])
 app.include_router(chat_router, tags=["transcription"])
 app.include_router(devices_router, tags=["devices"])
 app.include_router(logs_router, tags=["logs"])
+app.include_router(pipeline_config_router, tags=["pipeline-config"])
 
 
 @app.get("/health")

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from groq import Groq
 
@@ -51,9 +51,14 @@ class BasePipeline(ABC):
         language: Optional[str] = None,
         prompt: Optional[str] = None,
         api_key: Optional[str] = None,
+        user_config: Optional[Dict[str, Any]] = None,
     ) -> List[StepResult]:
         """
         Transcribe audio bytes to text.
+        
+        Args:
+            user_config: Per-step user config dict, e.g.
+                {"chinese_fixer": {"keywords": [...], "user_prompt": "..."}}
         
         Returns:
             Ordered list of StepResult, one per pipeline step.

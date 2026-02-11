@@ -9,6 +9,7 @@ import {
     LogOut,
     User,
     Globe,
+    Settings2,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from './ui/button'
@@ -29,6 +30,7 @@ export function Layout({ children }: LayoutProps) {
     const navItems = [
         { to: '/', icon: Monitor, label: t('nav.devices') },
         { to: '/history', icon: History, label: t('nav.history') },
+        { to: '/pipeline-config', icon: Settings2, label: t('nav.pipelineConfig') },
     ]
 
     const cycleTheme = () => {

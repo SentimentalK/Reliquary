@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
-      - DEFAULT_PIPELINE=${DEFAULT_PIPELINE:-raw}
+      - DEFAULT_PIPELINE=${DEFAULT_PIPELINE:-raw_whisper}
       - ADMIN_INVITE_CODE=${ADMIN_INVITE_CODE:-reliquary-admin-2026}
       - USER_INVITE_CODE=${USER_INVITE_CODE:-reliquary-user-2026}
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}

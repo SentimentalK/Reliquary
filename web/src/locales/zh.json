@@ -1,7 +1,7 @@
 {
   "layout": {
     "dashboard": "设备管理",
-    "logs": "时光机",
+    "logs": "历史记录",
     "docs": "文档",
     "logout": "退出登录",
     "toggleLanguage": "中文",
@@ -9,7 +9,8 @@
   },
   "nav": {
     "devices": "设备管理",
-    "history": "时光机",
+    "history": "历史记录",
+    "pipelineConfig": "识别链路",
     "logout": "退出登录"
   },
   "login": {
@@ -36,7 +37,7 @@
     "noDevicesDesc": "启动 Reliquary 客户端后，设备会自动出现在这里"
   },
   "history": {
-    "title": "时光机",
+    "title": "历史记录",
     "subtitle": "查看语音识别历史记录",
     "errorLoad": "加载失败，请检查后端 API",
     "noRecords": "暂无记录",
@@ -72,7 +73,7 @@
     "langEn": "英语 (English)",
     "langJa": "日语 (Japanese)",
     "langKo": "韩语 (Korean)",
-    "pipeline": "处理管道 (Pipeline)",
+    "pipeline": "识别链路",
     "apiKey": "API 密钥 (BYOK)",
     "apiKeyDesc": "可选：使用自己的 Groq API Key 进行语音识别",
     "save": "保存配置",
@@ -83,5 +84,21 @@
     "selectDate": "选择日期",
     "dateFormat": "yyyy年MM月dd日",
     "monthFormat": "M月"
+  },
+  "pipelineConfig": {
+    "title": "识别链路配置",
+    "subtitle": "为每个识别链路步骤自定义关键词和提示词",
+    "selectPipeline": "选择识别链路",
+    "noPipelines": "没有可配置的识别链路",
+    "systemPromptHint": "系统提示词（只读）",
+    "keywords": "关键词",
+    "keywordsDesc": "每行一个词，最多 10 个。添加经常被识别错误的词汇。支持空格、逗号或换行分隔。",
+    "keywordsPlaceholder": "Large V3\nReliquary\nGROQ",
+    "userPrompt": "自定义规则",
+    "userPromptDesc": "为此步骤添加额外的纠错规则。",
+    "userPromptPlaceholder": "例如：不要使用破折号和省略号\n不要改变原文的意思，只纠正错别字",
+    "save": "保存",
+    "saved": "已保存 ✓",
+    "saveFailed": "保存失败"
   }
 }

@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { Layout } from './components/Layout'
 import { Dashboard } from './pages/Dashboard'
 import { History } from './pages/History'
+import { PipelineConfig } from './pages/PipelineConfig'
 import { Login } from './pages/Login'
 import { useThemeStore } from './stores/theme'
 import { useAuthStore } from './stores/auth'
@@ -64,6 +65,16 @@ function App() {
                     <ProtectedRoute>
                         <Layout>
                             <History />
+                        </Layout>
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/pipeline-config"
+                element={
+                    <ProtectedRoute>
+                        <Layout>
+                            <PipelineConfig />
                         </Layout>
                     </ProtectedRoute>
                 }

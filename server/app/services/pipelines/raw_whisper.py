@@ -2,7 +2,7 @@
 
 import io
 import time
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 from app.services.pipelines.base import BasePipeline, GroqProvider, StepResult
 
@@ -27,6 +27,7 @@ class RawWhisperPipeline(BasePipeline):
         language: Optional[str] = None,
         prompt: Optional[str] = None,
         api_key: Optional[str] = None,
+        user_config: Optional[Dict[str, Any]] = None,
     ) -> List[StepResult]:
         """
         Transcribe audio using Groq Whisper API.

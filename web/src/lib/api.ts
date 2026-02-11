@@ -151,3 +151,37 @@ export const logsApi = {
     },
 }
 
+// ============== Pipeline Config API ==============
+
+export interface StepSchema {
+    step_name: string
+    system_prompt: string
+}
+
+export interface PipelineSchema {
+    steps: StepSchema[]
+}
+
+export interface PipelineConfigSchemaResponse {
+    pipelines: Record<string, PipelineSchema>
+}
+
+export interface PipelineConfigResponse {
+    config: Record<string, Record<string, { keywords: string[]; user_prompt: string }>>
+}
+
+export const pipelineConfigApi = {
+    getSchema: async (): Promise<PipelineConfigSchemaResponse> => {
+        const { data } = await api.get<PipelineConfigSchemaResponse>('/pipeline-config/schema')
+        return data
+    },
+
+    get: async (): Promise<PipelineConfigResponse> => {
+        const { data } = await api.get<PipelineConfigResponse>('/pipeline-config')
+        return data
+    },
+
+    update: async (config: Record<string, Record<string, { keywords: string[]; user_prompt: string }>>): Promise<void> => {
+        await api.put('/pipeline-config', { config })
+    },
+}

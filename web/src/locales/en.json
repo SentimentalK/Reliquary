@@ -10,6 +10,7 @@
   "nav": {
     "devices": "Devices",
     "history": "History",
+    "pipelineConfig": "Pipeline",
     "logout": "Log out"
   },
   "login": {
@@ -83,5 +84,21 @@
     "selectDate": "Select date",
     "dateFormat": "PPP",
     "monthFormat": "MMM"
+  },
+  "pipelineConfig": {
+    "title": "Pipeline Config",
+    "subtitle": "Customize keywords and prompts for each pipeline step",
+    "selectPipeline": "Select Pipeline",
+    "noPipelines": "No configurable pipelines available",
+    "systemPromptHint": "System Prompt (read-only)",
+    "keywords": "Keywords",
+    "keywordsDesc": "One word per line, max 10. Add words that are frequently misrecognized. Spaces, commas, or newlines all work.",
+    "keywordsPlaceholder": "Large V3\nReliquary\nGROQ",
+    "userPrompt": "Custom Rules",
+    "userPromptDesc": "Additional correction rules for this step.",
+    "userPromptPlaceholder": "e.g. Do not use dashes or ellipses\nDo not change the meaning of the original text",
+    "save": "Save",
+    "saved": "Saved ✓",
+    "saveFailed": "Save failed"
   }
 }

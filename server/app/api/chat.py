@@ -121,14 +121,32 @@ async def process_audio_buffer(
         pipe = manager.get_pipeline(pipeline_name)
     except ValueError:
         print(f"[WebSocket] Invalid pipeline '{pipeline_name}', falling back to default")
-        pipe = manager.get_pipeline(settings.default_pipeline)
+        try:
+            pipe = manager.get_pipeline(settings.default_pipeline)
+        except ValueError:
+            from app.services.pipelines.manager import PIPELINE_REGISTRY
+            fallback_key = next(iter(PIPELINE_REGISTRY))
+            print(f"[WebSocket] Default pipeline '{settings.default_pipeline}' also invalid, using '{fallback_key}'")
+            pipe = manager.get_pipeline(fallback_key)
     
     error_msg = None
     step_results = []
     
+    # Load user's pipeline config (keywords, user_prompt per step)
+    user_config = {}
+    if user_info:
+        from app.api.pipeline_config import read_user_config
+        full_config = read_user_config(user_info)
+        user_config = full_config.get(pipeline_name, {})
+    
     try:
         # Each step internally tracks its own latency
-        step_results = await pipe.transcribe(wav_data, filename="stream.wav", api_key=api_key)
+        step_results = await pipe.transcribe(
+            wav_data,
+            filename="stream.wav",
+            api_key=api_key,
+            user_config=user_config,
+        )
     except Exception as e:
         print(f"[WebSocket] Transcription failed: {e}")
         from app.services.pipelines.base import StepResult
