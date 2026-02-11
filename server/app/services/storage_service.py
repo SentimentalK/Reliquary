@@ -13,11 +13,24 @@ This format:
 """
 
 import json
+import os
 import re
 import uuid
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Dict
+from zoneinfo import ZoneInfo
+
+
+def _get_tz():
+    """Get timezone from TZ environment variable, default to UTC."""
+    tz_name = os.environ.get("TZ")
+    if tz_name:
+        try:
+            return ZoneInfo(tz_name)
+        except Exception:
+            pass
+    return ZoneInfo("UTC")
 import aiofiles
 
 from app.config import get_settings
@@ -87,7 +100,7 @@ class StorageService:
         Path format: {STORAGE_ROOT}/{UserPrefix}/{YYYY-MM-DD}_{device_id}.jsonl
         """
         user_dir = self._get_user_dir(user_id, user_info)
-        date_str = datetime.now().strftime("%Y-%m-%d")
+        date_str = datetime.now(tz=_get_tz()).strftime("%Y-%m-%d")
         safe_device_id = sanitize_filename(device_id)
         filename = f"{date_str}_{safe_device_id}.jsonl"
         return user_dir / filename
@@ -99,7 +112,7 @@ class StorageService:
         Path format: {STORAGE_ROOT}/{UserPrefix}/assets/{YYYYMMDD}/
         """
         user_dir = self._get_user_dir(user_id, user_info)
-        date_str = datetime.now().strftime("%Y%m%d")
+        date_str = datetime.now(tz=_get_tz()).strftime("%Y%m%d")
         return user_dir / "assets" / date_str
     
     async def save_audio_file(
@@ -177,7 +190,7 @@ class StorageService:
         
         data = {
             "id": interaction_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(tz=_get_tz()).isoformat(),
             "audio_path": audio_path,
             "transcription": transcription,
             "latency_stats": {
