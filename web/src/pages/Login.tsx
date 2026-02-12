@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { AudioWaveform, Loader2, Copy, Check, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Copy, Check, Eye, EyeOff } from 'lucide-react'
+import { Logo } from '@/components/Logo'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -79,12 +80,13 @@ export function Login() {
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
             <div className="w-full max-w-md space-y-8 p-8">
                 {/* Logo */}
-                <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-3">
-                        <AudioWaveform className="h-12 w-12 text-primary" />
-                        <span className="text-4xl font-bold">Reliquary</span>
+                {/* Logo - Side by Side */}
+                <div className="flex items-center gap-6 px-2">
+                    <Logo className="h-32 w-32 shrink-0 drop-shadow-xl dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
+                    <div className="flex flex-col">
+                        <span className="text-5xl font-bold tracking-tight">Reliquary</span>
+                        <p className="mt-2 text-lg text-muted-foreground">智能语音输入系统</p>
                     </div>
-                    <p className="mt-2 text-muted-foreground">智能语音输入系统</p>
                 </div>
 
                 {/* Card */}
@@ -118,9 +120,7 @@ export function Login() {
                                             {showToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                         </button>
                                     </div>
-                                    <p className="text-xs text-muted-foreground">
-                                        {t('login.tokenPlaceholder')}
-                                    </p>
+
                                 </div>
 
                                 {loginMutation.error && (
@@ -181,9 +181,7 @@ export function Login() {
                                         value={inviteCode}
                                         onChange={(e) => setInviteCode(e.target.value)}
                                     />
-                                    <p className="text-xs text-muted-foreground">
-                                        {t('login.contactAdmin')}
-                                    </p>
+
                                 </div>
 
                                 {registerMutation.error && (
@@ -260,7 +258,7 @@ export function Login() {
 
                 {/* Footer */}
                 <p className="text-center text-xs text-muted-foreground">
-                    Reliquary v1.5 · Multi-User + BYOK
+                    Reliquary v1.0.0
                 </p>
             </div>
         </div>

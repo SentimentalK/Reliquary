@@ -152,7 +152,7 @@ export default function LandingPage() {
                             <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-700"></div>
 
                             {/* Main Logo Image */}
-                            <Logo variant="default" className="relative z-10 h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 drop-shadow-2xl hover:scale-105 transition-transform duration-500 ease-out" />
+                            <Logo variant="default" className="relative z-10 h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 drop-shadow-2xl dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform duration-500 ease-out" />
                         </div>
 
                         <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-foreground">
