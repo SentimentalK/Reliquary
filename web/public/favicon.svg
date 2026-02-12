@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <style>
+        :root { --stroke: #000000; --fill: none; }
+        @media (prefers-color-scheme: dark) {
+            :root { --stroke: #FFFFFF; }
+        }
+    </style>
+    <g stroke="var(--stroke)" fill="var(--fill)" stroke-linejoin="round" stroke-linecap="round">
+        <!-- Main Body -->
+        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" stroke-width="8" />
+        
+        <!-- Y Seams -->
+        <line x1="50" y1="50" x2="50" y2="90" stroke-width="8" />
+        <line x1="50" y1="50" x2="15.36" y2="30" stroke-width="8" />
+        <line x1="50" y1="50" x2="84.64" y2="30" stroke-width="8" />
+        
+        <!-- Center Lock: Two Circles -->
+        <circle cx="50" cy="50" r="18" fill="var(--stroke)" stroke="none" />
+        <circle cx="50" cy="50" r="12" stroke="var(--stroke)" stroke-width="8" fill="var(--fill)" />
+    </g>
+</svg>

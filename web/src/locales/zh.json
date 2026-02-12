@@ -102,10 +102,11 @@
     "saveFailed": "保存失败"
   },
   "landing": {
-    "title": "夺回你的",
-    "titleStrong": "数字语音主权",
-    "subtitle": "一个本地优先、完全免费、基于责任链模式的 AI 语音接口。",
-    "subtitle2": "让数据回归本质，让思考不再被打断。",
+    "heroTitle": "Reliquary",
+    "heroSubtitle": "夺回你的",
+    "heroSubtitleStrong": "数字主权",
+    "heroDesc": "一个本地优先、完全免费、基于责任链模式的 AI 语音接口。",
+    "heroDesc2": "让数据回归本质，让思考不再被打断。",
     "version": "v1.0.0 Stable Available",
     "download": "下载客户端",
     "docker": "Docker 部署",
@@ -137,6 +138,13 @@
         "title": "Docker 一键私有化",
         "desc": "一条指令，构建数字堡垒。拒绝复杂配置，通过 Docker Compose 实现一键部署。在本地或云端瞬间拉起属于你的私有语音服务。"
       }
+    },
+    "footer": {
+      "copyright": "© 2026 Reliquary Project.",
+      "license": "基于 AGPLv3 协议开源。",
+      "privacy": "隐私政策",
+      "terms": "服务条款",
+      "twitter": "Twitter"
     }
   }
 }

@@ -102,10 +102,11 @@
     "saveFailed": "Save failed"
   },
   "landing": {
-    "title": "Reclaim Your",
-    "titleStrong": "Digital Voice Sovereignty",
-    "subtitle": "A local-first, completely free, Chain of Responsibility based AI voice interface.",
-    "subtitle2": "Let data return to its essence, let thinking be uninterrupted.",
+    "heroTitle": "Reliquary",
+    "heroSubtitle": "Reclaim Your",
+    "heroSubtitleStrong": "Digital Sovereignty",
+    "heroDesc": "A local-first, completely free, Chain of Responsibility based AI voice interface.",
+    "heroDesc2": "Let data return to its essence, let thinking be uninterrupted.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
     "docker": "Docker Deploy",
@@ -137,6 +138,13 @@
         "title": "One-Click Fortress",
         "desc": "One command to build a digital fortress. Reject complex configurations, achieve one-click deployment via Docker Compose. Instantly launch your private voice service locally or in the cloud."
       }
+    },
+    "footer": {
+      "copyright": "© 2026 Reliquary Project.",
+      "license": "Released under AGPLv3.",
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "twitter": "Twitter"
     }
   }
 }

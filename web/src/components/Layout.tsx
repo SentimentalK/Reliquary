@@ -1,11 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
+import { Logo } from './Logo'
 import {
     Monitor,
     History,
     Sun,
     Moon,
     Laptop,
-    AudioWaveform,
     LogOut,
     User,
     Globe,
@@ -58,7 +58,7 @@ export function Layout({ children }: LayoutProps) {
             <aside className="fixed left-0 top-0 z-40 flex h-screen w-16 flex-col border-r bg-card/50 backdrop-blur-sm md:w-64">
                 {/* Logo */}
                 <div className="flex h-16 items-center gap-2 border-b px-4">
-                    <AudioWaveform className="h-8 w-8 text-primary" />
+                    <Logo variant="nav" className="h-8 w-8 text-primary" />
                     <span className="hidden text-xl font-bold md:block">Reliquary</span>
                 </div>
 

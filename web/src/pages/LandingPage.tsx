@@ -1,3 +1,4 @@
+import { Logo } from '@/components/Logo'
 import {
     Mic,
     BrainCircuit,
@@ -9,18 +10,38 @@ import {
     ArrowRight,
     Download,
     LogIn,
-    BookOpen
+    Globe,
+    Moon,
+    Sun,
+    Laptop
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
+import { SUPPORTED_LANGUAGES } from '@/lib/i18n-utils'
 
 export default function LandingPage() {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const navigate = useNavigate()
     const { isAuthenticated } = useAuthStore()
+    const { theme, setTheme } = useThemeStore()
+
+    const cycleTheme = () => {
+        if (theme === 'light') setTheme('dark')
+        else if (theme === 'dark') setTheme('system')
+        else setTheme('light')
+    }
+
+    const toggleLanguage = () => {
+        const currentIndex = SUPPORTED_LANGUAGES.indexOf(i18n.language)
+        const nextIndex = (currentIndex + 1) % SUPPORTED_LANGUAGES.length
+        i18n.changeLanguage(SUPPORTED_LANGUAGES[nextIndex])
+    }
+
+    const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Laptop
 
     const features = [
         {
@@ -74,18 +95,32 @@ export default function LandingPage() {
             <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-8">
                     <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
-                        <div className="h-6 w-6 rounded-full bg-primary/20 flex items-center justify-center">
-                            <Mic className="h-4 w-4 text-primary" />
+                        {/* 32px Navbar Logo */}
+                        <div className="relative h-8 w-8 flex items-center justify-center">
+                            <Logo variant="nav" className="h-full w-full drop-shadow-md" />
                         </div>
                         Reliquary
                     </div>
-                    <nav className="flex items-center gap-4">
-                        <a href="https://github.com/sentimentalk/reliquary" target="_blank" rel="noreferrer" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+                    <nav className="flex items-center gap-2 sm:gap-4">
+                        <a href="https://github.com/sentimentalk/reliquary" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
                             GitHub
                         </a>
-                        <a href="#" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
+                        <a href="#" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
                             Docs
                         </a>
+
+                        {/* Utilities Toggles */}
+                        <div className="flex items-center gap-1 ml-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={toggleLanguage}>
+                                <Globe className="h-4 w-4" />
+                                <span className="sr-only">{t('layout.toggleLanguage')}</span>
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={cycleTheme}>
+                                <ThemeIcon className="h-4 w-4" />
+                                <span className="sr-only">{t('layout.theme')}</span>
+                            </Button>
+                        </div>
+
                         <div className="h-4 w-[1px] bg-border mx-1"></div>
                         {isAuthenticated ? (
                             <Button variant="ghost" size="sm" className="h-8 gap-2" onClick={() => navigate('/dashboard')}>
@@ -105,28 +140,42 @@ export default function LandingPage() {
             <main className="container mx-auto px-4 py-16 md:py-24 lg:py-32">
                 {/* Hero Section */}
                 <div className="flex flex-col items-center text-center space-y-8 mb-24">
-                    <div className="inline-flex items-center rounded-full border border-primary/20 bg-secondary/50 px-3 py-1 text-sm font-medium text-secondary-foreground backdrop-blur-sm">
+                    <div className="inline-flex items-center rounded-full border border-primary/20 bg-secondary/50 px-3 py-1 text-sm font-medium text-secondary-foreground backdrop-blur-sm mb-4">
                         <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></span>
                         {t('landing.version')}
                     </div>
 
-                    <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60 max-w-4xl mx-auto">
-                        {t('landing.title')}<br className="hidden sm:inline" />
-                        <span className="text-primary">{t('landing.titleStrong')}</span>
-                    </h1>
+                    {/* Prominent Logo & Name */}
+                    <div className="flex flex-col items-center space-y-4">
+                        <div className="relative group flex justify-center items-center mb-2">
+                            {/* Glow backdrop */}
+                            <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-                    <p className="max-w-[700px] text-lg text-muted-foreground md:text-xl">
-                        {t('landing.subtitle')}
+                            {/* Main Logo Image */}
+                            <Logo variant="default" className="relative z-10 h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 drop-shadow-2xl hover:scale-105 transition-transform duration-500 ease-out" />
+                        </div>
+
+                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-foreground">
+                            {t('landing.heroTitle')}
+                        </h1>
+
+                        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl text-foreground max-w-4xl mx-auto">
+                            {t('landing.heroSubtitle')} <span className="text-primary ml-2">{t('landing.heroSubtitleStrong')}</span>
+                        </h2>
+                    </div>
+
+                    <p className="max-w-[700px] text-lg text-muted-foreground md:text-xl pt-4">
+                        {t('landing.heroDesc')}
                         <br className="hidden sm:inline" />
-                        {t('landing.subtitle2')}
+                        {t('landing.heroDesc2')}
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                        <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20">
+                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
+                        <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
                             <Download className="mr-2 h-5 w-5" />
                             {t('landing.download')}
                         </Button>
-                        <Button variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-accent/50">
+                        <Button variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-accent/50 hover:scale-105 transition-transform">
                             <Terminal className="mr-2 h-5 w-5" />
                             {t('landing.docker')}
                         </Button>
@@ -190,11 +239,21 @@ export default function LandingPage() {
 
             <footer className="border-t border-border/40 bg-background/50 backdrop-blur py-8 mt-24">
                 <div className="container flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left text-sm text-muted-foreground">
-                    <p>© 2024-2026 Reliquary Project. Open Source.</p>
+                    <div className="flex flex-col md:flex-row gap-2">
+                        <p>{t('landing.footer.copyright')}</p>
+                        <a
+                            href="https://github.com/sentimentalk/reliquary/blob/main/LICENSE"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="hover:text-foreground underline underline-offset-4"
+                        >
+                            {t('landing.footer.license')}
+                        </a>
+                    </div>
                     <div className="flex gap-6">
-                        <a href="#" className="hover:text-foreground">Privacy</a>
-                        <a href="#" className="hover:text-foreground">Terms</a>
-                        <a href="#" className="hover:text-foreground">Twitter</a>
+                        <a href="#" className="hover:text-foreground">{t('landing.footer.privacy')}</a>
+                        <a href="#" className="hover:text-foreground">{t('landing.footer.terms')}</a>
+                        {/* <a href="#" className="hover:text-foreground">{t('landing.footer.twitter')}</a> */}
                     </div>
                 </div>
             </footer>
