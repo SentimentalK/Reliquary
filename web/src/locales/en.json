@@ -112,13 +112,10 @@
     "heroSubtitle": "Reclaim Your",
     "heroSubtitleStrong": "Digital Sovereignty",
     "heroDesc": "A local-first, completely free, Chain of Responsibility based AI voice interface.",
-    "heroDesc2": "Let data return to its essence, let thinking be uninterrupted.",
+    "heroDesc2": "Let data return to its source, let thinking be uninterrupted.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
     "docker": "Docker Deploy",
-    "ready": "Ready to start?",
-    "community": "Fully open source, community driven. Join us to reshape the future of human-computer interaction.",
-    "sourceCode": "View Source on GitHub",
     "features": {
       "mic": {
         "title": "Uninterrupted Thought Flow",
@@ -144,6 +141,18 @@
         "title": "One-Click Fortress",
         "desc": "One command to build a digital fortress. Reject complex configurations, achieve one-click deployment via Docker Compose. Instantly launch your private voice service locally or in the cloud."
       }
+    },
+    "trial": {
+      "title": "Start Trial, ",
+      "titleStrong": "No Data Retention",
+      "p1": "We do not provide commercial services. This trial is only to lower the barrier for beginners and avoid deployment hassles.",
+      "p2a": "Enter invite code",
+      "code": "FREE-TRIAL-3DAYS",
+      "p2b": "to unlock 3 days of full experience.",
+      "p3": "After 3 days, your account and data will be permanently deleted.",
+      "p4": "We strongly recommend local deployment after the trial to keep data truly in your hands.",
+      "btnTrial": "Use Invite Code",
+      "btnDocs": "View Deployment Docs"
     },
     "footer": {
       "copyright": "© 2026 Reliquary Project.",

@@ -112,13 +112,10 @@
     "heroSubtitle": "夺回你的",
     "heroSubtitleStrong": "数字主权",
     "heroDesc": "一个本地优先、完全免费、基于责任链模式的 AI 语音接口。",
-    "heroDesc2": "让数据回归本质，让思考不再被打断。",
+    "heroDesc2": "让数据回归本源，让思考不再被打断。",
     "version": "v1.0.0 Stable Available",
     "download": "下载客户端",
     "docker": "Docker 部署",
-    "ready": "准备好开始了吗？",
-    "community": "完全开源，社区驱动。加入我们，重塑人机交互的未来。",
-    "sourceCode": "在 GitHub 上查看源码",
     "features": {
       "mic": {
         "title": "完整思维流",
@@ -144,6 +141,18 @@
         "title": "Docker 一键私有化",
         "desc": "一条指令，构建数字堡垒。拒绝复杂配置，通过 Docker Compose 实现一键部署。在本地或云端瞬间拉起属于你的私有语音服务。"
       }
+    },
+    "trial": {
+      "title": "仅供体验，",
+      "titleStrong": "绝不留存数据",
+      "p1": "我们不提供商业服务。设立试用仅为降低小白门槛，免去你盲目部署的麻烦。",
+      "p2a": "注册时输入邀请码",
+      "code": "FREE-TRIAL-3DAYS",
+      "p2b": "即可解锁 3 天完整体验。",
+      "p3": "3 天后，你的账号与所有产生的语音数据将被彻底、永久删除。",
+      "p4": "体验满意后，我们强烈建议你查阅文档进行本地部署，让数据真正留在自己手里。",
+      "btnTrial": "使用邀请码体验",
+      "btnDocs": "查看本地部署文档"
     },
     "footer": {
       "copyright": "© 2026 Reliquary Project.",

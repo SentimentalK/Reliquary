@@ -13,7 +13,8 @@ import {
     Globe,
     Moon,
     Sun,
-    Laptop
+    Laptop,
+    Info
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -227,13 +228,50 @@ export default function LandingPage() {
                     ))}
                 </div>
 
-                {/* Bottom CTA */}
-                <div className="mt-32 text-center space-y-6">
-                    <h2 className="text-3xl font-bold tracking-tight">{t('landing.ready')}</h2>
-                    <p className="text-muted-foreground">{t('landing.community')}</p>
-                    <Button variant="link" size="lg" className="text-primary" onClick={() => window.open('https://github.com/sentimentalk/reliquary', '_blank')}>
-                        {t('landing.sourceCode')} <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
+
+
+                {/* Bottom CTA (Honest Trial Info) */}
+                <div className="mt-32 px-4 py-16 text-center max-w-3xl mx-auto space-y-8">
+                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+                        {t('landing.trial.title')}<span className="text-foreground">{t('landing.trial.titleStrong')}</span>
+                    </h2>
+
+                    <div className="text-lg text-muted-foreground space-y-4 text-left sm:text-center">
+                        <p>
+                            {t('landing.trial.p1')}
+                        </p>
+                        <p>
+                            {t('landing.trial.p2a')} <code className="text-rose-500 font-mono font-bold mx-1 select-all">{t('landing.trial.code')}</code> {t('landing.trial.p2b')}
+                        </p>
+                        <div className="inline-flex flex-col sm:flex-row items-start sm:items-center gap-3 border px-6 py-4 rounded-xl text-left sm:text-center mt-2 transition-colors bg-rose-50 border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/20 text-rose-600 dark:text-rose-400">
+                            <Info className="h-6 w-6 shrink-0 mt-0.5 sm:mt-0" />
+                            <p className="font-medium text-base">
+                                {t('landing.trial.p3')}
+                            </p>
+                        </div>
+                        <p>
+                            {t('landing.trial.p4')}
+                        </p>
+                    </div>
+
+                    <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">
+                        <Button
+                            size="lg"
+                            className="h-12 px-8 text-base hover:scale-105 transition-transform"
+                            onClick={() => navigate('/login')}
+                        >
+                            {t('landing.trial.btnTrial')} <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="h-12 px-8 text-base hover:scale-105 transition-transform"
+                            onClick={() => window.open('https://github.com/sentimentalk/reliquary', '_blank')}
+                        >
+                            <Terminal className="mr-2 h-5 w-5" />
+                            {t('landing.trial.btnDocs')}
+                        </Button>
+                    </div>
                 </div>
             </main>
 
