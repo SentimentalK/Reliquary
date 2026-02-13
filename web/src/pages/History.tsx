@@ -9,7 +9,6 @@ import {
     Activity
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DatePicker } from '@/components/ui/date-picker'
@@ -32,6 +31,17 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
     const rawText = rawStep?.text || ""
     const fixedText = finalStep?.text || t('history.empty')
 
+    // --- LATENCY LOGIC ---
+    // Recognition Time = Sum of all step latencies (e.g. Whisper + Fixer)
+    const recognitionTime = steps.reduce((sum, step) => sum + (step.latency_ms || 0), 0)
+
+    // Total Latency = Total time from user perspective (usually includes speaking time if measured from start of interaction)
+    const totalLatency = entry.latency_stats?.total_ms || 0
+
+    // Speaking Time = Total - Recognition (Approximation)
+    // If total is missing or less than recognition, fallback to 0 or estimates
+    const speakingTime = Math.max(0, totalLatency - recognitionTime)
+
     // --- CORE LOGIC: Client-side Length Check ---
     const discrepancy = useMemo(() => {
         const rawLen = rawText.length
@@ -48,8 +58,6 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
 
         let label = ""
         if (isSuspicious) {
-            // Using logic from user request: +% Length (Hallucination?) or -% Length (Cutoff?)
-            // We can add translation keys later if needed, hardcoding for now as requested
             label = diff > 0
                 ? `+${percent}% Length (Hallucination?)`
                 : `-${percent}% Length (Cutoff?)`
@@ -58,8 +66,6 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
         return { isSuspicious, label, percent }
     }, [rawText, fixedText])
 
-    const totalLatency = entry.latency_stats?.total_ms || 0
-    const durationStr = `${totalLatency}ms`
 
     return (
         <div className={`group relative flex gap-4 p-4 border-b border-border/40 hover:bg-muted/30 transition-colors ${discrepancy.isSuspicious ? "bg-amber-50/30 dark:bg-amber-950/10" : ""}`}>
@@ -102,12 +108,12 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                     </div>
                 </div>
 
-                {/* Metadata Line (Collapsed) */}
+                {/* Metadata Line (Collapsed) - Shows RECOGNITION time */}
                 {!isExpanded && (
                     <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground pl-6">
                         <span className="flex items-center gap-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                            {durationStr}
+                            {recognitionTime}ms
                         </span>
                         <span>•</span>
                         <span>{steps.length} steps</span>
@@ -139,8 +145,8 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                                     </div>
 
                                     <div className={`p-3 rounded-md border text-sm font-mono transition-colors ${highlight
-                                            ? "bg-amber-50 border-amber-200 text-foreground ring-1 ring-amber-100 dark:bg-amber-950/20 dark:border-amber-800 dark:ring-amber-900"
-                                            : "bg-muted/50 border-border/50 text-muted-foreground"
+                                        ? "bg-amber-50 border-amber-200 text-foreground ring-1 ring-amber-100 dark:bg-amber-950/20 dark:border-amber-800 dark:ring-amber-900"
+                                        : "bg-muted/50 border-border/50 text-muted-foreground"
                                         }`}>
                                         {step.text}
                                     </div>
@@ -148,10 +154,15 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                             )
                         })}
 
-                        {/* Footer Metadata */}
+                        {/* Footer Metadata - Detailed Latency Breakdown */}
                         <div className="pt-2 border-t border-border/50 flex items-end justify-between">
                             <div className="space-y-1 text-xs text-muted-foreground font-mono">
-                                <p>{t('history.totalLatency')}: {totalLatency}ms</p>
+                                <p>
+                                    Total: {totalLatency}ms
+                                    <span className="text-muted-foreground/70 ml-1">
+                                        (Speaking: ~{speakingTime}ms, Recognition: {recognitionTime}ms)
+                                    </span>
+                                </p>
                                 {entry.audio_path && (
                                     <p title={entry.audio_path} className="truncate max-w-md">Audio Path: {entry.audio_path}</p>
                                 )}
@@ -240,45 +251,43 @@ export function History() {
                 </div>
             </div>
 
-            {/* Log List */}
-            <Card>
-                <CardContent className="p-0">
-                    {isLoading ? (
-                        <div className="p-4 space-y-4">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="flex gap-3">
-                                    <Skeleton className="h-4 w-24" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-full" />
-                                        <Skeleton className="h-3 w-1/3" />
-                                    </div>
+            {/* Log List - Removed Card Wrapper for flat look */}
+            <div className="bg-background rounded-lg">
+                {isLoading ? (
+                    <div className="p-4 space-y-4">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                            <div key={i} className="flex gap-3">
+                                <Skeleton className="h-4 w-24" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-3 w-1/3" />
                                 </div>
-                            ))}
-                        </div>
-                    ) : error ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                            {t('history.errorLoad')}
-                        </div>
-                    ) : !data?.entries?.length ? (
-                        <div className="p-8 text-center text-muted-foreground">
-                            {dateString} {t('history.noRecords')}
-                        </div>
-                    ) : (
-                        <div className="divide-y divide-border/40">
-                            {data.entries.map((entry) => (
-                                <LogEntryItem
-                                    key={entry.id}
-                                    entry={entry}
-                                    isExpanded={expandedIds.has(entry.id)}
-                                    onToggle={() => toggleExpanded(entry.id)}
-                                    onDelete={handleDelete}
-                                    isDeleting={deleteMutation.isPending && deleteMutation.variables === entry.id}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                            </div>
+                        ))}
+                    </div>
+                ) : error ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                        {t('history.errorLoad')}
+                    </div>
+                ) : !data?.entries?.length ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                        {dateString} {t('history.noRecords')}
+                    </div>
+                ) : (
+                    <div className="divide-y divide-border/40 border-b border-border/40">
+                        {data.entries.map((entry) => (
+                            <LogEntryItem
+                                key={entry.id}
+                                entry={entry}
+                                isExpanded={expandedIds.has(entry.id)}
+                                onToggle={() => toggleExpanded(entry.id)}
+                                onDelete={handleDelete}
+                                isDeleting={deleteMutation.isPending && deleteMutation.variables === entry.id}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     )
 }
