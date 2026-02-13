@@ -11,17 +11,16 @@ export function Logo({ variant = 'default', className, ...props }: LogoProps) {
             <div className={cn("relative flex items-center justify-center", className)} {...props}>
                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
                     <g className="stroke-foreground" fill="none" strokeLinejoin="round" strokeLinecap="round">
-                        {/* Main Body - stroke 8 */}
-                        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" className="stroke-[8px]" />
-
-                        {/* Y Seams - stroke 8 */}
-                        <line x1="50" y1="50" x2="50" y2="90" className="stroke-[8px]" />
-                        <line x1="50" y1="50" x2="15.36" y2="30" className="stroke-[8px]" />
-                        <line x1="50" y1="50" x2="84.64" y2="30" className="stroke-[8px]" />
-
-                        {/* Center Lock: Two Circles */}
-                        <circle cx="50" cy="50" r="18" className="fill-foreground stroke-none" />
-                        <circle cx="50" cy="50" r="12" className="stroke-foreground stroke-[8px] fill-background" />
+                        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" className="fill-background stroke-[6px]" />
+                        <line x1="50" y1="50" x2="50" y2="90" className="stroke-[6px]" />
+                        <line x1="50" y1="50" x2="15.36" y2="30" className="stroke-[6px]" />
+                        <line x1="50" y1="50" x2="84.64" y2="30" className="stroke-[6px]" />
+                        <polygon points="50,22 67,32 50,42 33,32" className="stroke-[5px]" />
+                        <polygon points="26,46 40,54 40,70 26,62" className="stroke-[5px]" />
+                        <polygon points="74,46 60,54 60,70 74,62" className="stroke-[5px]" />
+                        <circle cx="50" cy="50" r="15" className="fill-background stroke-none" />
+                        <circle cx="50" cy="50" r="11" className="stroke-[6px]" />
+                        <circle cx="50" cy="50" r="3" className="fill-foreground stroke-none" />
                     </g>
                 </svg>
             </div>
@@ -33,18 +32,32 @@ export function Logo({ variant = 'default', className, ...props }: LogoProps) {
             <div className={cn("relative flex items-center justify-center", className)} {...props}>
                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
                     <g className="stroke-foreground" fill="none" strokeLinejoin="round" strokeLinecap="round">
-                        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" className="fill-background stroke-[4.5px]" />
+                        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" className="fill-background stroke-[2.5px]" />
 
-                        <line x1="50" y1="50" x2="50" y2="90" className="stroke-[4.5px]" />
-                        <line x1="50" y1="50" x2="15.36" y2="30" className="stroke-[4.5px]" />
-                        <line x1="50" y1="50" x2="84.64" y2="30" className="stroke-[4.5px]" />
+                        <line x1="50" y1="50" x2="50" y2="90" className="stroke-[2.5px]" />
+                        <line x1="50" y1="50" x2="15.36" y2="30" className="stroke-[2.5px]" />
+                        <line x1="50" y1="50" x2="84.64" y2="30" className="stroke-[2.5px]" />
 
-                        <polygon points="50,20 67.32,30 50,40 32.68,30" className="stroke-[3.5px]" />
-                        <polygon points="24.02,45 41.34,55 41.34,75 24.02,65" className="stroke-[3.5px]" />
-                        <polygon points="75.98,45 58.66,55 58.66,75 75.98,65" className="stroke-[3.5px]" />
+                        <polygon points="50,15 75.98,30 50,45 24.02,30" className="stroke-2" />
+                        <polygon points="50,20 67.32,30 50,40 32.68,30" className="stroke-2" />
+                        <polygon points="50,25 58.66,30 50,35 41.34,30" className="stroke-2" />
+                        <polygon points="50,28 53.46,30 50,32 46.54,30" className="fill-foreground stroke-none" />
 
-                        <circle cx="50" cy="50" r="15" className="fill-background stroke-[3.5px]" />
-                        <circle cx="50" cy="50" r="8" className="stroke-[3.5px]" />
+                        <polygon points="19.7,37.5 45.7,52.5 45.7,82.5 19.7,67.5" className="stroke-2" />
+                        <polygon points="24,45 41.3,55 41.3,75 24,65" className="stroke-2" />
+                        <polygon points="28.3,52.5 37,57.5 37,67.5 28.3,62.5" className="stroke-2" />
+                        <polygon points="31,57 34.4,59 34.4,63 31,61" className="fill-foreground stroke-none" />
+
+                        <polygon points="54.3,52.5 80.3,37.5 80.3,67.5 54.3,82.5" className="stroke-2" />
+                        <polygon points="58.7,55 76,45 76,65 58.7,75" className="stroke-2" />
+                        <polygon points="63,57.5 71.7,52.5 71.7,62.5 63,67.5" className="stroke-2" />
+                        <polygon points="65.6,59 69,57 69,61 65.6,63" className="fill-foreground stroke-none" />
+
+                        <circle cx="50" cy="50" r="14" className="fill-background stroke-none" />
+                        <circle cx="50" cy="50" r="13.5" className="stroke-2" />
+                        <circle cx="50" cy="50" r="9.5" className="stroke-2" strokeDasharray="3 2" />
+                        <circle cx="50" cy="50" r="5.5" className="stroke-2" />
+                        <polygon points="50,46 54,52 46,52" className="fill-foreground stroke-none" />
                     </g>
                 </svg>
             </div>
