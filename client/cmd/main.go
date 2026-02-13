@@ -271,6 +271,9 @@ func main() {
 			}
 			fmt.Printf("✓ [Server] Pipeline updated to: %s\n", *update.Pipeline)
 		}
+
+		// Sync updated identity to control plane for future reconnections
+		controlPlane.UpdateIdentity(app.getIdentity())
 	})
 
 	// Handle key learning mode from server

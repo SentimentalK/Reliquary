@@ -440,6 +440,9 @@ async def push_config_update(device_id: str, config: ConfigUpdateRequest) -> Dic
     if not payload:
         raise HTTPException(status_code=400, detail="No config fields provided")
     
+    # Persist to server-side store so it survives until next restart
+    update_device_config(device_id, payload)
+    
     success = await manager.push_command(device_id, "config_update", payload)
     
     if not success:

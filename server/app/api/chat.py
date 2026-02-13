@@ -157,7 +157,7 @@ async def process_audio_buffer(
     total_latency_ms = int((end_time - start_time) * 1000)
     
     # Log interaction with WAV data for storage
-    interaction_id = await storage.log_interaction(
+    entry_data = await storage.log_interaction(
         user_id=user_id,
         device_id=device_id,
         wav_data=wav_data,
@@ -165,6 +165,15 @@ async def process_audio_buffer(
         total_latency_ms=total_latency_ms,
         user_info=user_info,
     )
+    interaction_id = entry_data.get("id", "")
+    
+    # Publish to event bus for real-time web push
+    try:
+        from app.services.log_events import get_log_event_bus
+        bus = get_log_event_bus()
+        await bus.publish(entry_data)
+    except Exception as e:
+        print(f"[WebSocket] Log event publish error: {e}")
     
     final_text = step_results[-1].text if step_results else ""
     print(f"[WebSocket] Transcription complete ({trigger}): {final_text[:50]}...")

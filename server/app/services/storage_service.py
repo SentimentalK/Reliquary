@@ -156,20 +156,12 @@ class StorageService:
         step_results: list,
         total_latency_ms: int,
         user_info: Optional[object] = None,
-    ) -> str:
+    ) -> dict:
         """
         Log an interaction to the user's JSONL file.
         
-        Args:
-            user_id: User identifier (display name)
-            device_id: Client-provided device identifier
-            wav_data: WAV audio data to save
-            step_results: Ordered list of StepResult from pipeline
-            total_latency_ms: Total processing latency (user-perceived)
-            user_info: Optional UserInfo object for proper storage path
-            
         Returns:
-            Generated interaction ID
+            The full log entry dict (includes id, timestamp, transcription, etc.)
         """
         interaction_id = str(uuid.uuid4())
         
@@ -207,7 +199,7 @@ class StorageService:
         async with aiofiles.open(log_path, mode="a", encoding="utf-8") as f:
             await f.write(json_line)
         
-        return interaction_id
+        return data
 
 
 # Singleton instance

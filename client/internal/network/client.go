@@ -419,6 +419,12 @@ func (c *ControlPlaneClient) IsAuthFailed() bool {
 	return c.authFailed
 }
 
+// UpdateIdentity updates the identity used for future reconnections.
+// This ensures handshake sends current config values instead of stale initial ones.
+func (c *ControlPlaneClient) UpdateIdentity(id Identity) {
+	c.identity = id
+}
+
 // ConnectWithRetry connects to the control plane with automatic reconnection.
 // This blocks forever, reconnecting on failures. Run in a goroutine.
 // IMPORTANT: Does NOT retry on 401 (authentication failure).

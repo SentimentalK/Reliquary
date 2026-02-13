@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
 import {
@@ -12,8 +12,10 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DatePicker } from '@/components/ui/date-picker'
+import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
 import { logsApi, type LogEntry } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
+import { analyzeQuality } from '@/lib/qualityCheck'
 
 function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
     entry: LogEntry
@@ -23,7 +25,7 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
     isDeleting: boolean
 }) {
     const { t } = useTranslation()
-    const steps = entry.transcription || []
+    const steps = Array.isArray(entry.transcription) ? entry.transcription : []
 
     const rawStep = steps[0]
     const finalStep = steps[steps.length - 1]
@@ -32,63 +34,62 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
     const fixedText = finalStep?.text || t('history.empty')
 
     // --- LATENCY LOGIC ---
-    // Recognition Time = Sum of all step latencies (e.g. Whisper + Fixer)
     const recognitionTime = steps.reduce((sum, step) => sum + (step.latency_ms || 0), 0)
-
-    // Total Latency = Total time from user perspective (usually includes speaking time if measured from start of interaction)
     const totalLatency = entry.latency_stats?.total_ms || 0
-
-    // Speaking Time = Total - Recognition (Approximation)
-    // If total is missing or less than recognition, fallback to 0 or estimates
     const speakingTime = Math.max(0, totalLatency - recognitionTime)
 
-    // --- CORE LOGIC: Client-side Length Check ---
-    const discrepancy = useMemo(() => {
-        const rawLen = rawText.length
-        const fixLen = fixedText.length
-
-        if (rawLen === 0) return { isSuspicious: false, label: "" }
-
-        const diff = fixLen - rawLen
-        const ratio = Math.abs(diff) / rawLen
-        const percent = Math.round((Math.abs(diff) / rawLen) * 100)
-
-        // Threshold: If difference is > 20%, flag it.
-        const isSuspicious = ratio > 0.2
-
-        let label = ""
-        if (isSuspicious) {
-            label = diff > 0
-                ? `+${percent}% Length (Hallucination?)`
-                : `-${percent}% Length (Cutoff?)`
-        }
-
-        return { isSuspicious, label, percent }
+    // --- QUALITY CHECK LOGIC ---
+    const quality = useMemo(() => {
+        return analyzeQuality(rawText, fixedText)
     }, [rawText, fixedText])
 
+    const getStatusColors = () => {
+        if (quality.status === 'red') {
+            return {
+                bg: "bg-red-50/50 hover:bg-red-50/80 dark:bg-red-950/20",
+                border: "bg-red-500",
+                badge: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+                text: "text-red-700 dark:text-red-400",
+                highlight: "bg-red-50 border-red-200 text-foreground ring-1 ring-red-100 dark:bg-red-950/20 dark:border-red-900 dark:ring-red-900"
+            }
+        }
+        if (quality.status === 'yellow') {
+            return {
+                bg: "bg-amber-50/30 hover:bg-amber-50/50 dark:bg-amber-950/10",
+                border: "bg-amber-500",
+                badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                text: "text-amber-700 dark:text-amber-400",
+                highlight: "bg-amber-50 border-amber-200 text-foreground ring-1 ring-amber-100 dark:bg-amber-950/20 dark:border-amber-900 dark:ring-amber-900"
+            }
+        }
+        return {
+            bg: "hover:bg-muted/30",
+            border: "",
+            badge: "",
+            text: "",
+            highlight: ""
+        }
+    }
+
+    const colors = getStatusColors()
+    const isSuspicious = quality.status !== 'ok'
 
     return (
-        <div className={`group relative flex gap-4 p-4 border-b border-border/40 hover:bg-muted/30 transition-colors ${discrepancy.isSuspicious ? "bg-amber-50/30 dark:bg-amber-950/10" : ""}`}>
-
-            {/* Visual Indicator for Suspicious Records on the far left */}
-            {discrepancy.isSuspicious && (
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-r" title="Potential fix error detected"></div>
+        <div className={`group relative flex gap-4 p-4 border-b border-border/40 transition-colors ${colors.bg}`}>
+            {isSuspicious && (
+                <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-r ${colors.border}`} title={quality.msg}></div>
             )}
 
-            {/* Timestamp Column */}
             <div className="w-24 flex-shrink-0 flex flex-col gap-1">
                 <span className="text-xs font-medium text-muted-foreground">{formatTime(entry.timestamp)}</span>
-                {discrepancy.isSuspicious && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded w-fit">
+                {isSuspicious && (
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded w-fit ${colors.badge}`}>
                         <AlertTriangle size={10} /> Check
                     </span>
                 )}
             </div>
 
-            {/* Main Content */}
             <div className="flex-grow min-w-0">
-
-                {/* Header / Preview Line */}
                 <div
                     className="flex items-start justify-between cursor-pointer"
                     onClick={onToggle}
@@ -97,8 +98,7 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                         <span className="mt-0.5 text-muted-foreground">
                             <Activity size={16} />
                         </span>
-                        <p className={`text-sm font-medium leading-relaxed ${discrepancy.isSuspicious ? "text-foreground" : "text-muted-foreground"}`}>
-                            {/* Show the final output as the preview */}
+                        <p className={`text-sm font-medium leading-relaxed ${isSuspicious ? "text-foreground" : "text-muted-foreground"}`}>
                             {fixedText}
                         </p>
                     </div>
@@ -108,7 +108,6 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                     </div>
                 </div>
 
-                {/* Metadata Line (Collapsed) - Shows RECOGNITION time */}
                 {!isExpanded && (
                     <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground pl-6">
                         <span className="flex items-center gap-1">
@@ -120,14 +119,11 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                     </div>
                 )}
 
-                {/* EXPANDED PIPELINE VIEW */}
                 {isExpanded && (
                     <div className="mt-4 pl-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-                        {/* Render all steps */}
                         {steps.map((step, index) => {
                             const isLast = index === steps.length - 1
-                            // Highlight logic applies to the last step if suspicious
-                            const highlight = isLast && discrepancy.isSuspicious
+                            const highlight = isLast && isSuspicious
 
                             return (
                                 <div key={index} className="space-y-1">
@@ -137,15 +133,15 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                                             <span className="text-muted-foreground">({step.latency_ms}ms)</span>
 
                                             {highlight && (
-                                                <span className="ml-2 text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
-                                                    <AlertTriangle size={12} /> {discrepancy.label}
+                                                <span className={`ml-2 font-bold flex items-center gap-1 ${colors.text}`}>
+                                                    <AlertTriangle size={12} /> {quality.msg}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
 
                                     <div className={`p-3 rounded-md border text-sm font-mono transition-colors ${highlight
-                                        ? "bg-amber-50 border-amber-200 text-foreground ring-1 ring-amber-100 dark:bg-amber-950/20 dark:border-amber-800 dark:ring-amber-900"
+                                        ? colors.highlight
                                         : "bg-muted/50 border-border/50 text-muted-foreground"
                                         }`}>
                                         {step.text}
@@ -154,7 +150,6 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                             )
                         })}
 
-                        {/* Footer Metadata - Detailed Latency Breakdown */}
                         <div className="pt-2 border-t border-border/50 flex items-end justify-between">
                             <div className="space-y-1 text-xs text-muted-foreground font-mono">
                                 <p>
@@ -196,17 +191,65 @@ export function History() {
     const { t } = useTranslation()
     const queryClient = useQueryClient()
 
-    // Format date for API call
+    // Modal state: null = closed, 'all' = clear day, string = entry id
+    const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
     const dateString = format(selectedDate, 'yyyy-MM-dd')
 
-    // Fetch logs for selected date
     const { data, isLoading, error } = useQuery({
         queryKey: ['logs', dateString],
         queryFn: () => logsApi.getByDate(dateString),
         enabled: !!selectedDate,
     })
 
-    // Delete mutation
+    // WebSocket subscription for real-time log push
+    const dateRef = useRef(dateString)
+    dateRef.current = dateString
+
+    useEffect(() => {
+        const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
+        let ws: WebSocket | null = null
+        let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+
+        function connect() {
+            ws = new WebSocket(`${protocol}://${location.host}/ws/logs`)
+            ws.onmessage = (ev) => {
+                try {
+                    const msg = JSON.parse(ev.data)
+                    if (msg.type === 'new_entry' && msg.entry) {
+                        // Check if the entry's date matches the selected date
+                        const ts: string = msg.entry.timestamp || ''
+                        const entryDate = ts.slice(0, 10) // YYYY-MM-DD from ISO
+                        if (entryDate === dateRef.current) {
+                            queryClient.setQueryData(
+                                ['logs', dateRef.current],
+                                (old: any) => {
+                                    if (!old) return { entries: [msg.entry], date: dateRef.current, count: 1 }
+                                    return {
+                                        ...old,
+                                        entries: [msg.entry, ...old.entries],
+                                        count: (old.count || 0) + 1,
+                                    }
+                                }
+                            )
+                        }
+                    }
+                } catch { /* ignore parse errors */ }
+            }
+            ws.onclose = () => {
+                reconnectTimer = setTimeout(connect, 3000)
+            }
+        }
+
+        connect()
+
+        return () => {
+            if (reconnectTimer) clearTimeout(reconnectTimer)
+            ws?.close()
+        }
+    }, [queryClient])
+
+    // Single entry delete
     const deleteMutation = useMutation({
         mutationFn: (entryId: string) => logsApi.deleteEntry(entryId),
         onSuccess: () => {
@@ -214,9 +257,29 @@ export function History() {
         },
     })
 
-    const handleDelete = (entryId: string) => {
-        if (window.confirm(t('history.confirmDelete'))) {
-            deleteMutation.mutate(entryId)
+    // Clear day (all entries)
+    const clearDayMutation = useMutation({
+        mutationFn: (date: string) => logsApi.clearDay(date),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['logs', dateString] })
+        },
+    })
+
+    const handleDeleteRequest = (target: string) => {
+        setDeleteTarget(target)
+    }
+
+    const handleConfirmDelete = () => {
+        if (!deleteTarget) return
+
+        if (deleteTarget === 'all') {
+            clearDayMutation.mutate(dateString, {
+                onSettled: () => setDeleteTarget(null),
+            })
+        } else {
+            deleteMutation.mutate(deleteTarget, {
+                onSettled: () => setDeleteTarget(null),
+            })
         }
     }
 
@@ -232,8 +295,22 @@ export function History() {
         })
     }
 
+    const isAll = deleteTarget === 'all'
+
     return (
         <div className="space-y-6">
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmModal
+                isOpen={!!deleteTarget}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={handleConfirmDelete}
+                title={isAll ? t('history.confirmClearDayTitle') : t('history.confirmDeleteTitle')}
+                description={isAll ? t('history.confirmClearDayDesc') : t('history.confirmDeleteDesc')}
+                confirmText={isAll ? t('history.confirmClearAll') : t('history.delete')}
+                cancelText={t('history.cancel')}
+                isLoading={isAll ? clearDayMutation.isPending : deleteMutation.isPending}
+            />
+
             {/* Header */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 pb-4 mb-4 flex justify-between items-center">
                 <div>
@@ -241,8 +318,20 @@ export function History() {
                     <p className="text-sm text-muted-foreground">{t('history.subtitle')}</p>
                 </div>
 
-                {/* Date Picker */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
+                    {/* Clear Day Button */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteRequest('all')}
+                        disabled={!data?.entries?.length}
+                        className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                    >
+                        <Trash2 className="h-4 w-4 mr-1.5" />
+                        {t('history.clearDay')}
+                    </Button>
+
+                    {/* Date Picker */}
                     <DatePicker
                         date={selectedDate}
                         onDateChange={(date) => date && setSelectedDate(date)}
@@ -251,7 +340,7 @@ export function History() {
                 </div>
             </div>
 
-            {/* Log List - Removed Card Wrapper for flat look */}
+            {/* Log List */}
             <div className="bg-background rounded-lg">
                 {isLoading ? (
                     <div className="p-4 space-y-4">
@@ -281,7 +370,7 @@ export function History() {
                                 entry={entry}
                                 isExpanded={expandedIds.has(entry.id)}
                                 onToggle={() => toggleExpanded(entry.id)}
-                                onDelete={handleDelete}
+                                onDelete={handleDeleteRequest}
                                 isDeleting={deleteMutation.isPending && deleteMutation.variables === entry.id}
                             />
                         ))}

@@ -153,6 +153,10 @@ export const logsApi = {
     deleteEntry: async (entryId: string): Promise<void> => {
         await api.delete(`/logs/${entryId}`)
     },
+
+    clearDay: async (date: string): Promise<void> => {
+        await api.delete(`/logs/date/${date}`)
+    },
 }
 
 // ============== Pipeline Config API ==============

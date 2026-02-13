@@ -50,8 +50,15 @@
     "empty": "(Empty)",
     "totalLatency": "Total Latency",
     "delete": "Delete",
+    "clearDay": "Clear Day",
     "confirmDelete": "Are you sure you want to delete this entry? This cannot be undone.",
-    "deleteSuccess": "Deleted"
+    "deleteSuccess": "Deleted",
+    "confirmDeleteTitle": "Delete Record?",
+    "confirmDeleteDesc": "Are you sure you want to delete this recording? It will be removed from your history permanently.",
+    "confirmClearDayTitle": "Clear Entire Day?",
+    "confirmClearDayDesc": "This will permanently delete all records and audio files for this day. This action cannot be undone.",
+    "cancel": "Cancel",
+    "confirmClearAll": "Yes, Clear All"
   },
   "deviceCard": {
     "hotkey": "Hotkey",
