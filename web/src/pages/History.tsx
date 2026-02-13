@@ -1,7 +1,13 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { MessageSquare, Clock, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
+import {
+    ChevronDown,
+    ChevronUp,
+    Trash2,
+    AlertTriangle,
+    Activity
+} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,120 +26,158 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
     const { t } = useTranslation()
     const steps = entry.transcription || []
 
-    // Last step is the final output (shown in collapsed card)
-    const finalStep = steps.length > 0 ? steps[steps.length - 1] : null
-    const primaryText = finalStep?.text || t('history.empty')
+    const rawStep = steps[0]
+    const finalStep = steps[steps.length - 1]
 
-    // Multiple steps means chain pipeline
-    const hasMultipleSteps = steps.length > 1
+    const rawText = rawStep?.text || ""
+    const fixedText = finalStep?.text || t('history.empty')
 
-    // Latency stats
-    const totalLatency = entry.latency_stats?.total_ms
+    // --- CORE LOGIC: Client-side Length Check ---
+    const discrepancy = useMemo(() => {
+        const rawLen = rawText.length
+        const fixLen = fixedText.length
+
+        if (rawLen === 0) return { isSuspicious: false, label: "" }
+
+        const diff = fixLen - rawLen
+        const ratio = Math.abs(diff) / rawLen
+        const percent = Math.round((Math.abs(diff) / rawLen) * 100)
+
+        // Threshold: If difference is > 20%, flag it.
+        const isSuspicious = ratio > 0.2
+
+        let label = ""
+        if (isSuspicious) {
+            // Using logic from user request: +% Length (Hallucination?) or -% Length (Cutoff?)
+            // We can add translation keys later if needed, hardcoding for now as requested
+            label = diff > 0
+                ? `+${percent}% Length (Hallucination?)`
+                : `-${percent}% Length (Cutoff?)`
+        }
+
+        return { isSuspicious, label, percent }
+    }, [rawText, fixedText])
+
+    const totalLatency = entry.latency_stats?.total_ms || 0
+    const durationStr = `${totalLatency}ms`
 
     return (
-        <div className="border-b last:border-0">
-            <div
-                className="flex items-start gap-3 p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={onToggle}
-            >
-                {/* Time */}
-                <div className="flex-shrink-0 w-20 text-sm text-muted-foreground">
-                    {formatTime(entry.timestamp)}
-                </div>
+        <div className={`group relative flex gap-4 p-4 border-b border-border/40 hover:bg-muted/30 transition-colors ${discrepancy.isSuspicious ? "bg-amber-50/30 dark:bg-amber-950/10" : ""}`}>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-start gap-2">
-                        <MessageSquare className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
-                        <p className="text-sm leading-relaxed break-words">
-                            {primaryText}
+            {/* Visual Indicator for Suspicious Records on the far left */}
+            {discrepancy.isSuspicious && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500 rounded-r" title="Potential fix error detected"></div>
+            )}
+
+            {/* Timestamp Column */}
+            <div className="w-24 flex-shrink-0 flex flex-col gap-1">
+                <span className="text-xs font-medium text-muted-foreground">{formatTime(entry.timestamp)}</span>
+                {discrepancy.isSuspicious && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-100 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded w-fit">
+                        <AlertTriangle size={10} /> Check
+                    </span>
+                )}
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-grow min-w-0">
+
+                {/* Header / Preview Line */}
+                <div
+                    className="flex items-start justify-between cursor-pointer"
+                    onClick={onToggle}
+                >
+                    <div className="flex gap-2 items-start">
+                        <span className="mt-0.5 text-muted-foreground">
+                            <Activity size={16} />
+                        </span>
+                        <p className={`text-sm font-medium leading-relaxed ${discrepancy.isSuspicious ? "text-foreground" : "text-muted-foreground"}`}>
+                            {/* Show the final output as the preview */}
+                            {fixedText}
                         </p>
                     </div>
 
-                    {/* Meta - shown in collapsed view */}
-                    <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        {totalLatency && (
-                            <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {totalLatency}ms
-                            </span>
-                        )}
-                        {hasMultipleSteps && (
-                            <span className="text-blue-500">
-                                {steps.length} steps
-                            </span>
-                        )}
+                    <div className="ml-4 text-muted-foreground hover:text-foreground">
+                        {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </div>
                 </div>
 
-                {/* Expand toggle */}
-                <Button variant="ghost" size="icon" className="h-6 w-6">
-                    {isExpanded ? (
-                        <ChevronDown className="h-4 w-4" />
-                    ) : (
-                        <ChevronRight className="h-4 w-4" />
-                    )}
-                </Button>
-            </div>
+                {/* Metadata Line (Collapsed) */}
+                {!isExpanded && (
+                    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground pl-6">
+                        <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            {durationStr}
+                        </span>
+                        <span>•</span>
+                        <span>{steps.length} steps</span>
+                    </div>
+                )}
 
-            {/* Expanded Details */}
-            {isExpanded && (
-                <div className="px-4 pb-4 pt-0">
-                    <div className="ml-[5.5rem] rounded-lg bg-muted/50 p-4 text-sm space-y-3">
-                        {/* Show all pipeline step outputs in order */}
-                        {steps.map((step, index) => (
-                            <div key={index}>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-muted-foreground text-xs font-mono">
-                                        {index + 1}. {step.step}
-                                    </span>
-                                    {step.latency_ms > 0 && (
-                                        <span className="text-muted-foreground text-xs">
-                                            ({step.latency_ms}ms)
-                                        </span>
-                                    )}
-                                </div>
-                                <p className={`mt-1 ${index === steps.length - 1 ? '' : 'text-amber-600 dark:text-amber-400'}`}>
-                                    {step.text}
-                                </p>
-                            </div>
-                        ))}
+                {/* EXPANDED PIPELINE VIEW */}
+                {isExpanded && (
+                    <div className="mt-4 pl-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+                        {/* Render all steps */}
+                        {steps.map((step, index) => {
+                            const isLast = index === steps.length - 1
+                            // Highlight logic applies to the last step if suspicious
+                            const highlight = isLast && discrepancy.isSuspicious
 
-                        {/* Meta info & Actions */}
-                        <div className="pt-2 border-t border-border/50 flex items-end justify-between gap-4">
-                            <div className="text-xs text-muted-foreground space-y-1 min-w-0">
-                                {totalLatency && (
-                                    <div>{t('history.totalLatency')}: {totalLatency}ms</div>
-                                )}
-                                {entry.audio_path && (
-                                    <div className="font-mono truncate" title={entry.audio_path}>
-                                        Audio Path: {entry.audio_path}
+                            return (
+                                <div key={index} className="space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground uppercase tracking-wide">
+                                            <span>{index + 1}. {step.step}</span>
+                                            <span className="text-muted-foreground">({step.latency_ms}ms)</span>
+
+                                            {highlight && (
+                                                <span className="ml-2 text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                                                    <AlertTriangle size={12} /> {discrepancy.label}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
+
+                                    <div className={`p-3 rounded-md border text-sm font-mono transition-colors ${highlight
+                                            ? "bg-amber-50 border-amber-200 text-foreground ring-1 ring-amber-100 dark:bg-amber-950/20 dark:border-amber-800 dark:ring-amber-900"
+                                            : "bg-muted/50 border-border/50 text-muted-foreground"
+                                        }`}>
+                                        {step.text}
+                                    </div>
+                                </div>
+                            )
+                        })}
+
+                        {/* Footer Metadata */}
+                        <div className="pt-2 border-t border-border/50 flex items-end justify-between">
+                            <div className="space-y-1 text-xs text-muted-foreground font-mono">
+                                <p>{t('history.totalLatency')}: {totalLatency}ms</p>
+                                {entry.audio_path && (
+                                    <p title={entry.audio_path} className="truncate max-w-md">Audio Path: {entry.audio_path}</p>
                                 )}
-                                <div className="font-mono">ID: {entry.id}</div>
+                                <p>ID: {entry.id}</p>
                             </div>
 
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 disabled={isDeleting}
-                                className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 h-8 shrink-0"
+                                className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 h-8 px-2"
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onDelete(entry.id)
                                 }}
                             >
-                                <Trash2 className="h-4 w-4 mr-1.5" />
+                                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                                 {isDeleting ? '...' : t('history.delete')}
                             </Button>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     )
 }
-
 
 export function History() {
     const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
@@ -180,20 +224,20 @@ export function History() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 pb-4 mb-4 flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{t('history.title')}</h1>
-                    <p className="text-muted-foreground">
-                        {t('history.subtitle')}
-                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight">{t('history.title')}</h1>
+                    <p className="text-sm text-muted-foreground">{t('history.subtitle')}</p>
                 </div>
 
                 {/* Date Picker */}
-                <DatePicker
-                    date={selectedDate}
-                    onDateChange={(date) => date && setSelectedDate(date)}
-                    disabledAfter={new Date()}
-                />
+                <div className="flex items-center gap-2">
+                    <DatePicker
+                        date={selectedDate}
+                        onDateChange={(date) => date && setSelectedDate(date)}
+                        disabledAfter={new Date()}
+                    />
+                </div>
             </div>
 
             {/* Log List */}
@@ -203,7 +247,7 @@ export function History() {
                         <div className="p-4 space-y-4">
                             {[1, 2, 3, 4, 5].map((i) => (
                                 <div key={i} className="flex gap-3">
-                                    <Skeleton className="h-4 w-20" />
+                                    <Skeleton className="h-4 w-24" />
                                     <div className="flex-1 space-y-2">
                                         <Skeleton className="h-4 w-full" />
                                         <Skeleton className="h-3 w-1/3" />
@@ -220,7 +264,7 @@ export function History() {
                             {dateString} {t('history.noRecords')}
                         </div>
                     ) : (
-                        <div>
+                        <div className="divide-y divide-border/40">
                             {data.entries.map((entry) => (
                                 <LogEntryItem
                                     key={entry.id}
