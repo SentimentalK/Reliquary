@@ -23,14 +23,13 @@ from zoneinfo import ZoneInfo
 
 
 def _get_tz():
-    """Get timezone from TZ environment variable, default to UTC."""
-    tz_name = os.environ.get("TZ")
-    if tz_name:
-        try:
-            return ZoneInfo(tz_name)
-        except Exception:
-            pass
-    return ZoneInfo("UTC")
+    """Get timezone from application config."""
+    from app.config import get_settings
+    settings = get_settings()
+    try:
+        return ZoneInfo(settings.timezone)
+    except Exception:
+        return ZoneInfo("UTC")
 import aiofiles
 
 from app.config import get_settings

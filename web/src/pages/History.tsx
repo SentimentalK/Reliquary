@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { format } from 'date-fns'
-import { MessageSquare, Clock, ChevronDown, ChevronRight } from 'lucide-react'
+import { MessageSquare, Clock, ChevronDown, ChevronRight, Trash2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,10 +10,12 @@ import { DatePicker } from '@/components/ui/date-picker'
 import { logsApi, type LogEntry } from '@/lib/api'
 import { formatTime } from '@/lib/utils'
 
-function LogEntryItem({ entry, isExpanded, onToggle }: {
+function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
     entry: LogEntry
     isExpanded: boolean
     onToggle: () => void
+    onDelete: (id: string) => void
+    isDeleting: boolean
 }) {
     const { t } = useTranslation()
     const steps = entry.transcription || []
@@ -97,17 +99,33 @@ function LogEntryItem({ entry, isExpanded, onToggle }: {
                             </div>
                         ))}
 
-                        {/* Meta info */}
-                        <div className="pt-2 border-t border-border/50 text-xs text-muted-foreground space-y-1">
-                            {totalLatency && (
-                                <div>{t('history.totalLatency')}: {totalLatency}ms</div>
-                            )}
-                            {entry.audio_path && (
-                                <div className="font-mono truncate">
-                                    Audio Path: {entry.audio_path}
-                                </div>
-                            )}
-                            <div className="font-mono">ID: {entry.id}</div>
+                        {/* Meta info & Actions */}
+                        <div className="pt-2 border-t border-border/50 flex items-end justify-between gap-4">
+                            <div className="text-xs text-muted-foreground space-y-1 min-w-0">
+                                {totalLatency && (
+                                    <div>{t('history.totalLatency')}: {totalLatency}ms</div>
+                                )}
+                                {entry.audio_path && (
+                                    <div className="font-mono truncate" title={entry.audio_path}>
+                                        Audio Path: {entry.audio_path}
+                                    </div>
+                                )}
+                                <div className="font-mono">ID: {entry.id}</div>
+                            </div>
+
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={isDeleting}
+                                className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 h-8 shrink-0"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    onDelete(entry.id)
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4 mr-1.5" />
+                                {isDeleting ? '...' : t('history.delete')}
+                            </Button>
                         </div>
                     </div>
                 </div>
@@ -121,6 +139,7 @@ export function History() {
     const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
 
     // Format date for API call
     const dateString = format(selectedDate, 'yyyy-MM-dd')
@@ -131,6 +150,20 @@ export function History() {
         queryFn: () => logsApi.getByDate(dateString),
         enabled: !!selectedDate,
     })
+
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: (entryId: string) => logsApi.deleteEntry(entryId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['logs', dateString] })
+        },
+    })
+
+    const handleDelete = (entryId: string) => {
+        if (window.confirm(t('history.confirmDelete'))) {
+            deleteMutation.mutate(entryId)
+        }
+    }
 
     const toggleExpanded = (id: string) => {
         setExpandedIds((prev) => {
@@ -194,6 +227,8 @@ export function History() {
                                     entry={entry}
                                     isExpanded={expandedIds.has(entry.id)}
                                     onToggle={() => toggleExpanded(entry.id)}
+                                    onDelete={handleDelete}
+                                    isDeleting={deleteMutation.isPending && deleteMutation.variables === entry.id}
                                 />
                             ))}
                         </div>

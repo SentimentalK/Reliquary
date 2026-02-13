@@ -22,6 +22,9 @@ class Settings(BaseSettings):
     # Storage settings (Multi-User Distributed Storage)
     storage_root: str = "../data"  # Root path for all logs (can be NAS/Cloud mount)
     
+    # Timezone for date-based storage (IANA timezone name)
+    timezone: str = "America/New_York"
+    
     # Authentication - Invite Codes
     admin_invite_code: str = "reliquary-admin-2026"  # Override via ADMIN_INVITE_CODE env
     user_invite_code: str = "reliquary-user-2026"    # Override via USER_INVITE_CODE env

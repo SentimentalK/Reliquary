@@ -131,3 +131,60 @@ async def get_available_dates(
     sorted_dates = sorted(dates, reverse=True)
     
     return {"dates": sorted_dates}
+
+
+@router.delete("/api/logs/{entry_id}")
+async def delete_log_entry(entry_id: str) -> Dict[str, Any]:
+    """
+    Delete a single log entry by ID.
+    
+    Removes the entry from its JSONL file and deletes the associated audio file.
+    """
+    settings = get_settings()
+    storage_root = Path(settings.storage_root).resolve()
+    
+    if not storage_root.exists():
+        raise HTTPException(status_code=404, detail="Entry not found")
+    
+    # Scan all user directories and JSONL files
+    for user_dir in storage_root.iterdir():
+        if not user_dir.is_dir():
+            continue
+        
+        for log_file in user_dir.glob("*.jsonl"):
+            try:
+                lines = []
+                deleted_entry = None
+                
+                with open(log_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        stripped = line.strip()
+                        if not stripped:
+                            continue
+                        entry = json.loads(stripped)
+                        if entry.get("id") == entry_id:
+                            deleted_entry = entry
+                        else:
+                            lines.append(stripped)
+                
+                if deleted_entry:
+                    # Rewrite file without the deleted entry
+                    with open(log_file, "w", encoding="utf-8") as f:
+                        for remaining_line in lines:
+                            f.write(remaining_line + "\n")
+                    
+                    # Delete associated audio file
+                    audio_path = deleted_entry.get("audio_path")
+                    if audio_path:
+                        abs_audio_path = user_dir / audio_path
+                        if abs_audio_path.exists():
+                            abs_audio_path.unlink()
+                    
+                    return {
+                        "deleted": True,
+                        "id": entry_id,
+                    }
+            except Exception as e:
+                print(f"[Logs] Error processing {log_file}: {e}")
+    
+    raise HTTPException(status_code=404, detail="Entry not found")

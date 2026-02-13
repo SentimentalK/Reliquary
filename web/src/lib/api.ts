@@ -149,6 +149,10 @@ export const logsApi = {
         const { data } = await api.get<LogsResponse>('/logs', { params })
         return data
     },
+
+    deleteEntry: async (entryId: string): Promise<void> => {
+        await api.delete(`/logs/${entryId}`)
+    },
 }
 
 // ============== Pipeline Config API ==============

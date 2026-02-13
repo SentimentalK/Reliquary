@@ -48,7 +48,10 @@
     "errorLoad": "Failed to load logs, please check backend API",
     "noRecords": "No records found",
     "empty": "(Empty)",
-    "totalLatency": "Total Latency"
+    "totalLatency": "Total Latency",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this entry? This cannot be undone.",
+    "deleteSuccess": "Deleted"
   },
   "deviceCard": {
     "hotkey": "Hotkey",
@@ -145,12 +148,12 @@
     "trial": {
       "title": "Start Trial, ",
       "titleStrong": "No Data Retention",
-      "p1": "We do not provide commercial services. This trial is only to lower the barrier for beginners and avoid deployment hassles.",
+      "p1": "I currently do not provide commercial services. This trial is only to lower the barrier for beginners and avoid deployment hassles.",
       "p2a": "Enter invite code",
-      "code": "FREE-TRIAL-3DAYS",
-      "p2b": "to unlock 3 days of full experience.",
-      "p3": "After 3 days, your account and data will be permanently deleted.",
-      "p4": "We strongly recommend local deployment after the trial to keep data truly in your hands.",
+      "code": "FREE-TRIAL-1DAY",
+      "p2b": "to get limited-time full experience.",
+      "p3": "Daily at 3AM, your account and all generated voice data will be thoroughly and permanently deleted.",
+      "p4": "After satisfaction, I strongly recommend local deployment to keep data truly in your hands.",
       "btnTrial": "Use Invite Code",
       "btnDocs": "View Deployment Docs"
     },
