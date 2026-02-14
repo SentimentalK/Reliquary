@@ -38,12 +38,14 @@ async def transcribe_audio(
             raise HTTPException(status_code=400, detail="Empty audio file")
         
         manager = get_pipeline_manager()
-        pipe = manager.get_pipeline(pipeline_key)
         
-        text = await pipe.transcribe(audio_bytes, filename=file.filename or "audio.wav")
+        _results, final_text = await manager.run(
+            pipeline_key,
+            audio_bytes=audio_bytes,
+            filename=file.filename or "audio.wav",
+        )
         
-        # Return the final step's text
-        return text[-1].text if text else ""
+        return final_text
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -87,7 +89,7 @@ async def process_audio_buffer(
     api_key: str = None,  # BYOK: Bring Your Own Key
     user_info: object = None,  # UserInfo for proper storage path
     pipeline_name: str = "raw_whisper",
-) -> tuple[list, str, str | None]:
+) -> tuple[list, str, str, str | None]:
     """
     Process the audio buffer and return (step_results, interaction_id, error).
     
@@ -117,17 +119,15 @@ async def process_audio_buffer(
     
     wav_data = pcm_to_wav(bytes(pcm_buffer), sample_rate)
     
-    try:
-        pipe = manager.get_pipeline(pipeline_name)
-    except ValueError:
+    # Validate pipeline key, fall back to default if invalid
+    from app.services.pipelines.manager import PIPELINE_TEMPLATES
+    if pipeline_name not in PIPELINE_TEMPLATES:
         print(f"[WebSocket] Invalid pipeline '{pipeline_name}', falling back to default")
-        try:
-            pipe = manager.get_pipeline(settings.default_pipeline)
-        except ValueError:
-            from app.services.pipelines.manager import PIPELINE_REGISTRY
-            fallback_key = next(iter(PIPELINE_REGISTRY))
+        pipeline_name = settings.default_pipeline
+        if pipeline_name not in PIPELINE_TEMPLATES:
+            fallback_key = next(iter(PIPELINE_TEMPLATES))
             print(f"[WebSocket] Default pipeline '{settings.default_pipeline}' also invalid, using '{fallback_key}'")
-            pipe = manager.get_pipeline(fallback_key)
+            pipeline_name = fallback_key
     
     error_msg = None
     step_results = []
@@ -139,10 +139,12 @@ async def process_audio_buffer(
         full_config = read_user_config(user_info)
         user_config = full_config.get(pipeline_name, {})
     
+    final_text = ""
     try:
         # Each step internally tracks its own latency
-        step_results = await pipe.transcribe(
-            wav_data,
+        step_results, final_text = await manager.run(
+            pipeline_name,
+            audio_bytes=wav_data,
             filename="stream.wav",
             api_key=api_key,
             user_config=user_config,
@@ -151,6 +153,7 @@ async def process_audio_buffer(
         print(f"[WebSocket] Transcription failed: {e}")
         from app.services.pipelines.base import StepResult
         step_results = [StepResult(step="error", text=f"[Transcription Error: {str(e)}]", latency_ms=0)]
+        final_text = step_results[0].text
         error_msg = str(e)
     
     end_time = time.time()
@@ -175,9 +178,10 @@ async def process_audio_buffer(
     except Exception as e:
         print(f"[WebSocket] Log event publish error: {e}")
     
-    final_text = step_results[-1].text if step_results else ""
+    if not final_text:
+        final_text = step_results[-1].text if step_results else ""
     print(f"[WebSocket] Transcription complete ({trigger}): {final_text[:50]}...")
-    return step_results, interaction_id, error_msg
+    return step_results, final_text, interaction_id, error_msg
 
 
 @router.websocket("/ws/audio")
@@ -319,7 +323,7 @@ async def websocket_audio_stream(websocket: WebSocket):
                 heartbeat_task = asyncio.create_task(send_heartbeat())
             
             try:
-                step_results, interaction_id, error = await process_audio_buffer(
+                step_results, final_text, interaction_id, error = await process_audio_buffer(
                     pcm_buffer=pcm_buffer,
                     sample_rate=sample_rate,
                     user_id=current_user_id,
@@ -342,7 +346,6 @@ async def websocket_audio_stream(websocket: WebSocket):
             # Send result if client still connected
             if client_connected:
                 try:
-                    final_text = step_results[-1].text if step_results else ""
                     if error:
                         # Send error allows client to play error sound
                         await websocket.send_json({

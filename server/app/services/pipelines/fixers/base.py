@@ -1,23 +1,23 @@
-"""Base class for LLM-based fixer steps."""
+"""Base class for LLM-based fixer steps (PipelineStep implementation)."""
 
 import re
 import time
 from abc import ABC
 from typing import Optional
 
-from app.services.pipelines.base import GroqProvider
+from app.services.pipelines.base import PipelineStep, PipelineContext, GroqProvider, StepResult
 
 # Regex to strip <think>...</think> blocks from Qwen3 output
 _THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
 
 
-class BaseFixer(ABC):
+class BaseFixerStep(PipelineStep):
     """
     Base class for LLM-based ASR correction steps.
     
     Subclasses define their own MODEL, STEP_NAME, and SYSTEM_PROMPT.
-    The fix() method handles the GROQ chat completion call,
-    timing, and <think> tag stripping.
+    Reads "raw_text" from context, writes corrected text back as "raw_text"
+    so downstream fixers can chain naturally.
     """
     
     MODEL: str = ""           # e.g. "qwen/qwen3-32b"
@@ -27,28 +27,62 @@ class BaseFixer(ABC):
     def __init__(self):
         self._provider = GroqProvider()
     
-    async def fix(
+    async def process(self, ctx: PipelineContext) -> PipelineContext:
+        """Fix raw ASR text using LLM, reading/writing from context."""
+        raw_text = ctx.get_data("raw_text", "")
+        
+        if not raw_text or not raw_text.strip():
+            ctx.results.append(StepResult(step=self.STEP_NAME, text=raw_text, latency_ms=0))
+            return ctx
+        
+        # Extract per-step user config (keywords, user_prompt)
+        step_cfg = ctx.user_config.get(self.STEP_NAME, {})
+        keywords = step_cfg.get("keywords")
+        user_prompt = step_cfg.get("user_prompt")
+        
+        # Anti-hallucination: cap output tokens at 2x raw text length
+        max_tokens = len(raw_text) * 2
+        
+        fixed_text, latency_ms = await self._fix(
+            raw_text,
+            api_key=ctx.api_key,
+            keywords=keywords,
+            user_prompt=user_prompt,
+            max_tokens=max_tokens
+        )
+        
+        # Latency circuit breaker: if fixer took longer than Whisper,
+        # keep fixer result in the log but signal manager to return raw text.
+        whisper_latency = ctx.get_data("whisper_latency_ms", 0)
+        if whisper_latency > 0 and latency_ms > whisper_latency:
+            print(f"[Fixer] Latency breaker: {self.STEP_NAME} took {latency_ms}ms "
+                  f"> whisper {whisper_latency}ms, falling back to raw text")
+            ctx.set_data("use_raw_fallback", True)
+        else:
+            ctx.set_data("raw_text", fixed_text)
+        
+        # Fixer result always stored for logging
+        ctx.results.append(StepResult(step=self.STEP_NAME, text=fixed_text, latency_ms=latency_ms))
+        
+        return ctx
+    
+    async def _fix(
         self,
         raw_text: str,
         api_key: Optional[str] = None,
         keywords: Optional[list[str]] = None,
         user_prompt: Optional[str] = None,
+        max_tokens: Optional[int] = None,
     ) -> tuple[str, int]:
         """
-        Fix raw ASR text using LLM.
+        Internal fix logic — LLM chat completion with timing and <think> stripping.
         
         Args:
-            raw_text: Raw transcription from previous step.
-            api_key: API key for BYOK authentication.
-            keywords: User-defined keywords that must be recognized correctly.
-            user_prompt: User-defined additional correction rules.
-            
+            max_tokens: Cap on output tokens (anti-hallucination guard).
+        
         Returns:
             Tuple of (corrected_text, latency_ms).
         """
-        if not raw_text or not raw_text.strip():
-            return raw_text, 0
-        
         # Build system prompt: base + user keywords + user prompt
         system_prompt = self.SYSTEM_PROMPT
         
@@ -61,14 +95,19 @@ class BaseFixer(ABC):
         
         client = self._provider.get_client(api_key)
         
-        t0 = time.time()
-        response = client.chat.completions.create(
-            model=self.MODEL,
-            messages=[
+        api_kwargs = {
+            "model": self.MODEL,
+            "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": raw_text},
             ],
-        )
+            "temperature": 0.3,
+        }
+        if max_tokens and max_tokens > 0:
+            api_kwargs["max_tokens"] = max_tokens
+        
+        t0 = time.time()
+        response = client.chat.completions.create(**api_kwargs)
         latency_ms = int((time.time() - t0) * 1000)
         
         result = response.choices[0].message.content

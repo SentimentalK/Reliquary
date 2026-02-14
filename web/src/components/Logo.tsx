@@ -32,32 +32,27 @@ export function Logo({ variant = 'default', className, ...props }: LogoProps) {
             <div className={cn("relative flex items-center justify-center", className)} {...props}>
                 <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
                     <g className="stroke-foreground" fill="none" strokeLinejoin="round" strokeLinecap="round">
-                        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" className="fill-background stroke-[2.5px]" />
+                        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" className="fill-background stroke-2" />
+                        <line x1="50" y1="50" x2="50" y2="90" className="stroke-2" />
+                        <line x1="50" y1="50" x2="15.36" y2="30" className="stroke-2" />
+                        <line x1="50" y1="50" x2="84.64" y2="30" className="stroke-2" />
 
-                        <line x1="50" y1="50" x2="50" y2="90" className="stroke-[2.5px]" />
-                        <line x1="50" y1="50" x2="15.36" y2="30" className="stroke-[2.5px]" />
-                        <line x1="50" y1="50" x2="84.64" y2="30" className="stroke-[2.5px]" />
+                        <polygon points="50,42 29.22,30 50,18 70.78,30" strokeWidth="1.5" />
+                        <polygon points="50,36 39.61,30 50,24 60.39,30" strokeWidth="1.2" />
+                        <polygon points="50,31.5 47.4,30 50,28.5 52.6,30" className="fill-foreground stroke-none" />
 
-                        <polygon points="50,15 75.98,30 50,45 24.02,30" className="stroke-2" />
-                        <polygon points="50,20 67.32,30 50,40 32.68,30" className="stroke-2" />
-                        <polygon points="50,25 58.66,30 50,35 41.34,30" className="stroke-2" />
-                        <polygon points="50,28 53.46,30 50,32 46.54,30" className="fill-foreground stroke-none" />
+                        <polygon points="43.07,54 22.29,42 22.29,66 43.07,78" strokeWidth="1.5" />
+                        <polygon points="37.87,57 27.48,51 27.48,63 37.87,69" strokeWidth="1.2" />
+                        <polygon points="33.98,59.25 31.38,57.75 31.38,60.75 33.98,62.25" className="fill-foreground stroke-none" />
 
-                        <polygon points="19.7,37.5 45.7,52.5 45.7,82.5 19.7,67.5" className="stroke-2" />
-                        <polygon points="24,45 41.3,55 41.3,75 24,65" className="stroke-2" />
-                        <polygon points="28.3,52.5 37,57.5 37,67.5 28.3,62.5" className="stroke-2" />
-                        <polygon points="31,57 34.4,59 34.4,63 31,61" className="fill-foreground stroke-none" />
+                        <polygon points="56.93,54 77.71,42 77.71,66 56.93,78" strokeWidth="1.5" />
+                        <polygon points="62.13,57 72.52,51 72.52,63 62.13,69" strokeWidth="1.2" />
+                        <polygon points="66.02,59.25 68.62,57.75 68.62,60.75 66.02,62.25" className="fill-foreground stroke-none" />
 
-                        <polygon points="54.3,52.5 80.3,37.5 80.3,67.5 54.3,82.5" className="stroke-2" />
-                        <polygon points="58.7,55 76,45 76,65 58.7,75" className="stroke-2" />
-                        <polygon points="63,57.5 71.7,52.5 71.7,62.5 63,67.5" className="stroke-2" />
-                        <polygon points="65.6,59 69,57 69,61 65.6,63" className="fill-foreground stroke-none" />
-
-                        <circle cx="50" cy="50" r="14" className="fill-background stroke-none" />
-                        <circle cx="50" cy="50" r="13.5" className="stroke-2" />
-                        <circle cx="50" cy="50" r="9.5" className="stroke-2" strokeDasharray="3 2" />
-                        <circle cx="50" cy="50" r="5.5" className="stroke-2" />
-                        <polygon points="50,46 54,52 46,52" className="fill-foreground stroke-none" />
+                        <circle cx="50" cy="50" r="13.5" className="fill-background" strokeWidth="1.5" />
+                        <circle cx="50" cy="50" r="9.5" strokeWidth="1.5" strokeDasharray="3 3" />
+                        <circle cx="50" cy="50" r="5.5" strokeWidth="1.5" />
+                        <polygon points="50,47 53,51.5 47,51.5" className="fill-foreground stroke-none" />
                     </g>
                 </svg>
             </div>

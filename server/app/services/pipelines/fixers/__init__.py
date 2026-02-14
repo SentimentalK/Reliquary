@@ -1,5 +1,5 @@
-from app.services.pipelines.fixers.base import BaseFixer
-from app.services.pipelines.fixers.chinese import ChineseFixer
-from app.services.pipelines.fixers.english import EnglishFixer
+from app.services.pipelines.fixers.base import BaseFixerStep
+from app.services.pipelines.fixers.chinese import ChineseFixerStep
+from app.services.pipelines.fixers.english import EnglishFixerStep
 
-__all__ = ["BaseFixer", "ChineseFixer", "EnglishFixer"]
+__all__ = ["BaseFixerStep", "ChineseFixerStep", "EnglishFixerStep"]

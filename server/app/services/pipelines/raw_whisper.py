@@ -1,17 +1,18 @@
-"""Raw Whisper pipeline using Groq API."""
+"""Whisper transcription step using Groq API."""
 
 import io
 import time
 from typing import Optional, List, Dict, Any
 
-from app.services.pipelines.base import BasePipeline, GroqProvider, StepResult
+from app.services.pipelines.base import PipelineStep, PipelineContext, GroqProvider, StepResult
 
 
-class RawWhisperPipeline(BasePipeline):
+class WhisperStep(PipelineStep):
     """
-    Direct transcription using Groq's Whisper-large-v3 model.
+    Transcription step using Groq's Whisper-large-v3 model.
     
-    Returns raw Whisper output without any post-processing.
+    Reads audio from context, writes raw transcription text
+    to context as "raw_text".
     """
     
     MODEL = "whisper-large-v3"
@@ -20,37 +21,24 @@ class RawWhisperPipeline(BasePipeline):
     def __init__(self):
         self._provider = GroqProvider()
     
-    async def transcribe(
-        self,
-        audio_bytes: bytes,
-        filename: str = "audio.wav",
-        language: Optional[str] = None,
-        prompt: Optional[str] = None,
-        api_key: Optional[str] = None,
-        user_config: Optional[Dict[str, Any]] = None,
-    ) -> List[StepResult]:
-        """
-        Transcribe audio using Groq Whisper API.
+    async def process(self, ctx: PipelineContext) -> PipelineContext:
+        """Transcribe audio bytes via Groq Whisper API."""
+        client = self._provider.get_client(ctx.api_key)
         
-        Returns:
-            List with single StepResult from Whisper (includes latency).
-        """
-        client = self._provider.get_client(api_key)
-        
-        audio_file = io.BytesIO(audio_bytes)
-        audio_file.name = filename
+        audio_file = io.BytesIO(ctx.audio_bytes)
+        audio_file.name = ctx.filename
         
         api_kwargs = {
-            "file": (filename, audio_file),
+            "file": (ctx.filename, audio_file),
             "model": self.MODEL,
             "response_format": "text",
         }
         
-        if prompt:
-            api_kwargs["prompt"] = prompt
+        if ctx.prompt:
+            api_kwargs["prompt"] = ctx.prompt
         
-        if language:
-            api_kwargs["language"] = language
+        if ctx.language:
+            api_kwargs["language"] = ctx.language
         
         t0 = time.time()
         transcription = client.audio.transcriptions.create(**api_kwargs)
@@ -58,4 +46,9 @@ class RawWhisperPipeline(BasePipeline):
         
         text = transcription.strip() if isinstance(transcription, str) else transcription.text.strip()
         
-        return [StepResult(step=self.STEP_NAME, text=text, latency_ms=latency_ms)]
+        # Write to context for downstream steps
+        ctx.set_data("raw_text", text)
+        ctx.set_data("whisper_latency_ms", latency_ms)
+        ctx.results.append(StepResult(step=self.STEP_NAME, text=text, latency_ms=latency_ms))
+        
+        return ctx

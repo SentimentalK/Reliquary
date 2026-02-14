@@ -20,7 +20,7 @@ from app.services.auth import (
     get_current_user,
     get_user_storage_prefix,
 )
-from app.services.pipelines.manager import PIPELINE_REGISTRY
+from app.services.pipelines.manager import PIPELINE_TEMPLATES, STEP_REGISTRY
 
 router = APIRouter()
 
@@ -71,27 +71,30 @@ def write_user_config(user_info: UserInfo, config: Dict[str, Any]) -> None:
 
 def _get_configurable_pipelines() -> Dict[str, Any]:
     """
-    Build schema of configurable pipelines and their fixer steps.
+    Build schema of configurable pipelines and their steps.
     
-    Excludes raw_whisper (no fixer steps to configure).
+    Iterates PIPELINE_TEMPLATES, looks up each step class in STEP_REGISTRY,
+    and includes steps that have a non-empty SYSTEM_PROMPT (i.e. fixer steps).
     """
     result = {}
     
-    for key, instance in PIPELINE_REGISTRY.items():
-        # Collect fixer steps — look for attributes that are BaseFixer subclasses
+    for pipeline_key, step_names in PIPELINE_TEMPLATES.items():
         steps = []
-        from app.services.pipelines.fixers.base import BaseFixer
-        for attr_name in dir(instance):
-            attr = getattr(instance, attr_name, None)
-            if isinstance(attr, BaseFixer):
+        for step_name in step_names:
+            step_cls = STEP_REGISTRY.get(step_name)
+            if step_cls is None:
+                continue
+            # Only include steps that have a configurable SYSTEM_PROMPT
+            system_prompt = getattr(step_cls, "SYSTEM_PROMPT", "")
+            if system_prompt and system_prompt.strip():
                 steps.append({
-                    "step_name": attr.STEP_NAME,
-                    "system_prompt": attr.SYSTEM_PROMPT.strip(),
+                    "step_name": getattr(step_cls, "STEP_NAME", step_name),
+                    "system_prompt": system_prompt.strip(),
                 })
         
-        # Only include pipelines that have configurable fixer steps
+        # Only include pipelines that have configurable steps
         if steps:
-            result[key] = {"steps": steps}
+            result[pipeline_key] = {"steps": steps}
     
     return result
 

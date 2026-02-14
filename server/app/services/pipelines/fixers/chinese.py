@@ -1,9 +1,9 @@
-"""Chinese language fixer for ASR output."""
+"""Chinese language fixer step for ASR output."""
 
-from app.services.pipelines.fixers.base import BaseFixer
+from app.services.pipelines.fixers.base import BaseFixerStep
 
 
-class ChineseFixer(BaseFixer):
+class ChineseFixerStep(BaseFixerStep):
     """
     Corrects Chinese speech recognition output.
     Fixes punctuation, logic errors, off-topic words,

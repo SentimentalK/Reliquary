@@ -1,9 +1,9 @@
-"""English language fixer for ASR output."""
+"""English language fixer step for ASR output."""
 
-from app.services.pipelines.fixers.base import BaseFixer
+from app.services.pipelines.fixers.base import BaseFixerStep
 
 
-class EnglishFixer(BaseFixer):
+class EnglishFixerStep(BaseFixerStep):
     """
     Polishes English speech recognition output.
     
