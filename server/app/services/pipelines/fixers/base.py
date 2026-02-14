@@ -1,31 +1,31 @@
-"""Base class for LLM-based fixer steps (PipelineStep implementation)."""
+"""Config-driven LLM fixer step (replaces ChineseFixerStep / EnglishFixerStep)."""
 
 import re
 import time
-from abc import ABC
 from typing import Optional
 
 from app.services.pipelines.base import PipelineStep, PipelineContext, GroqProvider, StepResult
+from app.services.prompt_service import get_prompt_service
 
 # Regex to strip <think>...</think> blocks from Qwen3 output
 _THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
 
 
-class BaseFixerStep(PipelineStep):
+class LLMFixerStep(PipelineStep):
     """
-    Base class for LLM-based ASR correction steps.
+    Config-driven LLM fixer step.
     
-    Subclasses define their own MODEL, STEP_NAME, and SYSTEM_PROMPT.
-    Reads "raw_text" from context, writes corrected text back as "raw_text"
-    so downstream fixers can chain naturally.
+    Instantiated with (step_name, model, prompt_key) — no subclassing needed.
+    Reads "raw_text" from context, fixes it via LLM, writes back.
+    Prompt text is loaded from disk via PromptService.
     """
     
-    MODEL: str = ""           # e.g. "qwen/qwen3-32b"
-    STEP_NAME: str = ""       # e.g. "chinese_fixer"
-    SYSTEM_PROMPT: str = ""   # System prompt for correction
-    
-    def __init__(self):
+    def __init__(self, step_name: str, model: str, prompt_key: str):
+        self.STEP_NAME = step_name
+        self.model = model
+        self.prompt_key = prompt_key
         self._provider = GroqProvider()
+        self._prompt_service = get_prompt_service()
     
     async def process(self, ctx: PipelineContext) -> PipelineContext:
         """Fix raw ASR text using LLM, reading/writing from context."""
@@ -43,18 +43,28 @@ class BaseFixerStep(PipelineStep):
         # Anti-hallucination: cap output tokens at 2x raw text length
         max_tokens = len(raw_text) * 2
         
+        # Load versioned prompt from disk
+        system_prompt = self._prompt_service.get_prompt(self.prompt_key)
+        prompt_ver = self._prompt_service.get_prompt_version(self.prompt_key)
+        
+        # Record prompt version in context for transaction log
+        prompt_versions = ctx.get_data("prompt_versions", {})
+        prompt_versions[self.STEP_NAME] = prompt_ver
+        ctx.set_data("prompt_versions", prompt_versions)
+        
         fixed_text, latency_ms = await self._fix(
             raw_text,
+            system_prompt=system_prompt,
             api_key=ctx.api_key,
             keywords=keywords,
             user_prompt=user_prompt,
             max_tokens=max_tokens
         )
         
-        # Latency circuit breaker: if fixer took longer than Whisper,
+        # Latency circuit breaker: if fixer took longer than Whisper * 1.5,
         # keep fixer result in the log but signal manager to return raw text.
         whisper_latency = ctx.get_data("whisper_latency_ms", 0)
-        if whisper_latency > 0 and latency_ms > whisper_latency*1.5:
+        if whisper_latency > 0 and latency_ms > whisper_latency * 1.5:
             print(f"[Fixer] Latency breaker: {self.STEP_NAME} took {latency_ms}ms "
                   f"> whisper {whisper_latency}ms, falling back to raw text")
             ctx.set_data("use_raw_fallback", True)
@@ -69,6 +79,7 @@ class BaseFixerStep(PipelineStep):
     async def _fix(
         self,
         raw_text: str,
+        system_prompt: str,
         api_key: Optional[str] = None,
         keywords: Optional[list[str]] = None,
         user_prompt: Optional[str] = None,
@@ -78,14 +89,13 @@ class BaseFixerStep(PipelineStep):
         Internal fix logic — LLM chat completion with timing and <think> stripping.
         
         Args:
+            system_prompt: Base system prompt loaded from PromptService.
             max_tokens: Cap on output tokens (anti-hallucination guard).
         
         Returns:
             Tuple of (corrected_text, latency_ms).
         """
         # Build system prompt: base + user keywords + user prompt
-        system_prompt = self.SYSTEM_PROMPT
-        
         if keywords:
             kw_str = ", ".join(keywords[:10])
             system_prompt += f"\n\n# 用户关键词（这些词必须正确识别）\n{kw_str}"
@@ -96,7 +106,7 @@ class BaseFixerStep(PipelineStep):
         client = self._provider.get_client(api_key)
         
         api_kwargs = {
-            "model": self.MODEL,
+            "model": self.model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": raw_text},

@@ -156,9 +156,13 @@ class StorageService:
         step_results: list,
         total_latency_ms: int,
         user_info: Optional[object] = None,
+        meta: Optional[Dict] = None,
     ) -> dict:
         """
         Log an interaction to the user's JSONL file.
+        
+        Args:
+            meta: Optional audit metadata (prompt_versions, user_config_ver, etc.)
         
         Returns:
             The full log entry dict (includes id, timestamp, transcription, etc.)
@@ -188,6 +192,8 @@ class StorageService:
                 "total_ms": total_latency_ms,
             },
         }
+        if meta:
+            data["meta"] = meta
         
         # Get log path and ensure user directory exists
         log_path = self._get_log_path(user_id, device_id, user_info)

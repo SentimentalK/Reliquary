@@ -1,15 +1,26 @@
 """
-Pipeline Config API - User-customizable pipeline step settings.
+Pipeline Config API — step-level user settings.
+
+User config is stored as append-only JSONL:
+    {user_dir}/user_config.jsonl
+
+Each line:
+    {"ver": N, "ts": <unix>, "config": {step_name: {keywords, user_prompt}}}
+
+Config is flat at the step level — no pipeline nesting.
+A step like "chinese_fixer_kimi-k2" has one config regardless of which
+pipeline it appears in.
 
 Endpoints:
-- GET  /api/pipeline-config/schema  — Available pipelines and their configurable steps
-- GET  /api/pipeline-config         — Read user's current config
-- PUT  /api/pipeline-config         — Update user's config
+- GET  /api/pipeline-config/schema  — All configurable steps
+- GET  /api/pipeline-config         — Read user's current step configs
+- PUT  /api/pipeline-config         — Update user's step configs
 """
 
 import json
+import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -20,11 +31,11 @@ from app.services.auth import (
     get_current_user,
     get_user_storage_prefix,
 )
-from app.services.pipelines.manager import PIPELINE_TEMPLATES, STEP_REGISTRY
+from app.services.pipelines.manager import STEP_CONFIGS
+from app.services.prompt_service import get_prompt_service
 
 router = APIRouter()
 
-# Max keywords to prevent hallucination from overly long context
 MAX_KEYWORDS = 10
 
 
@@ -36,66 +47,130 @@ class StepConfig(BaseModel):
     user_prompt: str = ""
 
 
-class PipelineConfigUpdate(BaseModel):
-    """Request body: { pipeline_key: { step_name: StepConfig } }"""
-    config: Dict[str, Dict[str, StepConfig]]
+class ConfigUpdate(BaseModel):
+    """Request body: { step_name: StepConfig }"""
+    config: Dict[str, StepConfig]
 
 
 # ============== Helpers ==============
 
-def _get_config_path(user_info: UserInfo) -> Path:
-    """Get path to user's config file."""
+def _get_user_dir(user_info: UserInfo) -> Path:
     settings = get_settings()
     storage_root = Path(settings.storage_root).resolve()
     prefix = get_user_storage_prefix(user_info)
-    return storage_root / prefix / "user_config.json"
+    return storage_root / prefix
 
 
-def read_user_config(user_info: UserInfo) -> Dict[str, Any]:
-    """Read user config from disk. Returns empty dict if not exists."""
+def _get_config_path(user_info: UserInfo) -> Path:
+    return _get_user_dir(user_info) / "user_config.jsonl"
+
+
+def _get_legacy_config_path(user_info: UserInfo) -> Path:
+    return _get_user_dir(user_info) / "user_config.json"
+
+
+def _migrate_if_needed(user_info: UserInfo) -> None:
+    """
+    One-time migration from old formats:
+    1. user_config.json (flat or pipeline-nested) → JSONL ver=1
+    """
+    jsonl_path = _get_config_path(user_info)
+    if jsonl_path.exists():
+        return
+
+    json_path = _get_legacy_config_path(user_info)
+    if not json_path.exists():
+        return
+
+    try:
+        old = json.loads(json_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+
+    if not old:
+        return
+
+    # Flatten if old format was pipeline-nested:
+    # {"whisper_chinese_fixer": {"chinese_fixer": {...}}} → {"chinese_fixer": {...}}
+    flat: Dict[str, Any] = {}
+    for key, val in old.items():
+        if isinstance(val, dict) and "keywords" not in val and "user_prompt" not in val:
+            # This is a pipeline-nested entry — extract inner steps
+            for step_name, step_cfg in val.items():
+                if step_name not in flat:
+                    flat[step_name] = step_cfg
+        else:
+            # Already flat
+            flat[key] = val
+
+    entry = {"ver": 1, "ts": int(time.time()), "config": flat}
+    jsonl_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(jsonl_path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def read_user_config(user_info: UserInfo) -> Tuple[Dict[str, Any], int]:
+    """
+    Read user config (last JSONL line).
+    
+    Returns:
+        (config_dict, version).  Flat: {step_name: {keywords, user_prompt}}
+    """
+    _migrate_if_needed(user_info)
+
     path = _get_config_path(user_info)
     if not path.exists():
-        return {}
+        return {}, 0
+
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        lines = path.read_text(encoding="utf-8").strip().splitlines()
+        if not lines:
+            return {}, 0
+        last = json.loads(lines[-1])
+        return last.get("config", {}), last.get("ver", 0)
     except Exception:
-        return {}
+        return {}, 0
 
 
-def write_user_config(user_info: UserInfo, config: Dict[str, Any]) -> None:
-    """Write user config to disk."""
+def write_user_config(user_info: UserInfo, config: Dict[str, Any]) -> int:
+    _migrate_if_needed(user_info)
+    _current, current_ver = read_user_config(user_info)
+    new_ver = current_ver + 1
+
+    entry = {"ver": new_ver, "ts": int(time.time()), "config": config}
     path = _get_config_path(user_info)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(config, ensure_ascii=False, indent=2), encoding="utf-8")
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+    return new_ver
 
 
-def _get_configurable_pipelines() -> Dict[str, Any]:
+def _get_configurable_steps() -> Dict[str, Any]:
     """
-    Build schema of configurable pipelines and their steps.
+    Build schema of all configurable steps.
     
-    Iterates PIPELINE_TEMPLATES, looks up each step class in STEP_REGISTRY,
-    and includes steps that have a non-empty SYSTEM_PROMPT (i.e. fixer steps).
+    Returns: {step_name: {system_prompt: str}}
+    Only includes LLMFixerStep instances (those with a prompt_key).
     """
+    ps = get_prompt_service()
     result = {}
-    
-    for pipeline_key, step_names in PIPELINE_TEMPLATES.items():
-        steps = []
-        for step_name in step_names:
-            step_cls = STEP_REGISTRY.get(step_name)
-            if step_cls is None:
-                continue
-            # Only include steps that have a configurable SYSTEM_PROMPT
-            system_prompt = getattr(step_cls, "SYSTEM_PROMPT", "")
-            if system_prompt and system_prompt.strip():
-                steps.append({
-                    "step_name": getattr(step_cls, "STEP_NAME", step_name),
-                    "system_prompt": system_prompt.strip(),
-                })
-        
-        # Only include pipelines that have configurable steps
-        if steps:
-            result[pipeline_key] = {"steps": steps}
-    
+
+    for step_name, cfg in STEP_CONFIGS.items():
+        args = cfg.get("args", {})
+        prompt_key = args.get("prompt_key")
+        if not prompt_key:
+            continue
+        try:
+            system_prompt = ps.get_prompt(prompt_key)
+        except FileNotFoundError:
+            system_prompt = ""
+        if system_prompt:
+            result[step_name] = {
+                "step_name": step_name,
+                "system_prompt": system_prompt.strip(),
+            }
+
     return result
 
 
@@ -105,56 +180,36 @@ def _get_configurable_pipelines() -> Dict[str, Any]:
 async def get_schema(
     user: UserInfo = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """
-    Get configurable pipelines and their steps.
-    
-    Returns schema for the frontend to render config forms.
-    Each step includes the base system_prompt for display.
-    """
-    return {"pipelines": _get_configurable_pipelines()}
+    """Return all configurable steps and their system prompts."""
+    return {"steps": _get_configurable_steps()}
 
 
 @router.get("/api/pipeline-config")
 async def get_config(
     user: UserInfo = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Read user's pipeline config."""
-    config = read_user_config(user)
-    return {"config": config}
+    config, ver = read_user_config(user)
+    return {"config": config, "version": ver}
 
 
 @router.put("/api/pipeline-config")
 async def update_config(
-    body: PipelineConfigUpdate,
+    body: ConfigUpdate,
     user: UserInfo = Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """
-    Update user's pipeline config.
-    
-    Validates pipeline keys and step names against the registry.
-    Enforces keyword limit.
-    """
-    schema = _get_configurable_pipelines()
-    
-    for pipeline_key, steps in body.config.items():
-        if pipeline_key not in schema:
-            raise HTTPException(400, f"Pipeline '{pipeline_key}' is not configurable")
-        
-        valid_step_names = {s["step_name"] for s in schema[pipeline_key]["steps"]}
-        for step_name, step_config in steps.items():
-            if step_name not in valid_step_names:
-                raise HTTPException(400, f"Step '{step_name}' not found in pipeline '{pipeline_key}'")
-            if len(step_config.keywords) > MAX_KEYWORDS:
-                raise HTTPException(400, f"Max {MAX_KEYWORDS} keywords per step")
-    
-    # Serialize to plain dict for storage
-    config_dict = {
-        pk: {
-            sn: {"keywords": sc.keywords, "user_prompt": sc.user_prompt}
-            for sn, sc in steps.items()
+    """Update user's step configs."""
+    valid_steps = _get_configurable_steps()
+
+    config_dict = {}
+    for step_name, step_config in body.config.items():
+        if step_name not in valid_steps:
+            continue  # skip unknown steps
+        if len(step_config.keywords) > MAX_KEYWORDS:
+            raise HTTPException(400, f"Max {MAX_KEYWORDS} keywords per step")
+        config_dict[step_name] = {
+            "keywords": step_config.keywords,
+            "user_prompt": step_config.user_prompt,
         }
-        for pk, steps in body.config.items()
-    }
-    
-    write_user_config(user, config_dict)
-    return {"success": True, "config": config_dict}
+
+    new_ver = write_user_config(user, config_dict)
+    return {"success": True, "config": config_dict, "version": new_ver}

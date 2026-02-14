@@ -234,7 +234,9 @@ export function DeviceConfigSheet() {
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
                                             <option value="raw_whisper">Raw Whisper</option>
-                                            <option value="whisper_chinese_fixer">Whisper + Chinese Fixer</option>
+                                            <option value="whisper_chinese_fixer_kimi-k2">Whisper + Chinese Fixer (kimi-k2)</option>
+                                            <option value="whisper_chinese_fixer_gpt-oss-20b">Whisper + Chinese Fixer (gpt-oss-20b)</option>
+                                            <option value="whisper_chinese_fixer_qwen3-32b">Whisper + Chinese Fixer (qwen3-32b)</option>
                                             <option value="whisper_english_fixer">Whisper + English Fixer</option>
                                         </select>
                                     </div>

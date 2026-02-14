@@ -1,44 +1,75 @@
-"""Pipeline manager with dynamic step assembly."""
+"""Pipeline manager with config-driven step assembly."""
 
-from typing import Dict, List, Type
+from typing import Any, Dict, List, Type
 from functools import lru_cache
 
 from app.services.pipelines.base import PipelineStep, PipelineContext, StepResult
 from app.services.pipelines.raw_whisper import WhisperStep
-from app.services.pipelines.fixers import ChineseFixerStep, EnglishFixerStep
+from app.services.pipelines.fixers import LLMFixerStep
 
 
 # ---------------------------------------------------------------------------
-# Step Registry — maps step names to their classes (the "building blocks")
+# Step Configs — maps step names to their class + constructor args
+# Adding a new fixer = one new entry here + one prompt file.  No code needed.
 # ---------------------------------------------------------------------------
-STEP_REGISTRY: Dict[str, Type[PipelineStep]] = {
-    "whisper": WhisperStep,
-    "chinese_fixer": ChineseFixerStep,
-    "english_fixer": EnglishFixerStep,
+STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
+    "whisper": {
+        "class": WhisperStep,
+    },
+    "chinese_fixer_kimi-k2": {
+        "class": LLMFixerStep,
+        "args": {
+            "step_name": "chinese_fixer_kimi-k2",
+            "model": "moonshotai/kimi-k2-instruct-0905",
+            "prompt_key": "chinese_fixer",
+        },
+    },
+    "chinese_fixer_gpt-oss-20b": {
+        "class": LLMFixerStep,
+        "args": {
+            "step_name": "chinese_fixer_gpt-oss-20b",
+            "model": "openai/gpt-oss-20b",
+            "prompt_key": "chinese_fixer",
+        },
+    },
+    "chinese_fixer_qwen3-32b": {
+        "class": LLMFixerStep,
+        "args": {
+            "step_name": "chinese_fixer_qwen3-32b",
+            "model": "qwen/qwen3-32b",
+            "prompt_key": "chinese_fixer",
+        },
+    },
+    "english_fixer": {
+        "class": LLMFixerStep,
+        "args": {
+            "step_name": "english_fixer",
+            "model": "llama-3.1-8b-instant",
+            "prompt_key": "english_fixer",
+        },
+    },
 }
 
 # ---------------------------------------------------------------------------
 # Pipeline Templates — maps pipeline keys to ordered lists of step names
-# Adding a new pipeline = one new entry here.  No code changes needed.
+# Adding a new pipeline = one new entry here.
 # ---------------------------------------------------------------------------
 PIPELINE_TEMPLATES: Dict[str, List[str]] = {
     "raw_whisper": ["whisper"],
-    "whisper_chinese_fixer": ["whisper", "chinese_fixer"],
+    "whisper_chinese_fixer_kimi-k2": ["whisper", "chinese_fixer_kimi-k2"],
+    "whisper_chinese_fixer_gpt-oss-20b": ["whisper", "chinese_fixer_gpt-oss-20b"],
+    "whisper_chinese_fixer_qwen3-32b": ["whisper", "chinese_fixer_qwen3-32b"],
     "whisper_english_fixer": ["whisper", "english_fixer"],
 }
 
 
 class PipelineManager:
     """
-    Dynamic pipeline assembly and execution.
+    Config-driven pipeline assembly and execution.
     
-    Instantiates steps from STEP_REGISTRY according to PIPELINE_TEMPLATES,
+    Instantiates steps from STEP_CONFIGS according to PIPELINE_TEMPLATES,
     runs them sequentially through a shared PipelineContext, and returns
-    the accumulated StepResults.
-    
-    Usage:
-        manager = PipelineManager()
-        results = await manager.run("whisper_chinese_fixer", audio_bytes, ...)
+    the accumulated StepResults + final text.
     """
     
     def get_available_pipelines(self) -> List[str]:
@@ -52,11 +83,11 @@ class PipelineManager:
             raise ValueError(f"Unknown pipeline '{pipeline_key}'. Available: {available}")
         return PIPELINE_TEMPLATES[pipeline_key]
     
-    def get_step_class(self, step_name: str) -> Type[PipelineStep]:
-        """Return the step class for a given step name."""
-        if step_name not in STEP_REGISTRY:
+    def get_step_config(self, step_name: str) -> Dict[str, Any]:
+        """Return the config dict for a given step name."""
+        if step_name not in STEP_CONFIGS:
             raise ValueError(f"Unknown step '{step_name}'")
-        return STEP_REGISTRY[step_name]
+        return STEP_CONFIGS[step_name]
     
     async def run(
         self,
@@ -71,21 +102,8 @@ class PipelineManager:
         """
         Assemble and run a pipeline by key.
         
-        Args:
-            pipeline_key: Key from PIPELINE_TEMPLATES (e.g. "whisper_chinese_fixer").
-            audio_bytes: Raw audio data.
-            filename: Audio filename hint.
-            language: Language hint for Whisper.
-            prompt: Prompt hint for Whisper.
-            api_key: BYOK API key.
-            user_config: Per-step config dict, e.g.
-                {"chinese_fixer": {"keywords": [...], "user_prompt": "..."}}
-        
         Returns:
             Tuple of (step_results, final_text).
-            step_results: full list for logging.
-            final_text: the text to return to the user (may differ from
-                        results[-1] if the latency breaker fired).
         """
         step_names = self.get_pipeline_steps(pipeline_key)
         
@@ -99,8 +117,8 @@ class PipelineManager:
         )
         
         for step_name in step_names:
-            step_cls = STEP_REGISTRY[step_name]
-            step = step_cls()
+            cfg = STEP_CONFIGS[step_name]
+            step = cfg["class"](**cfg.get("args", {}))
             ctx = await step.process(ctx)
         
         # Determine final text for the user

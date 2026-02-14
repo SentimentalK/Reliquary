@@ -132,12 +132,12 @@ async def process_audio_buffer(
     error_msg = None
     step_results = []
     
-    # Load user's pipeline config (keywords, user_prompt per step)
+    # Load user's step-level config (keywords, user_prompt per step)
     user_config = {}
+    user_config_ver = 0
     if user_info:
         from app.api.pipeline_config import read_user_config
-        full_config = read_user_config(user_info)
-        user_config = full_config.get(pipeline_name, {})
+        user_config, user_config_ver = read_user_config(user_info)
     
     final_text = ""
     try:
@@ -159,6 +159,34 @@ async def process_audio_buffer(
     end_time = time.time()
     total_latency_ms = int((end_time - start_time) * 1000)
     
+    # Build audit metadata for transaction log
+    meta = {}
+    # Prompt versions are recorded by each fixer step in context._data
+    # They flow through step_results indirectly; we extract from last run's context
+    # Since manager.run returns results, not context, we check if any fixer ran
+    # by looking at step names in results
+    for r in step_results:
+        if r.step not in ("whisper_large_v3", "error"):
+            # This is a fixer step — get its prompt version from PromptService
+            try:
+                from app.services.prompt_service import get_prompt_service
+                ps = get_prompt_service()
+                cfg = None
+                from app.services.pipelines.manager import STEP_CONFIGS
+                if r.step in STEP_CONFIGS:
+                    cfg = STEP_CONFIGS[r.step]
+                if cfg:
+                    prompt_key = cfg.get("args", {}).get("prompt_key")
+                    if prompt_key:
+                        ver = ps.get_prompt_version(prompt_key)
+                        if "prompt_versions" not in meta:
+                            meta["prompt_versions"] = {}
+                        meta["prompt_versions"][r.step] = ver
+            except Exception:
+                pass
+    if user_config_ver > 0:
+        meta["user_config_ver"] = user_config_ver
+    
     # Log interaction with WAV data for storage
     entry_data = await storage.log_interaction(
         user_id=user_id,
@@ -167,6 +195,7 @@ async def process_audio_buffer(
         step_results=step_results,
         total_latency_ms=total_latency_ms,
         user_info=user_info,
+        meta=meta if meta else None,
     )
     interaction_id = entry_data.get("id", "")
     

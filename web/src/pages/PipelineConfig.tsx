@@ -4,7 +4,7 @@ import { Settings2, Save, Loader2, Info } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { pipelineConfigApi, type PipelineSchema, type StepSchema } from '@/lib/api'
+import { pipelineConfigApi, type StepSchema } from '@/lib/api'
 
 
 function StepConfigForm({
@@ -22,7 +22,6 @@ function StepConfigForm({
 }) {
     const { t } = useTranslation()
 
-    // Count keywords from raw text (for display only)
     const keywordCount = keywordsText
         .split(/[\n,;，；]+/)
         .map(l => l.trim())
@@ -108,11 +107,10 @@ export function PipelineConfig() {
     const queryClient = useQueryClient()
 
     // State — keywords stored as raw text for free-form editing
-    const [selectedPipeline, setSelectedPipeline] = useState<string>('')
-    const [localConfig, setLocalConfig] = useState<Record<string, Record<string, { keywordsText: string; user_prompt: string }>>>({})
+    const [localConfig, setLocalConfig] = useState<Record<string, { keywordsText: string; user_prompt: string }>>({})
     const [hasChanges, setHasChanges] = useState(false)
 
-    // Fetch schema (available pipelines & steps)
+    // Fetch schema (all configurable steps)
     const { data: schemaData, isLoading: schemaLoading } = useQuery({
         queryKey: ['pipeline-config-schema'],
         queryFn: pipelineConfigApi.getSchema,
@@ -126,16 +124,12 @@ export function PipelineConfig() {
 
     // Save mutation — parse keywords text into array before sending
     const saveMutation = useMutation({
-        mutationFn: (config: Record<string, Record<string, { keywordsText: string; user_prompt: string }>>) => {
-            // Convert local format (keywordsText) to API format (keywords[])
-            const apiConfig: Record<string, Record<string, { keywords: string[]; user_prompt: string }>> = {}
-            for (const [pk, steps] of Object.entries(config)) {
-                apiConfig[pk] = {}
-                for (const [sn, sc] of Object.entries(steps)) {
-                    apiConfig[pk][sn] = {
-                        keywords: parseKeywords(sc.keywordsText),
-                        user_prompt: sc.user_prompt,
-                    }
+        mutationFn: (config: Record<string, { keywordsText: string; user_prompt: string }>) => {
+            const apiConfig: Record<string, { keywords: string[]; user_prompt: string }> = {}
+            for (const [stepName, sc] of Object.entries(config)) {
+                apiConfig[stepName] = {
+                    keywords: parseKeywords(sc.keywordsText),
+                    user_prompt: sc.user_prompt,
                 }
             }
             return pipelineConfigApi.update(apiConfig)
@@ -146,50 +140,34 @@ export function PipelineConfig() {
         },
     })
 
-    // Available pipelines from schema
-    const pipelines = schemaData?.pipelines || {}
-    const pipelineKeys = Object.keys(pipelines)
+    // All configurable steps from schema
+    const steps = schemaData?.steps || {}
+    const stepNames = Object.keys(steps)
 
-    // Auto-select first pipeline
-    useEffect(() => {
-        if (pipelineKeys.length > 0 && !selectedPipeline) {
-            setSelectedPipeline(pipelineKeys[0])
-        }
-    }, [pipelineKeys, selectedPipeline])
-
-    // Initialize local config from server data (convert keywords[] → keywordsText)
+    // Initialize local config from server data
     useEffect(() => {
         if (configData?.config) {
-            const converted: Record<string, Record<string, { keywordsText: string; user_prompt: string }>> = {}
-            for (const [pk, steps] of Object.entries(configData.config)) {
-                converted[pk] = {}
-                for (const [sn, sc] of Object.entries(steps)) {
-                    converted[pk][sn] = {
-                        keywordsText: keywordsToText(sc.keywords),
-                        user_prompt: sc.user_prompt,
-                    }
+            const converted: Record<string, { keywordsText: string; user_prompt: string }> = {}
+            for (const [stepName, sc] of Object.entries(configData.config)) {
+                converted[stepName] = {
+                    keywordsText: keywordsToText(sc.keywords),
+                    user_prompt: sc.user_prompt,
                 }
             }
             setLocalConfig(converted)
         }
     }, [configData])
 
-    const selectedSchema = pipelines[selectedPipeline] as PipelineSchema | undefined
-    const steps = selectedSchema?.steps || []
-
     const getStepConfig = (stepName: string) => {
-        return localConfig[selectedPipeline]?.[stepName] || { keywordsText: '', user_prompt: '' }
+        return localConfig[stepName] || { keywordsText: '', user_prompt: '' }
     }
 
     const updateStepConfig = (stepName: string, field: 'keywordsText' | 'user_prompt', value: string) => {
         setLocalConfig(prev => ({
             ...prev,
-            [selectedPipeline]: {
-                ...(prev[selectedPipeline] || {}),
-                [stepName]: {
-                    ...getStepConfig(stepName),
-                    [field]: value,
-                },
+            [stepName]: {
+                ...getStepConfig(stepName),
+                [field]: value,
             },
         }))
         setHasChanges(true)
@@ -219,39 +197,24 @@ export function PipelineConfig() {
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                         </div>
-                    ) : pipelineKeys.length === 0 ? (
+                    ) : stepNames.length === 0 ? (
                         <div className="py-12 text-center text-muted-foreground">
                             {t('pipelineConfig.noPipelines')}
                         </div>
                     ) : (
                         <>
-                            {/* Pipeline Selector */}
-                            <div>
-                                <label className="text-sm font-medium block mb-2">
-                                    {t('pipelineConfig.selectPipeline')}
-                                </label>
-                                <select
-                                    className="w-full max-w-sm rounded-md border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                                    value={selectedPipeline}
-                                    onChange={(e) => setSelectedPipeline(e.target.value)}
-                                >
-                                    {pipelineKeys.map(key => (
-                                        <option key={key} value={key}>{key}</option>
-                                    ))}
-                                </select>
-                            </div>
-
                             {/* Step configs */}
-                            {steps.map((step) => {
-                                const cfg = getStepConfig(step.step_name)
+                            {stepNames.map((stepName) => {
+                                const step = steps[stepName]
+                                const cfg = getStepConfig(stepName)
                                 return (
                                     <StepConfigForm
-                                        key={step.step_name}
+                                        key={stepName}
                                         step={step}
                                         keywordsText={cfg.keywordsText}
                                         userPrompt={cfg.user_prompt}
-                                        onKeywordsTextChange={(text) => updateStepConfig(step.step_name, 'keywordsText', text)}
-                                        onUserPromptChange={(p) => updateStepConfig(step.step_name, 'user_prompt', p)}
+                                        onKeywordsTextChange={(text) => updateStepConfig(stepName, 'keywordsText', text)}
+                                        onUserPromptChange={(p) => updateStepConfig(stepName, 'user_prompt', p)}
                                     />
                                 )
                             })}

@@ -166,16 +166,13 @@ export interface StepSchema {
     system_prompt: string
 }
 
-export interface PipelineSchema {
-    steps: StepSchema[]
-}
-
 export interface PipelineConfigSchemaResponse {
-    pipelines: Record<string, PipelineSchema>
+    steps: Record<string, StepSchema>
 }
 
 export interface PipelineConfigResponse {
-    config: Record<string, Record<string, { keywords: string[]; user_prompt: string }>>
+    config: Record<string, { keywords: string[]; user_prompt: string }>
+    version: number
 }
 
 export const pipelineConfigApi = {
@@ -189,7 +186,7 @@ export const pipelineConfigApi = {
         return data
     },
 
-    update: async (config: Record<string, Record<string, { keywords: string[]; user_prompt: string }>>): Promise<void> => {
+    update: async (config: Record<string, { keywords: string[]; user_prompt: string }>): Promise<void> => {
         await api.put('/pipeline-config', { config })
     },
 }

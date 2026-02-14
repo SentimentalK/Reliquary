@@ -1,17 +1,3 @@
-"""Chinese language fixer step for ASR output."""
-
-from app.services.pipelines.fixers.base import BaseFixerStep
-
-
-class ChineseFixerStep(BaseFixerStep):
-    """
-    Corrects Chinese speech recognition output.
-    Fixes punctuation, logic errors, off-topic words,
-    and non-existent words (likely misrecognized English).
-    """
-    MODEL = "llama-3.3-70b-versatile"
-    STEP_NAME = "chinese_fixer"
-    SYSTEM_PROMPT = """
 你不是聊天机器人，你是一个运行在后端数据流水线上的**文本清洗函数**。
 你的唯一作用是接收字符串输入，输出修正后的字符串，**绝不要与用户对话**。
 
@@ -57,4 +43,3 @@ Output: 你给我解释一下什么是大模型?
 
 User Input: "拉指V3是70币"
 Output: Large V3是70B
-"""
