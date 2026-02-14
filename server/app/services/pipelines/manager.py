@@ -30,6 +30,8 @@ STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
             "step_name": "chinese_fixer_gpt-oss-20b",
             "model": "openai/gpt-oss-20b",
             "prompt_key": "chinese_fixer",
+            "token_buffer": 1024,
+            "min_latency_ms": 2000,
         },
     },
     "chinese_fixer_qwen3-32b": {
@@ -38,6 +40,10 @@ STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
             "step_name": "chinese_fixer_qwen3-32b",
             "model": "qwen/qwen3-32b",
             "prompt_key": "chinese_fixer",
+            "strip_pattern": r"<think>.*?</think>\s*",
+            "token_ratio": 3.0,
+            "token_buffer": 1024,
+            "min_latency_ms": 3000,
         },
     },
     "english_fixer": {

@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink, useNavigate, Link } from 'react-router-dom'
 import { Logo } from './Logo'
 import {
     Monitor,
@@ -28,7 +28,7 @@ export function Layout({ children }: LayoutProps) {
     const { t, i18n } = useTranslation()
 
     const navItems = [
-        { to: '/', icon: Monitor, label: t('nav.devices') },
+        { to: '/dashboard', icon: Monitor, label: t('nav.devices') },
         { to: '/history', icon: History, label: t('nav.history') },
         { to: '/pipeline-config', icon: Settings2, label: t('nav.pipelineConfig') },
     ]
@@ -58,8 +58,10 @@ export function Layout({ children }: LayoutProps) {
             <aside className="fixed left-0 top-0 z-40 flex h-screen w-16 flex-col border-r bg-card/50 backdrop-blur-sm md:w-64">
                 {/* Logo */}
                 <div className="flex h-16 items-center gap-2 border-b px-4">
-                    <Logo variant="nav" className="h-8 w-8 text-primary" />
-                    <span className="hidden text-xl font-bold md:block">Reliquary</span>
+                    <Link to="/" className="flex items-center gap-2">
+                        <Logo variant="nav" className="h-8 w-8 text-primary" />
+                        <span className="hidden text-xl font-bold md:block">Reliquary</span>
+                    </Link>
                 </div>
 
                 {/* Navigation */}

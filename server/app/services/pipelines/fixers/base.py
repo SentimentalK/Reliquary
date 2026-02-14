@@ -2,13 +2,10 @@
 
 import re
 import time
-from typing import Optional
+from typing import Optional, Pattern
 
 from app.services.pipelines.base import PipelineStep, PipelineContext, GroqProvider, StepResult
 from app.services.prompt_service import get_prompt_service
-
-# Regex to strip <think>...</think> blocks from Qwen3 output
-_THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
 
 
 class LLMFixerStep(PipelineStep):
@@ -20,10 +17,30 @@ class LLMFixerStep(PipelineStep):
     Prompt text is loaded from disk via PromptService.
     """
     
-    def __init__(self, step_name: str, model: str, prompt_key: str):
+    def __init__(
+        self, 
+        step_name: str, 
+        model: str, 
+        prompt_key: str,
+        # --- Configurable parameters ---
+        strip_pattern: Optional[str] = None, # Regex pattern to strip from output
+        token_ratio: float = 2.0,            # Max output tokens = input length * ratio
+        token_buffer: int = 200,             # Base token buffer (safety margin)
+        latency_factor: float = 2.0,         # Latency threshold multiplier vs Whisper
+        min_latency_ms: int = 1500           # Minimum latency threshold in ms
+    ):
         self.STEP_NAME = step_name
         self.model = model
         self.prompt_key = prompt_key
+        
+        # Pre-compile regex if provided
+        self.strip_re: Optional[Pattern] = re.compile(strip_pattern, re.DOTALL) if strip_pattern else None
+        
+        self.token_ratio = token_ratio
+        self.token_buffer = token_buffer
+        self.latency_factor = latency_factor
+        self.min_latency_ms = min_latency_ms
+        
         self._provider = GroqProvider()
         self._prompt_service = get_prompt_service()
     
@@ -40,8 +57,9 @@ class LLMFixerStep(PipelineStep):
         keywords = step_cfg.get("keywords")
         user_prompt = step_cfg.get("user_prompt")
         
-        # Anti-hallucination: cap output tokens at 2x raw text length
-        max_tokens = len(raw_text) * 2
+        # Dynamic max_tokens calculation
+        # Reasoning models need large buffer for "thinking"
+        max_tokens = int(len(raw_text) * self.token_ratio) + self.token_buffer
         
         # Load versioned prompt from disk
         system_prompt = self._prompt_service.get_prompt(self.prompt_key)
@@ -61,12 +79,15 @@ class LLMFixerStep(PipelineStep):
             max_tokens=max_tokens
         )
         
-        # Latency circuit breaker: if fixer took longer than Whisper * 1.5,
-        # keep fixer result in the log but signal manager to return raw text.
+        # Latency circuit breaker
         whisper_latency = ctx.get_data("whisper_latency_ms", 0)
-        if whisper_latency > 0 and latency_ms > whisper_latency * 1.5:
+        
+        # Only break if latency exceeds BOTH relative factor AND absolute minimum
+        threshold = max(whisper_latency * self.latency_factor, self.min_latency_ms)
+        
+        if whisper_latency > 0 and latency_ms > threshold:
             print(f"[Fixer] Latency breaker: {self.STEP_NAME} took {latency_ms}ms "
-                  f"> whisper {whisper_latency}ms, falling back to raw text")
+                  f"> limit {threshold}ms (whisper={whisper_latency}ms). Fallback.")
             ctx.set_data("use_raw_fallback", True)
         else:
             ctx.set_data("raw_text", fixed_text)
@@ -86,14 +107,7 @@ class LLMFixerStep(PipelineStep):
         max_tokens: Optional[int] = None,
     ) -> tuple[str, int]:
         """
-        Internal fix logic — LLM chat completion with timing and <think> stripping.
-        
-        Args:
-            system_prompt: Base system prompt loaded from PromptService.
-            max_tokens: Cap on output tokens (anti-hallucination guard).
-        
-        Returns:
-            Tuple of (corrected_text, latency_ms).
+        Internal fix logic — LLM chat completion with timing and optional regex stripping.
         """
         # Build system prompt: base + user keywords + user prompt
         if keywords:
@@ -123,6 +137,8 @@ class LLMFixerStep(PipelineStep):
         if not result:
             return raw_text, latency_ms
         
-        # Strip <think>...</think> blocks from Qwen3 output
-        result = _THINK_RE.sub("", result)
+        # Apply regex stripping if configured (e.g. remove <think> tags)
+        if self.strip_re:
+            result = self.strip_re.sub("", result)
+            
         return result.strip() if result.strip() else raw_text, latency_ms
