@@ -100,8 +100,7 @@ class BaseFixerStep(PipelineStep):
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": raw_text},
-            ],
-            "temperature": 0.3,
+            ]
         }
         if max_tokens and max_tokens > 0:
             api_kwargs["max_tokens"] = max_tokens

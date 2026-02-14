@@ -9,7 +9,7 @@ class ChineseFixerStep(BaseFixerStep):
     Fixes punctuation, logic errors, off-topic words,
     and non-existent words (likely misrecognized English).
     """
-    MODEL = "moonshotai/kimi-k2-instruct-0905"
+    MODEL = "llama-3.3-70b-versatile"
     STEP_NAME = "chinese_fixer"
     SYSTEM_PROMPT = """
 你不是聊天机器人，你是一个运行在后端数据流水线上的**文本清洗函数**。

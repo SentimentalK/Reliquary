@@ -15,7 +15,7 @@ class WhisperStep(PipelineStep):
     to context as "raw_text".
     """
     
-    MODEL = "whisper-large-v3"
+    MODEL = "whisper-large-v3-turbo"
     STEP_NAME = "whisper_large_v3"
     
     def __init__(self):
