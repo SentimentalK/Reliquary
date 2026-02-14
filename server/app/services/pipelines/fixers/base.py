@@ -54,7 +54,7 @@ class BaseFixerStep(PipelineStep):
         # Latency circuit breaker: if fixer took longer than Whisper,
         # keep fixer result in the log but signal manager to return raw text.
         whisper_latency = ctx.get_data("whisper_latency_ms", 0)
-        if whisper_latency > 0 and latency_ms > whisper_latency:
+        if whisper_latency > 0 and latency_ms > whisper_latency*1.5:
             print(f"[Fixer] Latency breaker: {self.STEP_NAME} took {latency_ms}ms "
                   f"> whisper {whisper_latency}ms, falling back to raw text")
             ctx.set_data("use_raw_fallback", True)
