@@ -22,6 +22,7 @@ STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
             "step_name": "chinese_fixer_kimi-k2",
             "model": "moonshotai/kimi-k2-instruct-0905",
             "prompt_key": "chinese_fixer",
+            "token_ratio": 1.5,
         },
     },
     "chinese_fixer_gpt-oss-20b": {

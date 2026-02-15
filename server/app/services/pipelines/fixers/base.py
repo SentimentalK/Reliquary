@@ -70,14 +70,22 @@ class LLMFixerStep(PipelineStep):
         prompt_versions[self.STEP_NAME] = prompt_ver
         ctx.set_data("prompt_versions", prompt_versions)
         
-        fixed_text, latency_ms = await self._fix(
-            raw_text,
-            system_prompt=system_prompt,
-            api_key=ctx.api_key,
-            keywords=keywords,
-            user_prompt=user_prompt,
-            max_tokens=max_tokens
-        )
+        try:
+            fixed_text, latency_ms = await self._fix(
+                raw_text,
+                system_prompt=system_prompt,
+                api_key=ctx.api_key,
+                keywords=keywords,
+                user_prompt=user_prompt,
+                max_tokens=max_tokens,
+                frequency_penalty=0.3
+            )
+        except Exception as e:
+            print(f"[Fixer] Error in step {self.STEP_NAME}: {e}. Fallback to raw.")
+            ctx.set_data("use_raw_fallback", True)
+            # Add a dummy result so pipeline logic doesn't break if it expects a result
+            ctx.results.append(StepResult(step=self.STEP_NAME, text=raw_text, latency_ms=0))
+            return ctx
         
         # Latency circuit breaker
         whisper_latency = ctx.get_data("whisper_latency_ms", 0)
@@ -105,6 +113,7 @@ class LLMFixerStep(PipelineStep):
         keywords: Optional[list[str]] = None,
         user_prompt: Optional[str] = None,
         max_tokens: Optional[int] = None,
+        frequency_penalty: float = 0.0,
     ) -> tuple[str, int]:
         """
         Internal fix logic — LLM chat completion with timing and optional regex stripping.
@@ -128,6 +137,9 @@ class LLMFixerStep(PipelineStep):
         }
         if max_tokens and max_tokens > 0:
             api_kwargs["max_tokens"] = max_tokens
+        
+        if frequency_penalty > 0:
+            api_kwargs["frequency_penalty"] = frequency_penalty
         
         t0 = time.time()
         response = client.chat.completions.create(**api_kwargs)
