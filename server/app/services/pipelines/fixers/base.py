@@ -27,7 +27,8 @@ class LLMFixerStep(PipelineStep):
         token_ratio: float = 2.0,            # Max output tokens = input length * ratio
         token_buffer: int = 200,             # Base token buffer (safety margin)
         latency_factor: float = 2.0,         # Latency threshold multiplier vs Whisper
-        min_latency_ms: int = 1500           # Minimum latency threshold in ms
+        min_latency_ms: int = 1500,          # Minimum latency threshold in ms
+        frequency_penalty: float = 0.0,      # Frequency penalty for LLM
     ):
         self.STEP_NAME = step_name
         self.model = model
@@ -40,6 +41,7 @@ class LLMFixerStep(PipelineStep):
         self.token_buffer = token_buffer
         self.latency_factor = latency_factor
         self.min_latency_ms = min_latency_ms
+        self.frequency_penalty = frequency_penalty
         
         self._provider = GroqProvider()
         self._prompt_service = get_prompt_service()
@@ -78,7 +80,7 @@ class LLMFixerStep(PipelineStep):
                 keywords=keywords,
                 user_prompt=user_prompt,
                 max_tokens=max_tokens,
-                frequency_penalty=0.3
+                frequency_penalty=self.frequency_penalty
             )
         except Exception as e:
             print(f"[Fixer] Error in step {self.STEP_NAME}: {e}. Fallback to raw.")
