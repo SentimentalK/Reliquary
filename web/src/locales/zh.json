@@ -120,37 +120,37 @@
   },
   "landing": {
     "heroTitle": "Reliquary",
-    "heroSubtitle": "夺回你的",
-    "heroSubtitleStrong": "数字主权",
-    "heroDesc": "一个本地优先、完全免费、基于责任链模式的 AI 语音接口。",
-    "heroDesc2": "让数据回归本源，让思考不再被打断。",
+    "heroSubtitle": "构建你的",
+    "heroSubtitleStrong": "数字命匣",
+    "heroDesc": "一个私有化部署的个人数字资产 I/O 协议",
+    "heroDesc2": "不仅仅是语音转文字，更是为未来储备属于你的核心数据资产。",
     "version": "v1.0.0 Stable Available",
     "download": "下载客户端",
     "docker": "Docker 部署",
     "features": {
-      "mic": {
-        "title": "完整思维流",
-        "desc": "AI 需要语境，而不是碎片。Reliquary 提供“思考缓冲”，让你在 Thinking Aloud 中从容理清逻辑，一次性投喂完整的高质量 Prompt，最大化 AI 执行效率。"
-      },
       "sovereignty": {
-        "title": "数据主权与解耦",
-        "desc": "拒绝 Vendor Lock-in。你的语音数据完全由你掌控。随时携带完整数据资产切换至任何更先进的 AI 模型，让模型成为可替换的后端，而不是你的依赖。"
+        "title": "数字主权",
+        "desc": "你的数据，是 AI 成为你“外脑”的唯一门票。大厂模型只懂通用知识，不懂你。Reliquary 帮你积累私有数据湖，让未来的 AI 真正理解你的语境，成为无法替代的专属副手。"
+      },
+      "recall": {
+        "title": "全量检索",
+        "desc": "拒绝“数据坟墓”，让记忆随时待命。自动将非结构化的语音流转化为结构化的资产。无论是上周的灵感还是去年的会议细节，都能被索引、被挖掘。"
+      },
+      "efficiency": {
+        "title": "极致效率",
+        "desc": "3 倍于打字的速度，100% 的完整语境。杜绝激进的打断机制，允许你一次性说完复杂的长逻辑。完整的长上下文能极大减少 AI 的幻觉，让输出质量更高。"
+      },
+      "cost": {
+        "title": "零成本",
+        "desc": "免费享受企业级的极速体验。通过精妙的架构设计，合法利用顶级科技公司（如 Groq）的免费 API 额度。每天处理数百条高强度指令，秒级响应，不花一分钱。"
       },
       "pipeline": {
-        "title": "责任链式管道",
-        "desc": "像搭积木一样处理语音。基于 Responsible Chain 模式。通过可视化配置，自由定义修正规则、热词替换和文本清洗逻辑，精准适配个人习惯。"
+        "title": "可编程管道",
+        "desc": "像搭积木一样定义你的工作流。数据如何流转、如何处理，全由你决定。通过简单的自然语言配置，你可以自定义规则：自动提取待办、过滤敏感词、或推送到看板。"
       },
-      "lightweight": {
-        "title": "全平台轻量化",
-        "desc": "逻辑后置，体验无感。所有重型逻辑集中于后端，前端保持极致轻量与极速响应。支持 Windows, Linux, macOS 及 Android 全平台。"
-      },
-      "speed": {
-        "title": "Groq 光速推理",
-        "desc": "基于 Groq 芯片构建，体验每秒 500+ Tokens 的极致生成速度。零成本调用 Llama 3 或 Mixtral 等顶级开源模型，告别延迟，免费且强大。"
-      },
-      "docker": {
-        "title": "Docker 一键私有化",
-        "desc": "一条指令，构建数字堡垒。拒绝复杂配置，通过 Docker Compose 实现一键部署。在本地或云端瞬间拉起属于你的私有语音服务。"
+      "fortress": {
+        "title": "私有化堡垒",
+        "desc": "物理级的安全，一键即用的便利。极简 Docker 部署，30 秒拉起服务。数据死死锁在本地硬盘，物理隔绝任何云端审查与窥探。"
       }
     },
     "trial": {
@@ -158,18 +158,18 @@
       "titleStrong": "绝不留存数据",
       "p1": "我目前不提供商业服务。设立试用仅为降低小白门槛，免去你盲目部署的麻烦。",
       "p2a": "注册时输入邀请码",
-      "code": "FREE-TRIAL-1DAY",
+      "code": "reliquary-1day-demo",
       "p2b": "即可获得限时完整体验。",
-      "p3": "每日3AM, 你的账号与所有产生的语音数据将被彻底、永久删除。",
+      "p3": "你的账号与所有产生的语音数据将在注册24小时后被彻底、永久删除。",
       "p4": "体验满意后，我强烈建议你查阅文档进行本地部署，让数据真正留在自己手里。",
       "btnTrial": "使用邀请码体验",
-      "btnDocs": "查看本地部署文档"
+      "btnDocs": "查看部署文档"
     },
     "footer": {
-      "copyright": "© 2026 Reliquary Project.",
-      "license": "基于 AGPLv3 协议开源。",
-      "privacy": "隐私政策",
-      "terms": "服务条款",
+      "copyright": "© 2024-2026 Reliquary Project. Open Core.",
+      "license": "MIT License",
+      "privacy": "Privacy",
+      "terms": "Terms",
       "twitter": "Twitter"
     }
   }

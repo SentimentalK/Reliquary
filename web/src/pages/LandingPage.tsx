@@ -1,8 +1,7 @@
 import { Logo } from '@/components/Logo'
 import {
-    Mic,
-    BrainCircuit,
-    ShieldCheck,
+    Database,
+    Search,
     Workflow,
     Zap,
     Container,
@@ -14,7 +13,8 @@ import {
     Moon,
     Sun,
     Laptop,
-    Info
+    Info,
+    Coins
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -46,40 +46,40 @@ export default function LandingPage() {
 
     const features = [
         {
-            icon: Mic,
-            title: t('landing.features.mic.title'),
-            titleEn: "Uninterrupted Thought Flow",
-            desc: t('landing.features.mic.desc')
-        },
-        {
-            icon: ShieldCheck,
+            icon: Database,
             title: t('landing.features.sovereignty.title'),
             titleEn: "Digital Sovereignty",
             desc: t('landing.features.sovereignty.desc')
         },
         {
-            icon: Workflow,
-            title: t('landing.features.pipeline.title'),
-            titleEn: "Pipeline Architecture",
-            desc: t('landing.features.pipeline.desc')
+            icon: Search,
+            title: t('landing.features.recall.title'),
+            titleEn: "Total Recall",
+            desc: t('landing.features.recall.desc')
         },
         {
             icon: Zap,
-            title: t('landing.features.lightweight.title'),
-            titleEn: "Lightweight & Ubiquitous",
-            desc: t('landing.features.lightweight.desc')
+            title: t('landing.features.efficiency.title'),
+            titleEn: "Ultimate Efficiency",
+            desc: t('landing.features.efficiency.desc')
         },
         {
-            icon: BrainCircuit,
-            title: t('landing.features.speed.title'),
-            titleEn: "Groq Powered Speed",
-            desc: t('landing.features.speed.desc')
+            icon: Coins,
+            title: t('landing.features.cost.title'),
+            titleEn: "Zero Cost",
+            desc: t('landing.features.cost.desc')
+        },
+        {
+            icon: Workflow,
+            title: t('landing.features.pipeline.title'),
+            titleEn: "Programmable Pipeline",
+            desc: t('landing.features.pipeline.desc')
         },
         {
             icon: Container,
-            title: t('landing.features.docker.title'),
+            title: t('landing.features.fortress.title'),
             titleEn: "One-Click Fortress",
-            desc: t('landing.features.docker.desc')
+            desc: t('landing.features.fortress.desc')
         }
     ]
 
@@ -241,15 +241,17 @@ export default function LandingPage() {
                             {t('landing.trial.p1')}
                         </p>
                         <p>
-                            {t('landing.trial.p2a')} <code className="text-rose-500 font-mono font-bold mx-1 select-all">{t('landing.trial.code')}</code> {t('landing.trial.p2b')}
+                            {t('landing.trial.p2a')} <code className="text-rose-500 font-mono font-bold bg-rose-500/10 px-3 py-1 rounded-md mx-1 select-all">{t('landing.trial.code')}</code> {t('landing.trial.p2b')}
                         </p>
-                        <div className="inline-flex flex-col sm:flex-row items-start sm:items-center gap-3 border px-6 py-4 rounded-xl text-left sm:text-center mt-2 transition-colors bg-rose-50 border-rose-100 dark:bg-rose-500/10 dark:border-rose-500/20 text-rose-600 dark:text-rose-400">
-                            <Info className="h-6 w-6 shrink-0 mt-0.5 sm:mt-0" />
-                            <p className="font-medium text-base">
+
+                        <div className="inline-flex items-start sm:items-center gap-3 bg-rose-500/10 border border-rose-500/20 px-5 py-3 rounded-lg text-left sm:text-center mt-2 mx-auto">
+                            <Info className="h-5 w-5 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
+                            <p className="font-medium text-rose-500/90 text-base">
                                 {t('landing.trial.p3')}
                             </p>
                         </div>
-                        <p>
+
+                        <p className="pt-2">
                             {t('landing.trial.p4')}
                         </p>
                     </div>

@@ -1,7 +1,7 @@
 {
   "layout": {
-    "dashboard": "Dashboard",
-    "logs": "Time Machine",
+    "dashboard": "Device Management",
+    "logs": "History",
     "docs": "Documentation",
     "logout": "Log out",
     "toggleLanguage": "English",
@@ -43,7 +43,7 @@
     "noDevicesDesc": "Start a Reliquary client to see it here"
   },
   "history": {
-    "title": "Time Machine",
+    "title": "History",
     "subtitle": "View voice recognition history",
     "errorLoad": "Failed to load logs, please check backend API",
     "noRecords": "No records found",
@@ -120,54 +120,54 @@
   },
   "landing": {
     "heroTitle": "Reliquary",
-    "heroSubtitle": "Reclaim Your",
-    "heroSubtitleStrong": "Digital Sovereignty",
-    "heroDesc": "A local-first, completely free, Chain of Responsibility based AI voice interface.",
-    "heroDesc2": "Let data return to its source, let thinking be uninterrupted.",
+    "heroSubtitle": "Build Your",
+    "heroSubtitleStrong": "Digital Phylactery",
+    "heroDesc": "A self-hosted Personal Digital Asset I/O Protocol.",
+    "heroDesc2": "More than just speech-to-text; it's about reserving your Core Data Assets for the future.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
     "docker": "Docker Deploy",
     "features": {
-      "mic": {
-        "title": "Uninterrupted Thought Flow",
-        "desc": "AI needs context, not fragments. Reliquary provides a 'Thinking Buffer' allowing you to organize your logic calmly during Thinking Aloud, feeding a complete high-quality Prompt at once, maximizing AI execution efficiency."
-      },
       "sovereignty": {
         "title": "Digital Sovereignty",
-        "desc": "Reject Vendor Lock-in. Your voice data is completely under your control. Carry your complete data assets to switch to any more advanced AI model at any time, making the model a replaceable backend, not your dependency."
+        "desc": "Your data is the only ticket for AI to become your 'exocortex'. Big tech models only know general knowledge, not you. Reliquary helps you accumulate a private Data Lake, allowing future AI to truly understand your context and become an irreplaceable exclusive assistant."
+      },
+      "recall": {
+        "title": "Total Recall",
+        "desc": "Reject 'data tombs' and keep memories on standby. Automatically convert unstructured voice streams into structured assets. Whether it's an inspiration from last week or meeting details from last year, everything can be indexed and mined."
+      },
+      "efficiency": {
+        "title": "Ultimate Efficiency",
+        "desc": "3x faster than typing, with 100% complete context. Eliminate aggressive interruption mechanisms, allowing you to articulate complex trains of thought in one go. Comprehensive long contexts significantly reduce AI hallucinations, resulting in higher output quality."
+      },
+      "cost": {
+        "title": "Zero Cost",
+        "desc": "Enjoy enterprise-grade speed for free. Through ingenious architectural design, legally utilize free API tiers from top tech companies (like Groq). Handle hundreds of high-intensity instructions daily with sub-second response times, without spending a penny."
       },
       "pipeline": {
-        "title": "Pipeline Architecture",
-        "desc": "Handle voice like building blocks. Based on the Responsible Chain pattern. Through visual configuration, freely define correction rules, hot word replacement, and text cleaning logic, perfectly adapting to personal habits."
+        "title": "Programmable Pipeline",
+        "desc": "Define your workflow like building blocks. How data flows and is processed is entirely up to you. Through simple natural language configuration, you can customize rules: automatically extract to-dos, filter sensitive words, or push to a Kanban board."
       },
-      "lightweight": {
-        "title": "Lightweight & Ubiquitous",
-        "desc": "Logic at the back, experience seamless. All heavy logic is concentrated in the backend, the frontend remains extremely lightweight and fast. Supports Windows, Linux, macOS, and Android platforms."
-      },
-      "speed": {
-        "title": "Groq Powered Speed",
-        "desc": "Built on Groq chips, experience extreme generation speeds of 500+ Tokens per second. Call top open-source models like Llama 3 or Mixtral at zero cost, say goodbye to latency, free and powerful."
-      },
-      "docker": {
-        "title": "One-Click Fortress",
-        "desc": "One command to build a digital fortress. Reject complex configurations, achieve one-click deployment via Docker Compose. Instantly launch your private voice service locally or in the cloud."
+      "fortress": {
+        "title": "Private Fortress",
+        "desc": "Physical-level security with one-click convenience. Minimalist Docker deployment, service up in 30 seconds. Data is deadlocked on your local hard drive, physically isolated from any cloud censorship or prying eyes."
       }
     },
     "trial": {
-      "title": "Start Trial, ",
+      "title": "Trial Only, ",
       "titleStrong": "No Data Retention",
-      "p1": "I currently do not provide commercial services. This trial is only to lower the barrier for beginners and avoid deployment hassles.",
+      "p1": "We do not provide commercial services. The trial is set up to lower the barrier for beginners and save you the trouble of blind deployment.",
       "p2a": "Enter invite code",
-      "code": "FREE-TRIAL-1DAY",
-      "p2b": "to get limited-time full experience.",
-      "p3": "Daily at 3AM, your account and all generated voice data will be thoroughly and permanently deleted.",
-      "p4": "After satisfaction, I strongly recommend local deployment to keep data truly in your hands.",
+      "code": "reliquary-1day-demo",
+      "p2b": "to unlock a 1-day full experience.",
+      "p3": "Your account and all generated voice data will be completely and permanently deleted 24 hours after registration.",
+      "p4": "After the experience, we strongly recommend checking the documentation for local deployment to truly keep the data in your own hands.",
       "btnTrial": "Use Invite Code",
       "btnDocs": "View Deployment Docs"
     },
     "footer": {
-      "copyright": "© 2026 Reliquary Project.",
-      "license": "Released under AGPLv3.",
+      "copyright": "© 2024-2026 Reliquary Project. Open Core.",
+      "license": "MIT License",
       "privacy": "Privacy",
       "terms": "Terms",
       "twitter": "Twitter"
