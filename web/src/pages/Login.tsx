@@ -186,7 +186,9 @@ export function Login() {
 
                                 {registerMutation.error && (
                                     <p className="text-sm text-destructive">
-                                        {(registerMutation.error as Error).message || t('login.errorRegister')}
+                                        {(registerMutation.error as any)?.response?.data?.detail
+                                            || (registerMutation.error as Error).message
+                                            || t('login.errorRegister')}
                                     </p>
                                 )}
 

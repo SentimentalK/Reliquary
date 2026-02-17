@@ -7,9 +7,13 @@ Endpoints:
 - GET /api/auth/users - List all users (admin only)
 """
 
+import shutil
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
+from app.config import get_settings
 from app.services.auth import (
     UserInfo,
     get_admin_user,
@@ -54,6 +58,9 @@ class UsersListResponse(BaseModel):
 
 # ============== Endpoints ==============
 
+DISK_USAGE_THRESHOLD = 0.80  # 80%
+
+
 @router.post("/api/auth/register", response_model=RegisterResponse)
 async def register(request: RegisterRequest):
     """
@@ -71,6 +78,17 @@ async def register(request: RegisterRequest):
     Returns:
         User info and the master secret (one-time display)
     """
+    # --- Disk capacity guard ---
+    settings = get_settings()
+    storage_path = Path(settings.storage_root).resolve()
+    storage_path.mkdir(parents=True, exist_ok=True)
+    usage = shutil.disk_usage(storage_path)
+    if usage.used / usage.total >= DISK_USAGE_THRESHOLD:
+        raise HTTPException(
+            status_code=503,
+            detail="Trial slots full. Server storage overloaded. Please try again later.",
+        )
+
     try:
         secret = register_user(request.display_name, request.invite_code)
     except ValueError as e:
