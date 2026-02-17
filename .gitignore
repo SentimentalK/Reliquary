@@ -5,6 +5,7 @@
 __pycache__
 *.jsonl
 */node_modules
+.pytest_cache
 
 data/
 client/config*.json

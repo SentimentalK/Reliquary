@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <g stroke="#FFFFFF" fill="none" stroke-linejoin="round" stroke-linecap="round">
+    <g stroke="#000000" fill="none" stroke-linejoin="round" stroke-linecap="round">
         <!-- Main Cube Outer Contour (Mathematically perfect 2:1 isometric perspective) -->
-        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" fill="#000000" stroke-width="2" />
+        <polygon points="50,10 84.64,30 84.64,70 50,90 15.36,70 15.36,30" fill="#FFFFFF" stroke-width="2" />
         
         <!-- Core Seams (Y-shape, parallel to outer contour) -->
         <line x1="50" y1="50" x2="50" y2="90" stroke-width="2" />
@@ -14,7 +14,7 @@
         <polygon points="50,38 36.14,30 50,22 63.86,30" stroke-width="1" />
         <polygon points="50,34 43.07,30 50,26 56.93,30" stroke-width="0.8" />
         <!-- Small solid core square -->
-        <polygon points="50,31 48.27,30 50,29 51.73,30" fill="#FFFFFF" stroke="none" />
+        <polygon points="50,31 48.27,30 50,29 51.73,30" fill="#000000" stroke="none" />
 
         <!-- Left Panel: Nested towards center -->
         <polygon points="46.54,52 18.82,36 18.82,68 46.54,84" stroke-width="1.5" />
@@ -22,7 +22,7 @@
         <polygon points="39.61,56 25.75,48 25.75,64 39.61,72" stroke-width="1" />
         <polygon points="36.14,58 29.22,54 29.22,62 36.14,66" stroke-width="0.8" />
         <!-- Small solid core square -->
-        <polygon points="33.55,59.5 31.81,58.5 31.81,60.5 33.55,61.5" fill="#FFFFFF" stroke="none" />
+        <polygon points="33.55,59.5 31.81,58.5 31.81,60.5 33.55,61.5" fill="#000000" stroke="none" />
 
         <!-- Right Panel: Nested towards center -->
         <polygon points="53.46,52 81.18,36 81.18,68 53.46,84" stroke-width="1.5" />
@@ -30,12 +30,12 @@
         <polygon points="60.39,56 74.25,48 74.25,64 60.39,72" stroke-width="1" />
         <polygon points="63.86,58 70.78,54 70.78,62 63.86,66" stroke-width="0.8" />
         <!-- Small solid core square -->
-        <polygon points="66.45,59.5 68.19,58.5 68.19,60.5 66.45,61.5" fill="#FFFFFF" stroke="none" />
+        <polygon points="66.45,59.5 68.19,58.5 68.19,60.5 66.45,61.5" fill="#000000" stroke="none" />
 
         <!-- Core Lock: Original precise proportions -->
-        <circle cx="50" cy="50" r="13.5" fill="#000000" stroke-width="2" />
+        <circle cx="50" cy="50" r="13.5" fill="#FFFFFF" stroke-width="2" />
         <circle cx="50" cy="50" r="9.5" stroke-width="1.5" stroke-dasharray="2 2.5" />
         <circle cx="50" cy="50" r="6" stroke-width="1.5" />
-        <polygon points="50,46 53.5,52 46.5,52" fill="#FFFFFF" stroke="none" />
+        <polygon points="50,46 53.5,52 46.5,52" fill="#000000" stroke="none" />
     </g>
 </svg>
