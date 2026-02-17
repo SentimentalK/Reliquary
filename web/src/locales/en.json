@@ -58,7 +58,8 @@
     "confirmClearDayTitle": "Clear Entire Day?",
     "confirmClearDayDesc": "This will permanently delete all records and audio files for this day. This action cannot be undone.",
     "cancel": "Cancel",
-    "confirmClearAll": "Yes, Clear All"
+    "confirmClearAll": "Yes, Clear All",
+    "exportAll": "Export All"
   },
   "deviceCard": {
     "hotkey": "Hotkey",

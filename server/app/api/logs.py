@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi.responses import StreamingResponse
 
 from app.config import get_settings
 from app.services.auth import (
@@ -230,6 +231,53 @@ async def clear_day(
         "entries_removed": entries_removed,
         "files_removed": files_removed,
     }
+
+
+@router.get("/api/logs/export")
+async def export_user_data(
+    user: UserInfo = Depends(get_current_user),
+):
+    """
+    Export all user data as a streaming zip archive.
+
+    Uses stream-zip to send bytes to the client immediately as each file
+    is read — no in-memory buffering of the full archive.
+    """
+    from datetime import datetime as dt
+    from stream_zip import stream_zip, ZIP_32
+
+    user_dir = _get_user_dir(user)
+
+    if not user_dir.exists() or not any(user_dir.iterdir()):
+        raise HTTPException(status_code=404, detail="No data to export")
+
+    def member_files():
+        for file_path in user_dir.rglob("*"):
+            if file_path.is_file():
+                arcname = str(file_path.relative_to(user_dir))
+                modified_at = dt.fromtimestamp(file_path.stat().st_mtime)
+                perms = 0o644
+
+                def chunks(fp=file_path):
+                    with open(fp, "rb") as f:
+                        while True:
+                            chunk = f.read(65536)
+                            if not chunk:
+                                break
+                            yield chunk
+
+                yield arcname, modified_at, perms, ZIP_32, chunks()
+
+    safe_name = user.display_name.replace(" ", "_")
+    filename = f"{safe_name}_export.zip"
+
+    return StreamingResponse(
+        stream_zip(member_files()),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )
 
 
 @router.websocket("/ws/logs")

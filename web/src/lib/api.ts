@@ -157,6 +157,28 @@ export const logsApi = {
     clearDay: async (date: string): Promise<void> => {
         await api.delete(`/logs/date/${date}`)
     },
+
+    exportData: async (): Promise<void> => {
+        const { data, headers } = await api.get('/logs/export', {
+            responseType: 'blob',
+            timeout: 120000, // 2 min for large exports
+        })
+
+        // Extract filename from Content-Disposition header
+        const disposition = headers['content-disposition'] || ''
+        const match = disposition.match(/filename="?([^";\n]+)"?/)
+        const filename = match?.[1] || 'reliquary_export.zip'
+
+        // Trigger browser download
+        const url = URL.createObjectURL(data)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    },
 }
 
 // ============== Pipeline Config API ==============

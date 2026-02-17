@@ -58,7 +58,8 @@
     "confirmClearDayTitle": "清除整天记录？",
     "confirmClearDayDesc": "这将永久删除当天所有记录和音频文件，此操作无法撤销。",
     "cancel": "取消",
-    "confirmClearAll": "全部清除"
+    "confirmClearAll": "全部清除",
+    "exportAll": "导出全部"
   },
   "deviceCard": {
     "hotkey": "热键",

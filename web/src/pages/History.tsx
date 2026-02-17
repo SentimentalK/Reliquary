@@ -6,7 +6,8 @@ import {
     ChevronUp,
     Trash2,
     AlertTriangle,
-    Activity
+    Activity,
+    Download
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -188,6 +189,7 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
 export function History() {
     const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+    const [isExporting, setIsExporting] = useState(false)
     const { t } = useTranslation()
     const queryClient = useQueryClient()
 
@@ -319,6 +321,26 @@ export function History() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Export All Button */}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                            setIsExporting(true)
+                            try {
+                                await logsApi.exportData()
+                            } catch (e) {
+                                console.error('[Export]', e)
+                            } finally {
+                                setIsExporting(false)
+                            }
+                        }}
+                        disabled={isExporting}
+                    >
+                        <Download className={`h-4 w-4 mr-1.5 ${isExporting ? 'animate-bounce' : ''}`} />
+                        {t('history.exportAll')}
+                    </Button>
+
                     {/* Clear Day Button */}
                     <Button
                         variant="ghost"
