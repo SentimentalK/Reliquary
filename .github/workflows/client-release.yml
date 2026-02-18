@@ -59,7 +59,7 @@ jobs:
         with:
           name: dist-snapshot
           path: dist/*
-          retention-days: 7
+          retention-days: 1
 
   build-android:
     needs: build-and-release
@@ -118,6 +118,7 @@ jobs:
         with:
           name: reliquary-android-debug.apk
           path: client/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
 
       - name: Rename APK for Release
         if: startsWith(github.ref, 'refs/tags/')
