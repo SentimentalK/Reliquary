@@ -129,8 +129,7 @@ func main() {
 	}
 
 	fmt.Println("╔═══════════════════════════════════════════╗")
-	fmt.Println("║      Reliquary Voice Client v1.5.0           ║")
-	fmt.Println("║        (Multi-User + BYOK)                ║")
+	fmt.Println("║           Reliquary Client v1.0.0         ║")
 	fmt.Println("╠═══════════════════════════════════════════╣")
 	fmt.Printf("║  Hotkey: %-33s║\n", fmt.Sprintf("%s (code %d)", keyName, cfg.KeyCode))
 	fmt.Printf("║  Server: %-33s║\n", cfg.ServerURL)
@@ -232,7 +231,6 @@ func main() {
 	// Handle config updates from server (Config as Cache philosophy)
 	controlPlane.OnConfigUpdate(func(update network.ConfigUpdate) {
 		app.mu.Lock()
-		defer app.mu.Unlock()
 
 		if update.KeyCode != nil {
 			hotkeyHandler.SetTriggerKey(*update.KeyCode)
@@ -272,8 +270,22 @@ func main() {
 			fmt.Printf("✓ [Server] Pipeline updated to: %s\n", *update.Pipeline)
 		}
 
+		// Build identity while we still hold the lock (read fields directly)
+		identity := network.Identity{
+			DeviceID:           app.deviceID,
+			AuthToken:          app.authToken,
+			ApiKey:             app.apiKey,
+			Language:           app.language,
+			Pipeline:           app.pipeline,
+			KeyCode:            app.keyCode,
+			InsecureSkipVerify: app.insecureSkipVerify,
+		}
+		app.mu.Unlock()
+
 		// Sync updated identity to control plane for future reconnections
-		controlPlane.UpdateIdentity(app.getIdentity())
+		// NOTE: Must be outside the lock — getIdentity() uses RLock, which
+		// would deadlock if called while holding the write Lock.
+		controlPlane.UpdateIdentity(identity)
 	})
 
 	// Handle key learning mode from server
@@ -358,17 +370,34 @@ func main() {
 	}
 }
 
+// drainEvents removes any stale events from the channel.
+// Called after processing completes to prevent ghost triggers.
+func drainEvents(events chan hotkey.KeyEvent) {
+	for {
+		select {
+		case <-events:
+		default:
+			return
+		}
+	}
+}
+
 // runEventLoopWebSocket handles streaming mode with WebSocket.
+// Network operations run in a background goroutine so the event loop
+// always remains responsive to KeyUp events.
 func runEventLoopWebSocket(ctx context.Context, app *App) {
 	state := StateIdle
-	var audioChan <-chan []byte
-	var streamClient *network.StreamClient
-	var streamDone chan struct{}
-	var streamError error // Track error from streaming goroutine
 	var recordingStartTime time.Time
 
 	// Minimum recording duration to avoid accidental taps (1 second)
 	const minRecordingDuration = 1 * time.Second
+
+	// Session state for the current recording
+	var streamClient *network.StreamClient
+	var streamDone chan struct{} // Closed when StreamAudio goroutine finishes
+	var setupDone chan struct{}  // Closed when setup (connect+config) finishes
+	var setupErr error           // Error from setup goroutine
+	var streamError error        // Error from streaming goroutine
 
 	for {
 		select {
@@ -379,44 +408,51 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 			switch event {
 			case hotkey.KeyDown:
 				if state == StateIdle {
-					sound.PlayStartAndWait() // Wait for sound to finish before recording
+					sound.PlayStartAndWait()
 					fmt.Println("🎤 Recording... (release key to stop)")
 					recordingStartTime = time.Now()
-					streamError = nil // Reset error for new session
+					streamError = nil
+					setupErr = nil
 
-					// Start streaming
-					var err error
-					audioChan, err = app.recorder.StartStreaming()
+					// Start recording immediately (local, fast)
+					audioChan, err := app.recorder.StartStreaming()
 					if err != nil {
 						log.Printf("Failed to start recording: %v", err)
 						sound.PlayError()
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
-					// Connect to server with identity
-					streamClient = network.NewStreamClient(app.getServerURL(), app.getIdentity())
-					if err := streamClient.Connect(); err != nil {
-						log.Printf("Failed to connect to server: %v", err)
-						app.recorder.StopStreaming()
-						sound.PlayError()
-						continue
-					}
-
-					// Send config (includes user_id and device_id)
-					if err := streamClient.SendConfig(int(app.recorder.GetSampleRate())); err != nil {
-						log.Printf("Failed to send config: %v", err)
-						streamClient.Close()
-						app.recorder.StopStreaming()
-						sound.PlayError()
-						continue
-					}
-
-					// Start streaming audio in background
+					// Setup + streaming runs in background so event loop stays responsive
+					setupDone = make(chan struct{})
 					streamDone = make(chan struct{})
+					streamClient = network.NewStreamClient(app.getServerURL(), app.getIdentity())
+
 					go func() {
 						defer close(streamDone)
+
+						// Phase 1: Connect
+						if err := streamClient.Connect(); err != nil {
+							setupErr = err
+							close(setupDone)
+							log.Printf("Failed to connect to server: %v", err)
+							return
+						}
+
+						// Phase 2: Send config
+						if err := streamClient.SendConfig(int(app.recorder.GetSampleRate())); err != nil {
+							setupErr = err
+							close(setupDone)
+							log.Printf("Failed to send config: %v", err)
+							return
+						}
+
+						// Signal setup complete
+						close(setupDone)
+
+						// Phase 3: Stream audio (blocks until audioChan is closed by StopStreaming)
 						if err := streamClient.StreamAudio(audioChan); err != nil {
-							streamError = err // Capture error for main loop
+							streamError = err
 							log.Printf("Stream error: %v", err)
 						}
 					}()
@@ -428,29 +464,46 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 				if state == StateRecording {
 					recordingDuration := time.Since(recordingStartTime)
 
-					// Stop recording (closes audioChan)
+					// Stop recording immediately (closes audioChan, which unblocks StreamAudio)
 					app.recorder.StopStreaming()
 
-					// Wait for stream to finish
+					// Wait for setup to complete (if it hasn't already)
+					<-setupDone
+
+					// If setup failed, clean up and go idle
+					if setupErr != nil {
+						fmt.Printf("⚠️  Connection failed: %v\n", setupErr)
+						streamClient.Close()
+						<-streamDone // Wait for goroutine to finish
+						state = StateIdle
+						sound.PlayError()
+						drainEvents(app.hotkeyHandler.Events)
+						fmt.Println("\nReady for next recording...")
+						continue
+					}
+
+					// Wait for streaming goroutine to finish
 					<-streamDone
 
-					// Check if stream had an error (connection broke)
+					// Check if stream had an error
 					if streamError != nil {
 						fmt.Println("⚠️  Connection lost during recording (audio saved on server)")
 						streamClient.Close()
 						streamError = nil
 						state = StateIdle
 						sound.PlayError()
+						drainEvents(app.hotkeyHandler.Events)
 						fmt.Println("\nReady for next recording...")
 						continue
 					}
 
-					// Check if recording was too short (accidental tap)
+					// Check if recording was too short
 					if recordingDuration < minRecordingDuration {
 						fmt.Printf("⚠️  Recording too short (%.1fs < 1s), skipped\n", recordingDuration.Seconds())
 						sound.PlayError()
 						streamClient.Close()
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
@@ -463,6 +516,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 						streamClient.Close()
 						sound.PlayError()
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						fmt.Println("\nReady for next recording...")
 						continue
 					}
@@ -475,6 +529,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 						log.Printf("Transcription failed: %v", err)
 						sound.PlayError()
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						fmt.Println("\nReady for next recording...")
 						continue
 					}
@@ -482,6 +537,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					if result.Text == "" {
 						fmt.Println("⚠️  No speech detected")
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						fmt.Println("\nReady for next recording...")
 						continue
 					}
@@ -494,6 +550,7 @@ func runEventLoopWebSocket(ctx context.Context, app *App) {
 					}
 
 					state = StateIdle
+					drainEvents(app.hotkeyHandler.Events)
 					fmt.Println("\nReady for next recording...")
 				}
 			}
@@ -538,6 +595,7 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 						log.Printf("Failed to stop recording: %v", err)
 						sound.PlayError()
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
@@ -545,12 +603,14 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 					if recordingDuration < minRecordingDuration {
 						fmt.Printf("⚠️  Recording too short (%.1fs < 1s), skipped\n", recordingDuration.Seconds())
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
 					if len(audioData) < 100 {
 						fmt.Println("⚠️  Recording too short, skipped")
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
@@ -564,12 +624,14 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 						log.Printf("Transcription failed: %v", err)
 						sound.PlayError()
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
 					if text == "" {
 						fmt.Println("⚠️  No speech detected")
 						state = StateIdle
+						drainEvents(app.hotkeyHandler.Events)
 						continue
 					}
 
@@ -580,6 +642,7 @@ func runEventLoopHTTP(ctx context.Context, app *App) {
 					}
 
 					state = StateIdle
+					drainEvents(app.hotkeyHandler.Events)
 					fmt.Println("\nReady for next recording...")
 				}
 			}

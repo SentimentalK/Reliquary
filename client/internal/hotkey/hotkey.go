@@ -55,7 +55,7 @@ type Handler struct {
 // Note: On macOS, Input Monitoring permission is required.
 func NewHandler(keyCode int) (*Handler, error) {
 	return &Handler{
-		Events:  make(chan KeyEvent, 10),
+		Events:  make(chan KeyEvent, 32),
 		KeyCode: keyCode,
 	}, nil
 }

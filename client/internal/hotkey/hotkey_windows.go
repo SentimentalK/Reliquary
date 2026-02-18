@@ -43,9 +43,24 @@ func (h *Handler) Start(ctx context.Context) error {
 				isPressed := (ret & 0x8000) != 0
 
 				if isPressed && !wasPressed {
-					h.Events <- KeyDown
+					select {
+					case h.Events <- KeyDown:
+					default:
+					}
 				} else if !isPressed && wasPressed {
-					h.Events <- KeyUp
+					select {
+					case h.Events <- KeyUp:
+					default:
+						// KeyUp is critical — drain one stale event and retry
+						select {
+						case <-h.Events:
+						default:
+						}
+						select {
+						case h.Events <- KeyUp:
+						default:
+						}
+					}
 				}
 				wasPressed = isPressed
 				time.Sleep(10 * time.Millisecond)

@@ -186,6 +186,15 @@ func goKeyEventCallback(eventType C.int, keyCode C.int) {
 		select {
 		case globalHandler.Events <- KeyUp:
 		default:
+			// KeyUp is critical — drain one stale event and retry
+			select {
+			case <-globalHandler.Events:
+			default:
+			}
+			select {
+			case globalHandler.Events <- KeyUp:
+			default:
+			}
 		}
 	case 2: // Learning Mode - Key Detected
 		globalHandler.mu.Lock()
