@@ -30,10 +30,19 @@ type Config struct {
 	Pipeline string `json:"pipeline,omitempty"` // raw_whisper, whisper_fixer, etc.
 }
 
+// defaultKeyCode returns the platform-specific default hotkey code.
+// macOS uses Carbon key codes, Windows uses Win32 virtual key codes.
+func defaultKeyCode() int {
+	if runtime.GOOS == "windows" {
+		return 0xA1 // VK_RSHIFT (Right Shift on Windows)
+	}
+	return 60 // Right Shift on macOS
+}
+
 // DefaultConfig returns the default configuration.
 func DefaultConfig() Config {
 	return Config{
-		KeyCode:   60, // Right Shift on macOS
+		KeyCode:   defaultKeyCode(),
 		ServerURL: "https://localhost:443",
 		DeviceID:  getDefaultDeviceID(),
 		AuthToken: "",            // Must be set after registration
@@ -162,7 +171,7 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 	// Create config
 	m.mu.Lock()
 	m.config = Config{
-		KeyCode:   60, // Right Shift on macOS
+		KeyCode:   defaultKeyCode(),
 		ServerURL: serverURL,
 		DeviceID:  getDefaultDeviceID(),
 		AuthToken: authToken,
