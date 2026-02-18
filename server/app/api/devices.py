@@ -69,6 +69,7 @@ def get_device_config(device_id: str) -> Dict[str, Any]:
         _device_configs[device_id] = {
             "keycode": 60,  # Default: Right Shift on macOS
             "language": "", # Default: Auto-detect
+            "pipeline": "", # Empty = unknown, client is source of truth
         }
     return _device_configs[device_id]
 

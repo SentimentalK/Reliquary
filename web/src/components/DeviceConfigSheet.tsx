@@ -18,7 +18,7 @@ export function DeviceConfigSheet() {
 
     const [keycode, setKeycode] = useState(selectedDevice?.keycode ?? 61)
     const [language, setLanguage] = useState(selectedDevice?.language ?? '')
-    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline ?? 'raw_whisper')
+    const [pipeline, setPipeline] = useState(selectedDevice?.pipeline || '')
     const [apiKey, setApiKey] = useState('')
     const [isLearning, setIsLearning] = useState(false)
 
@@ -27,7 +27,7 @@ export function DeviceConfigSheet() {
         if (selectedDevice) {
             setKeycode(selectedDevice.keycode ?? 61)
             setLanguage(selectedDevice.language ?? '')
-            setPipeline(selectedDevice.pipeline ?? 'raw_whisper')
+            setPipeline(selectedDevice.pipeline || '')
             setApiKey('') // Don't show existing API key for security
         }
     }, [selectedDevice])
@@ -36,10 +36,12 @@ export function DeviceConfigSheet() {
     const pushConfigMutation = useMutation({
         mutationFn: async () => {
             if (!selectedDevice) return
-            const config: { keycode: number; language: string; api_key?: string; pipeline?: string } = {
+            const config: Record<string, any> = {
                 keycode,
                 language,
-                pipeline,
+            }
+            if (pipeline) {
+                config.pipeline = pipeline
             }
             if (apiKey) {
                 config.api_key = apiKey
@@ -233,6 +235,7 @@ export function DeviceConfigSheet() {
                                             onChange={(e) => setPipeline(e.target.value)}
                                             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                                         >
+                                            <option value="">{t('config.pipelineDeviceDefault')}</option>
                                             <option value="raw_whisper">Raw Whisper</option>
                                             <option value="whisper_chinese_fixer_kimi-k2">Whisper + Chinese Fixer (kimi-k2)</option>
                                             <option value="whisper_chinese_fixer_gpt-oss-20b">Whisper + Chinese Fixer (gpt-oss-20b)</option>

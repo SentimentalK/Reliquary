@@ -29,14 +29,22 @@ type Reliquary struct {
 	serverURL    string
 }
 
-// NewReliquary creates a new Reliquary instance.
+// NewReliquary creates a new Reliquary instance (backward-compatible).
 func NewReliquary(serverURL, deviceID, authToken, apiKey string, callback MobileCallback) *Reliquary {
+	return NewReliquaryWithConfig(serverURL, deviceID, authToken, apiKey, "", "", callback)
+}
+
+// NewReliquaryWithConfig creates a new Reliquary instance with full config.
+// language and pipeline are persisted from previous sessions (e.g. SharedPreferences).
+func NewReliquaryWithConfig(serverURL, deviceID, authToken, apiKey, language, pipeline string, callback MobileCallback) *Reliquary {
 	// Default config for Android
 	cfg := engine.Config{
 		ServerURL:          serverURL,
 		DeviceID:           deviceID,
 		AuthToken:          authToken,
 		ApiKey:             apiKey,
+		Language:           language,
+		Pipeline:           pipeline,
 		SampleRate:         16000, // Android AudioRecord default
 		InsecureSkipVerify: true,  // Often needed for dev/local
 	}
@@ -45,6 +53,8 @@ func NewReliquary(serverURL, deviceID, authToken, apiKey string, callback Mobile
 		DeviceID:           deviceID,
 		AuthToken:          authToken,
 		ApiKey:             apiKey,
+		Language:           language,
+		Pipeline:           pipeline,
 		InsecureSkipVerify: true,
 		Platform:           "android",
 	}

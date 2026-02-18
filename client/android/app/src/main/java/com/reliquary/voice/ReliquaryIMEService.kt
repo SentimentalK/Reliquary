@@ -74,19 +74,16 @@ class ReliquaryIMEService : InputMethodService(), MobileCallback {
             val language = prefs.getString(MainActivity.KEY_LANGUAGE, "") ?: ""
             val pipeline = prefs.getString(MainActivity.KEY_PIPELINE, "") ?: ""
 
-            // Initialize Go Client with config from SharedPreferences
-            reliquaryClient = Mobile.newReliquary(
+            // Initialize Go Client with full config from SharedPreferences
+            reliquaryClient = Mobile.newReliquaryWithConfig(
                 serverUrl,
                 deviceId,
                 authToken,
                 apiKey,
+                language,
+                pipeline,
                 this
             )
-
-            // Apply cached language/pipeline if set
-            if (language.isNotEmpty() || pipeline.isNotEmpty()) {
-                reliquaryClient?.updateConfig(apiKey, language, pipeline)
-            }
 
             android.util.Log.d("ReliquaryIME", "Go Client Initialized (server: $serverUrl, lang: $language, pipe: $pipeline, byok: ${apiKey.isNotEmpty()})")
         } catch (e: Throwable) {
