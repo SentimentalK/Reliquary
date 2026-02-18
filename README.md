@@ -14,64 +14,51 @@
   <img src="https://img.shields.io/badge/Status-Production%20Ready-orange.svg" alt="Status">
 </div>
 
-## What is Reliquary?
+## Don't be the AI's Bottleneck
 
-Reliquary is a **Self-Hosted** personal digital asset I/O protocol. It is not just a high-precision voice input terminal, but a **"Digital Phylactery"** for your mind. It solves not only the "speech-to-text" problem, but the triple dilemma of interaction between modern humans and the digital world:
+Modern LLMs possess terrifying reasoning capabilities. Yet, you are utilizing less than 1% of their potential. Why?
 
-- **Friction Kills Flow**
-  Inspiration is fleeting. The process of pulling out a phone, opening a note app, and tapping on a keyboard is too cumbersome. Typing speed (40-60 wpm) lags far behind thinking speed (150+ wpm). This mismatch causes massive amounts of high-value thought fragments to dissipate due to "friction".
+Because you are physically locked by the keyboard.
 
-- **Write-Only Memory**
-  Even if you record it, most notes become "dead data". Notebooks (whether paper or Notion) often become graveyards for thoughts—you only store, but rarely efficiently retrieve or utilize. Unstructured and unindexed thoughts are worthless.
+Only extreme voice input can unlock your brain. Reliquary converts voice to text, creating a zero-burden stream of thought that connects you to the "high-bandwidth fiber" of the super-individual.
 
-- **SaaS Feudalism**
-  Existing voice assistants are "walled gardens", not your "Exocortex".
-  - **Uncontrollable**: Aggressive silence detection interrupts your thinking and pollutes context.
-  - **Not Yours**: Your data becomes fodder for training large models.
-  - **Ephemeral**: To big tech, your personal memories are low-value data, liable to be cleaned up or ignored by algorithms at any time.
+It lets you throw away the keyboard and interact with AI at the speed of thought.
 
-It transforms your fleeting biological signals (voice) into eternal, structured digital assets (Relics) for future you (or your personal Agent) to mine indefinitely.
+## Core Features
 
-## Developer's Note (Top 0.1% AI Power User):
+### 1. Zero Friction Streaming
 
-> *"Reliquary is the phylactery where I store my digital soul. It records the past and unlocks the future."*
+- Forget grammar. Forget logic. Don't organize your language.
+Reliquary allows you to ramble in a "flow state". Whether eating, walking, or lying down, just spray your raw thoughts out. The LLM has your back.
 
-My original motivation for building Reliquary was purely utilitarian: I could not tolerate slow typing dragging down my brain. I needed a **"Mind Buffer"** that allowed me to clear my logic by **"Thinking Aloud"** without being interrupted by any UI interactions.
+### 2. Context-Aware Repair
 
-But in the process of building it, I saw a deeper crisis: **Data is Mana**.
+- Interacting with AI doesn't require the words to be correct. Reliquary cares if the INTENT is correct.
 
-If the future leading to AGI is an era of magic, then your data is your mana pool. Now, you are handing over all your mana to cloud giants. They possess insight across time, linking your discomfort from months ago to today's symptoms to provide clues for early cancer detection, while we have nothing. Why can't we build this database ourselves, letting all AI models serve us from the same starting line?
+- The Fixer Pipeline: Uses an internal LLM to automatically fix typos, add punctuation, and even format code blocks.
 
-**Reliquary aims to fill this gap.**
-I don't want my data fragmented across ten SaaS islands. I want to build a unified, Raw Data level **Mind Data Lake**.
-When the future GPT-10 or local AI Agent arrives, I will have a warehouse full of "soul slices" for it to read. It will instantly become the deputy who understands me best in this world, because I possess a memory backup of this entire era.
+- It doesn't chase 100% verbatim accuracy; it chases 100% Intent Transmission.
 
-Reliquary is not just speech-to-text + recording; it is your confidence in facing the AI era.
+### 3. Your Data, Your Rules
 
-## Why Choose Reliquary?
+- **Local First**: All data stored locally.
+- **Private Memory**: Your chat history is your personal "private training set".
+- **No SaaS BS**: Refuse subscriptions, refuse data used for training by big tech.
 
-**1. Ultimate Efficiency**
-  **Built for "Thinking Aloud", eliminating the anxiety of being interrupted.**
-  - Most voice assistants have aggressive silence detection. If you pause to think, it decides input is finished and starts processing. Although some platforms allow you to interrupt the AI's reply, this mechanism breaks your flow and pollutes the context. You never know how much the AI heard or if the context of the previous sentence still holds.
-  - Voice input provides a **"Mind Buffer"**, allowing you to organize language, correct logic, and even think in silence. Ultimately, you provide AI with deliberate **Clean Data**, not noise-filled fragments. This lets AI focus on solving problems rather than guessing riddles.
-  - **Asynchronous Parallel Thinking**: Break the linear "Ask-Wait-Reply" loop. You can continuously throw out multiple complex voice prompts, using the time AI takes to process to think about the next sub-problem. Don't let AI replace your thinking; let AI catch up to your speed.
+### 4. 1000% FREE (Open Source)
 
-**2. Zero Cost, Enterprise Grade**
-  - **The Fixer**: Reliquary doesn't just transcribe; it repairs. A context-aware LLM Agent (running on open-source models) automatically fixes homophones, adds punctuation based on tone, and even formats code blocks.
-  - **Highly Programmable**: Reliquary is extremely flexible. Whether you know code or not, you can define "correction rules" in natural language.
-  - **API Economics Hack**: By leveraging the generous Free Tier of modern API providers (mainly Groq). You can send hundreds of high-context instructions daily, enjoying enterprise-level response speed and accuracy at zero cost.
+- **Open Source**: Code fully open source (MIT), no paywall.
+- **Zero Cost**: LLM API optimized for Groq's free tier.
 
-**3. Digital Phylactery Mechanism**
-  - **Full Retention**: Stores Raw Audio, Raw Text, Fixed Text, and Metadata.
-  - **Future-Proofing**: Maybe today's models can't analyze the micro-tremors in your tone, but tomorrow's will. As long as you hold the raw data, you are constantly accumulating future assets.
-  - **One-Click Docker Deploy**: Your data is locked on your physical hard drive (VPS/NAS). This is your digital fortress, refusing any cloud censorship or deletion.
-  - **Custom Value Anchor**: To big tech, your data is a drop in the ocean; they only store what's valuable to algorithms. In Reliquary, you define what is important. You are building your own memory library, not part of a big tech profile.
+## Why Reliquary?
 
-**4. Programmable I/O Port**
-  **Reliquary is a set of Lego blocks for voice processing.**
-  - **Pipeline**: VAD -> Transcription -> Fixer -> Custom Parsers. Want to mask sensitive words before storage? Want to extract Todos to a Kanban board? The pipeline is yours to define.
-  - **Modular Pipeline**: All processing steps are modular.
-  - **Lightweight & Ubiquitous**: All heavy logic resides on the server. Clients (Android/Desktop) are razor-thin, instant-on, and battery-friendly—pure input terminals for your exocortex.
+| Feature | Traditional Voice (Siri/ChatGPT Voice) | Traditional Notes (Notion/Obsidian) | Reliquary |
+| :--- | :--- | :--- | :--- |
+| **Interaction** | Short Commands (Turn-based) | Structured Archiving | **Stream of Thought (Streaming)** |
+| **Interruption** | Aggressive Silence Detection | None | **No Interruption (Think as long as you want)** |
+| **Data Home** | Big Tech Servers (Training fodder) | Cloud Database | **Local Docker (Your Hard Drive)** |
+| **Cost** | Free but dumb / Subscription | Subscription / Buyout | **Open Source & Free (MIT)** |
+| **Core Value** | Convenience | Storage | **Expand Brain Bandwidth** |
 
 ## Vision & Roadmap
 

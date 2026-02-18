@@ -1,6 +1,6 @@
 {
   "layout": {
-    "dashboard": "Device Management",
+    "dashboard": "Dashboard",
     "logs": "History",
     "docs": "Documentation",
     "logout": "Log out",
@@ -91,6 +91,7 @@
     "langJa": "Japanese",
     "langKo": "Korean",
     "pipeline": "Pipeline",
+    "pipelineDeviceDefault": "— Device Current —",
     "apiKey": "API Key (BYOK)",
     "apiKeyDesc": "Groq API Key, get from https://console.groq.com/keys",
     "save": "Save Config",
@@ -122,8 +123,8 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "Build Your",
     "heroSubtitleStrong": "Digital Phylactery",
-    "heroDesc": "A self-hosted Personal Digital Asset I/O Protocol.",
-    "heroDesc2": "More than just speech-to-text; it's about reserving your Core Data Assets for the future.",
+    "heroDesc": "Tapping into < 1% of LLM compute?",
+    "heroDesc2": "Relax. Reliquary is your broadband link to the Super-Individual.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
     "docker": "Docker Deploy",
@@ -161,7 +162,7 @@
       "code": "reliquary-1day-demo",
       "p2b": "to unlock a 1-day full experience.",
       "p3": "Your account and all generated voice data will be completely and permanently deleted 24 hours after registration.",
-      "p4": "After the experience, we strongly recommend checking the documentation for local deployment to truly keep the data in your own hands.",
+      "p4": "After the experience, we strongly recommend checking the documentation for local deployment to keep the data in your own hands.",
       "btnTrial": "Use Invite Code",
       "btnDocs": "View Deployment Docs"
     },
