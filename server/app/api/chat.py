@@ -199,11 +199,13 @@ async def process_audio_buffer(
     )
     interaction_id = entry_data.get("id", "")
     
-    # Publish to event bus for real-time web push
+    # Publish to event bus for real-time web push (scoped to user)
     try:
         from app.services.log_events import get_log_event_bus
+        from app.services.auth import get_user_storage_prefix
         bus = get_log_event_bus()
-        await bus.publish(entry_data)
+        prefix = get_user_storage_prefix(user_info) if user_info else ""
+        await bus.publish(entry_data, user_prefix=prefix)
     except Exception as e:
         print(f"[WebSocket] Log event publish error: {e}")
     

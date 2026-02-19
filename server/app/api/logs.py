@@ -285,13 +285,26 @@ async def ws_logs(websocket: WebSocket):
     """
     WebSocket for real-time log push to web frontend.
     
-    New log entries are broadcast to all subscribers when saved.
-    Client sends periodic pings; server pushes {type: "new_entry", entry: {...}}.
+    Auth via query parameter: /ws/logs?token=sk-reliquary-...
+    New log entries are broadcast only to the authenticated user's session.
     """
+    # Authenticate via query parameter
+    token = websocket.query_params.get("token")
+    if not token:
+        await websocket.close(code=4001, reason="Missing auth token")
+        return
+    
+    from app.services.auth import verify_token, get_user_storage_prefix
+    user = verify_token(token)
+    if not user:
+        await websocket.close(code=4001, reason="Invalid auth token")
+        return
+    
+    user_prefix = get_user_storage_prefix(user)
+    
     await websocket.accept()
     bus = get_log_event_bus()
-    bus.subscribe(websocket)
-    print("[WS/Logs] Client subscribed")
+    bus.subscribe(websocket, user_prefix)
     try:
         while True:
             # Keep connection alive by waiting for client messages (pings)
@@ -300,5 +313,3 @@ async def ws_logs(websocket: WebSocket):
         pass
     finally:
         bus.unsubscribe(websocket)
-        print("[WS/Logs] Client unsubscribed")
-

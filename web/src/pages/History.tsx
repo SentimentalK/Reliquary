@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { DatePicker } from '@/components/ui/date-picker'
 import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
 import { logsApi, type LogEntry } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth'
 import { formatTime } from '@/lib/utils'
 import { analyzeQuality } from '@/lib/qualityCheck'
 
@@ -212,9 +213,13 @@ export function History() {
         const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
         let ws: WebSocket | null = null
         let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+        let alive = true
 
         function connect() {
-            ws = new WebSocket(`${protocol}://${location.host}/ws/logs`)
+            if (!alive) return
+            const token = useAuthStore.getState().token
+            if (!token) return
+            ws = new WebSocket(`${protocol}://${location.host}/ws/logs?token=${encodeURIComponent(token)}`)
             ws.onmessage = (ev) => {
                 try {
                     const msg = JSON.parse(ev.data)
@@ -227,6 +232,8 @@ export function History() {
                                 ['logs', dateRef.current],
                                 (old: any) => {
                                     if (!old) return { entries: [msg.entry], date: dateRef.current, count: 1 }
+                                    // Dedup: skip if this entry ID is already in the list
+                                    if (old.entries?.some((e: any) => e.id === msg.entry.id)) return old
                                     return {
                                         ...old,
                                         entries: [msg.entry, ...old.entries],
@@ -239,6 +246,7 @@ export function History() {
                 } catch { /* ignore parse errors */ }
             }
             ws.onclose = () => {
+                if (!alive) return
                 reconnectTimer = setTimeout(connect, 3000)
             }
         }
@@ -246,6 +254,7 @@ export function History() {
         connect()
 
         return () => {
+            alive = false
             if (reconnectTimer) clearTimeout(reconnectTimer)
             ws?.close()
         }
