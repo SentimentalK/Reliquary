@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Monitor, Smartphone, Cloud, Code2, Server, Shield, Command, Download, AlertTriangle, Terminal } from 'lucide-react'
+import { Monitor, Smartphone, Cloud, Code2, Server, Shield, Command, Download, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TerminalWindow } from './TerminalWindow'
 import { cn } from '@/lib/utils'
@@ -18,7 +17,6 @@ interface DeploymentSectionProps {
 
 export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) {
     const { t } = useTranslation()
-    const navigate = useNavigate()
     const [internalTab, setInternalTab] = useState<TabType>('client')
     const [platform, setPlatform] = useState<PlatformType>('mac')
     const [serverMode, setServerMode] = useState<ServerType>('docker')
