@@ -1,6 +1,11 @@
 version: 2
 project_name: reliquary
 
+release:
+  github:
+    owner: SentimentalK
+    name: reliquary-releases
+
 builds:
   - binary: reliquary
     dir: client
