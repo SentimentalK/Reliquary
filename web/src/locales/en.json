@@ -123,7 +123,7 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "Build Your",
     "heroSubtitleStrong": "Digital Phylactery",
-    "heroDesc": "Tapping into < 1% of LLM compute?",
+    "heroDesc": "Most people utilize less than 1% of LLM capabilities.",
     "heroDesc2": "Relax. Reliquary is your broadband link to the Super-Individual.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
@@ -151,7 +151,7 @@
       },
       "fortress": {
         "title": "Private Fortress",
-        "desc": "Physical-level security with one-click convenience. Minimalist Docker deployment, service up in 30 seconds. Data is deadlocked on your local hard drive, physically isolated from any cloud censorship or prying eyes."
+        "desc": "Physical-level security with one-click convenience. Minimalist Docker deployment, service up in 30 seconds. Data is securely locked on your local hard drive, physically isolated from any cloud censorship or prying eyes."
       }
     },
     "deployment": {
@@ -171,8 +171,10 @@
         "mac": "macOS",
         "win": "Windows",
         "android": "Android",
+        "linux": "Linux",
         "ios": "iOS"
       },
+      "comingSoon": "(Coming Soon)",
       "methods": {
         "docker": "Local (Recommended)",
         "prod": "Production",
@@ -182,11 +184,17 @@
         "client": {
           "mac": "Recommended to use Homebrew, we'll handle audio permissions automatically.",
           "mac_usage": "Run from command line after installation.",
-          "mac_usage_step1": "Enter server URL (e.g. https://reliquary.app)",
-          "mac_usage_step2": "Enter your personal access token",
+          "mac_usage_step1": "Enter server URL (Local: http://localhost:8080, Remote: Your Server URL)",
+          "mac_usage_step2": "Enter your personal access token (get from backend settings)",
           "win": "Use Scoop for the best experience.",
+          "win_usage": "Run from command line after installation.",
           "android": "Android client is not on Google Play yet, please download via APK.",
-          "ios": "iOS client is under development. Coming soon."
+          "android_steps": "Enable \"Install from Unknown Sources\"\nDownload and install latest APK",
+          "android_download": "Go to GitHub Releases",
+          "linux": "Linux version is coming soon.",
+          "ios": "iOS client is under development. Coming soon.",
+          "ios_download": "Download .ipa from GitHub",
+          "pending": "Feature under development. Please watch our GitHub repository for updates."
         },
         "server": {
           "docker": "Quick start for development/testing.",
@@ -200,7 +208,8 @@
           "warning": "Your account and ALL data will be permanently deleted after 24 hours.",
           "action": "Register with Code"
         }
-      }
+      },
+      "groqWarning": "Note: You must enter the Groq API Key in the backend settings, otherwise it will not work."
     },
     "footer": {
       "copyright": "© 2024-2026 Reliquary Project. Open Core.",

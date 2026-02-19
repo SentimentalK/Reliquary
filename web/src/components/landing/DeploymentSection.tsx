@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Monitor, Smartphone, Cloud, Code2, Server, Shield, Command, Download, AlertTriangle } from 'lucide-react'
+import { Monitor, Smartphone, Cloud, Code2, Server, Shield, Command, Download, AlertTriangle, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TerminalWindow } from './TerminalWindow'
 import { cn } from '@/lib/utils'
 import { AlertCircle } from 'lucide-react';
 
 export type TabType = 'client' | 'server'
-type PlatformType = 'mac' | 'win' | 'android' | 'ios'
+type PlatformType = 'mac' | 'win' | 'linux' | 'android' | 'ios'
 type ServerType = 'docker' | 'prod' | 'trial'
 
 interface DeploymentSectionProps {
@@ -115,11 +115,22 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                     <Smartphone className="mr-3 h-5 w-5" /> {t('landing.deployment.platforms.android')}
                                 </Button>
                                 <Button
+                                    variant={platform === 'linux' ? 'secondary' : 'ghost'}
+                                    className="w-full justify-start h-12 text-base opacity-70"
+                                    onClick={() => setPlatform('linux')}
+                                >
+                                    <Terminal className="mr-3 h-5 w-5" />
+                                    {t('landing.deployment.platforms.linux')}
+                                    <span className="ml-2 text-xs opacity-60 font-normal">{t('landing.deployment.comingSoon')}</span>
+                                </Button>
+                                <Button
                                     variant={platform === 'ios' ? 'secondary' : 'ghost'}
                                     className="w-full justify-start h-12 text-base opacity-70"
                                     onClick={() => setPlatform('ios')}
                                 >
-                                    <Smartphone className="mr-3 h-5 w-5" /> {t('landing.deployment.platforms.ios')}
+                                    <Smartphone className="mr-3 h-5 w-5" />
+                                    {t('landing.deployment.platforms.ios')}
+                                    <span className="ml-2 text-xs opacity-60 font-normal">{t('landing.deployment.comingSoon')}</span>
                                 </Button>
                             </>
                         ) : (
@@ -231,29 +242,87 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                     </>
                                 )}
                                 {platform === 'win' && (
-                                    <TerminalWindow
-                                        title="PowerShell"
-                                        showCopy
-                                        onCopy={() => copyToClipboard('scoop bucket add sentimentalk https://github.com/sentimentalk/scoop-bucket\nscoop install reliquary')}
-                                    >
+                                    <>
+                                        <div className="mb-6">
+                                            <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+                                                {t('landing.deployment.steps.install')}
+                                            </h4>
+                                            <TerminalWindow
+                                                title="PowerShell"
+                                                showCopy
+                                                onCopy={() => copyToClipboard('scoop bucket add sentimentalk https://github.com/sentimentalk/scoop-bucket\nscoop install reliquary')}
+                                            >
+                                                <div className="text-muted-foreground mb-4 select-none italic">
+                                                    # {t('landing.deployment.tips.client.win')}
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <span className="text-blue-400">PS C:\&gt;</span>
+                                                    <span>scoop bucket add sentimentalk https://github.com/sentimentalk/scoop-bucket</span>
+                                                </div>
+                                                <div className="text-muted-foreground/70 mb-3 select-none">
+                                                    Checking repo... ok<br />
+                                                    The sentimentalk bucket was added successfully.
+                                                </div>
+                                                <div className="flex gap-2">
+                                                    <span className="text-blue-400">PS C:\&gt;</span>
+                                                    <span>scoop install reliquary</span>
+                                                </div>
+                                                <div className="text-muted-foreground/70 mt-3 select-none">
+                                                    Installing 'reliquary' (1.0.0) [64bit]<br />
+                                                    Reliquary installed successfully!
+                                                </div>
+                                            </TerminalWindow>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+                                                {t('landing.deployment.steps.usage')}
+                                            </h4>
+                                            <div className="group relative">
+                                                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-xl blur opacity-0 group-hover:opacity-100 transition duration-500" />
+                                                <TerminalWindow
+                                                    title="PowerShell"
+                                                    showCopy
+                                                    className="relative bg-zinc-950 border-zinc-900 text-zinc-50 shadow-2xl dark:bg-zinc-50 dark:text-zinc-950 dark:border-zinc-200"
+                                                    headerClassName="bg-zinc-900 border-zinc-800 dark:bg-zinc-100 dark:border-zinc-200"
+                                                    onCopy={() => copyToClipboard('reliquary')}
+                                                >
+                                                    <div className="text-zinc-500 mb-4 select-none italic dark:text-zinc-400">
+                                                        # {t('landing.deployment.tips.client.win_usage')}
+                                                    </div>
+                                                    <div className="flex gap-2 font-medium">
+                                                        <span className="text-blue-400">PS C:\&gt;</span>
+                                                        <span>reliquary</span>
+                                                    </div>
+                                                    <div className="text-green-500/80 mt-3 font-medium dark:text-green-600/90 space-y-1">
+                                                        <div className="flex gap-2">
+                                                            <span>✔</span>
+                                                            <span>Reliquary Client Started...</span>
+                                                        </div>
+                                                        <div className="flex gap-2 text-zinc-400 dark:text-zinc-500">
+                                                            <span>?</span>
+                                                            <span>{t('landing.deployment.tips.client.mac_usage_step1')}: <span className="text-zinc-500 dark:text-zinc-400">http://localhost:8080</span></span>
+                                                        </div>
+                                                        <div className="flex gap-2 text-zinc-400 dark:text-zinc-500">
+                                                            <span>?</span>
+                                                            <span>{t('landing.deployment.tips.client.mac_usage_step2')}: <span className="text-zinc-500 dark:text-zinc-400">********</span></span>
+                                                        </div>
+                                                        <div className="flex gap-2 text-zinc-500 dark:text-zinc-400 mt-2">
+                                                            <span>Listening on localhost:8080...</span>
+                                                        </div>
+                                                    </div>
+                                                </TerminalWindow>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                                {platform === 'linux' && (
+                                    <TerminalWindow title="Bash">
                                         <div className="text-muted-foreground mb-4 select-none italic">
-                                            # {t('landing.deployment.tips.client.win')}
+                                            # {t('landing.deployment.tips.client.linux')}
                                         </div>
-                                        <div className="flex gap-2">
-                                            <span className="text-blue-400">PS C:\&gt;</span>
-                                            <span>scoop bucket add sentimentalk https://github.com/sentimentalk/scoop-bucket</span>
-                                        </div>
-                                        <div className="text-muted-foreground/70 mb-3 select-none">
-                                            Checking repo... ok<br />
-                                            The sentimentalk bucket was added successfully.
-                                        </div>
-                                        <div className="flex gap-2">
-                                            <span className="text-blue-400">PS C:\&gt;</span>
-                                            <span>scoop install reliquary</span>
-                                        </div>
-                                        <div className="text-muted-foreground/70 mt-3 select-none">
-                                            Installing 'reliquary' (1.0.0) [64bit]<br />
-                                            Reliquary installed successfully!
+                                        <div className="text-muted-foreground/70">
+                                            {t('landing.deployment.tips.client.pending')}
                                         </div>
                                     </TerminalWindow>
                                 )}
@@ -262,28 +331,8 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                         <div className="text-muted-foreground mb-4 select-none italic">
                                             # {t('landing.deployment.tips.client.android')}
                                         </div>
-                                        <div className="text-muted-foreground/70">
-                                            <span className="text-yellow-500"># Android client available on GitHub Releases</span><br /><br />
-                                            1. Enable "Install from Unknown Sources"<br />
-                                            2. Download the latest APK<br /><br />
-                                            <a
-                                                href="https://github.com/sentimentalk/reliquary/releases"
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-primary hover:underline underline-offset-4"
-                                            >
-                                                &gt; Go to GitHub Releases
-                                            </a>
-                                        </div>
-                                    </TerminalWindow>
-                                )}
-                                {platform === 'ios' && (
-                                    <TerminalWindow title="iOS Sideload">
-                                        <div className="text-muted-foreground mb-4 select-none italic">
-                                            # {t('landing.deployment.tips.client.ios')}
-                                        </div>
                                         <div className="text-muted-foreground/90 space-y-2 font-mono text-sm leading-relaxed">
-                                            {t('landing.deployment.tips.client.ios_steps').split('\n').map((step, i) => (
+                                            {t('landing.deployment.tips.client.android_steps').split('\n').map((step, i) => (
                                                 <div key={i} className="flex gap-2">
                                                     <span className="text-blue-400 select-none">[{i + 1}]</span>
                                                     <span>{step}</span>
@@ -297,12 +346,28 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                                     className="text-primary hover:underline underline-offset-4 flex items-center gap-2"
                                                 >
                                                     <Download className="h-4 w-4" />
-                                                    Download .ipa from GitHub
+                                                    {t('landing.deployment.tips.client.android_download')}
                                                 </a>
                                             </div>
                                         </div>
                                     </TerminalWindow>
                                 )}
+                                {platform === 'ios' && (
+                                    <TerminalWindow title="iOS">
+                                        <div className="text-muted-foreground mb-4 select-none italic">
+                                            # {t('landing.deployment.tips.client.ios')}
+                                        </div>
+                                        <div className="text-muted-foreground/70">
+                                            {t('landing.deployment.tips.client.pending')}
+                                        </div>
+                                    </TerminalWindow>
+                                )}
+                                <div className="mt-8 flex items-start gap-3 text-rose-600 bg-rose-50/50 p-4 rounded-lg border border-rose-200/60">
+                                    <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                                    <p className="text-sm md:text-base leading-relaxed font-medium">
+                                        {t('landing.deployment.groqWarning')}
+                                    </p>
+                                </div>
                             </>
                         )}
 
@@ -386,7 +451,7 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                                     </code>
                                                 </p>
 
-                                                <div className="flex items-start gap-3 text-rose-600 bg-rose-50/50 p-4 rounded-lg border border-rose-200/60 shadow-inner">
+                                                <div className="flex items-start gap-3 text-rose-600 bg-rose-50/50 p-4 rounded-lg border border-rose-200/60">
                                                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                                                     <p className="text-sm md:text-base leading-relaxed font-medium">
                                                         {t('landing.deployment.tips.trial.warning')}

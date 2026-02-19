@@ -171,8 +171,10 @@
         "mac": "macOS",
         "win": "Windows",
         "android": "Android",
+        "linux": "Linux",
         "ios": "iOS"
       },
+      "comingSoon": "(Coming Soon)",
       "methods": {
         "docker": "本地 (推荐)",
         "prod": "私有服务器",
@@ -185,8 +187,14 @@
           "mac_usage_step1": "输入后端地址 (本地部署输入 http://localhost:8080, 远程部署输入网址)",
           "mac_usage_step2": "输入您的个人访问令牌 (在后端设置页面获取)",
           "win": "使用 Scoop 安装可以获得最佳体验。",
+          "win_usage": "安装完成后，每次通过命令行启动。",
           "android": "Android 客户端目前未上架 Google Play，请直接下载 APK。",
-          "ios": "iOS 客户端开发中，敬请期待。"
+          "android_steps": "启用“安装未知来源应用”权限\n下载并安装最新版 APK",
+          "android_download": "前往 GitHub Releases 下载",
+          "linux": "Linux 版本正在积极适配中，敬请期待。",
+          "ios": "iOS 客户端开发中，敬请期待。",
+          "ios_download": "前往 GitHub 下载 .ipa",
+          "pending": "功能开发中，敬请关注 GitHub 仓库更新。"
         },
         "server": {
           "docker": "快速启动开发环境，适合本地测试。",
@@ -200,7 +208,9 @@
           "warning": "你的账号与所有产生的语音数据将在注册 24 小时后被彻底、永久删除。",
           "action": "使用邀请码注册"
         }
-      }
+
+      },
+      "groqWarning": "注意：需在后端网页填入 Groq API Key，否则无法使用。"
     },
     "footer": {
       "copyright": "© 2024-2026 Reliquary Project. Open Core.",
