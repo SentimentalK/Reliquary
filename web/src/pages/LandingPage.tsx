@@ -6,25 +6,26 @@ import {
     Zap,
     Container,
     Terminal,
-    ArrowRight,
     Download,
     LogIn,
     Globe,
     Moon,
     Sun,
     Laptop,
-    Info,
     Coins
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { DeploymentSection } from '@/components/landing/DeploymentSection'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import { SUPPORTED_LANGUAGES } from '@/lib/i18n-utils'
+import { useState } from 'react'
 
 export default function LandingPage() {
+    const [deploymentTab, setDeploymentTab] = useState<'client' | 'server'>('client')
     const { t, i18n } = useTranslation()
     const navigate = useNavigate()
     const { isAuthenticated } = useAuthStore()
@@ -172,39 +173,33 @@ export default function LandingPage() {
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
-                        <Button size="lg" className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform">
+                        <Button
+                            size="lg"
+                            className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+                            onClick={() => {
+                                setDeploymentTab('client')
+                                document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
+                            }}
+                        >
                             <Download className="mr-2 h-5 w-5" />
                             {t('landing.download')}
                         </Button>
-                        <Button variant="outline" size="lg" className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-accent/50 hover:scale-105 transition-transform">
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-accent/50 hover:scale-105 transition-transform"
+                            onClick={() => {
+                                setDeploymentTab('server')
+                                document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
+                            }}
+                        >
                             <Terminal className="mr-2 h-5 w-5" />
                             {t('landing.docker')}
                         </Button>
                     </div>
 
                     {/* Terminal Preview Hint */}
-                    <div className="pt-8 w-full max-w-3xl mx-auto opacity-70 hover:opacity-100 transition-opacity duration-500">
-                        <div className="rounded-lg border bg-card/50 backdrop-blur text-left overflow-hidden shadow-2xl">
-                            <div className="flex items-center gap-2 border-b bg-muted/50 px-4 py-2.5">
-                                <div className="h-3 w-3 rounded-full bg-red-500/80" />
-                                <div className="h-3 w-3 rounded-full bg-yellow-500/80" />
-                                <div className="h-3 w-3 rounded-full bg-green-500/80" />
-                                <span className="ml-2 text-xs text-muted-foreground font-mono">bash — 80x24</span>
-                            </div>
-                            <div className="p-4 font-mono text-sm text-muted-foreground">
-                                <div className="flex gap-2">
-                                    <span className="text-primary">➜</span>
-                                    <span className="text-foreground">docker compose up -d</span>
-                                </div>
-                                <div className="mt-2 text-green-400">✔ Container reliquary-server  Started</div>
-                                <div className="text-green-400">✔ Container reliquary-web     Started</div>
-                                <div className="mt-2 text-foreground/80">
-                                    Server running at http://localhost:8080<br />
-                                    Web Interface ready at http://localhost:3000
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Features Grid */}
@@ -230,51 +225,7 @@ export default function LandingPage() {
 
 
 
-                {/* Bottom CTA (Honest Trial Info) */}
-                <div className="mt-32 px-4 py-16 text-center max-w-3xl mx-auto space-y-8">
-                    <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                        {t('landing.trial.title')}<span className="text-foreground">{t('landing.trial.titleStrong')}</span>
-                    </h2>
-
-                    <div className="text-lg text-muted-foreground space-y-4 text-left sm:text-center">
-                        <p>
-                            {t('landing.trial.p1')}
-                        </p>
-                        <p>
-                            {t('landing.trial.p2a')} <code className="text-rose-500 font-mono font-bold bg-rose-500/10 px-3 py-1 rounded-md mx-1 select-all">{t('landing.trial.code')}</code> {t('landing.trial.p2b')}
-                        </p>
-
-                        <div className="inline-flex items-start sm:items-center gap-3 bg-rose-500/10 border border-rose-500/20 px-5 py-3 rounded-lg text-left sm:text-center mt-2 mx-auto">
-                            <Info className="h-5 w-5 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
-                            <p className="font-medium text-rose-500/90 text-base">
-                                {t('landing.trial.p3')}
-                            </p>
-                        </div>
-
-                        <p className="pt-2">
-                            {t('landing.trial.p4')}
-                        </p>
-                    </div>
-
-                    <div className="pt-8 flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button
-                            size="lg"
-                            className="h-12 px-8 text-base hover:scale-105 transition-transform"
-                            onClick={() => navigate('/login')}
-                        >
-                            {t('landing.trial.btnTrial')} <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            className="h-12 px-8 text-base hover:scale-105 transition-transform"
-                            onClick={() => window.open('https://github.com/sentimentalk/reliquary', '_blank')}
-                        >
-                            <Terminal className="mr-2 h-5 w-5" />
-                            {t('landing.trial.btnDocs')}
-                        </Button>
-                    </div>
-                </div>
+                <DeploymentSection tab={deploymentTab} onTabChange={setDeploymentTab} />
             </main>
 
             <footer className="border-t border-border/40 bg-background/50 backdrop-blur py-8 mt-24">

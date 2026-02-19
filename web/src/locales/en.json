@@ -127,7 +127,7 @@
     "heroDesc2": "Relax. Reliquary is your broadband link to the Super-Individual.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
-    "docker": "Docker Deploy",
+    "docker": "Backend Deploy",
     "features": {
       "sovereignty": {
         "title": "Digital Sovereignty",
@@ -154,17 +154,53 @@
         "desc": "Physical-level security with one-click convenience. Minimalist Docker deployment, service up in 30 seconds. Data is deadlocked on your local hard drive, physically isolated from any cloud censorship or prying eyes."
       }
     },
-    "trial": {
-      "title": "Trial Only, ",
-      "titleStrong": "No Data Retention",
-      "p1": "We do not provide commercial services. The trial is set up to lower the barrier for beginners and save you the trouble of blind deployment.",
-      "p2a": "Enter invite code",
-      "code": "reliquary-1day-demo",
-      "p2b": "to unlock a 1-day full experience.",
-      "p3": "Your account and all generated voice data will be completely and permanently deleted 24 hours after registration.",
-      "p4": "After the experience, we strongly recommend checking the documentation for local deployment to keep the data in your own hands.",
-      "btnTrial": "Use Invite Code",
-      "btnDocs": "View Deployment Docs"
+    "deployment": {
+      "title": "Get Started",
+      "subtitle": "Choose the best way to deploy. We also provide a one-click trial environment.",
+      "tabs": {
+        "client": "Install Client",
+        "server": "Deploy Backend"
+      },
+      "steps": {
+        "install": "Installation",
+        "usage": "Usage"
+      },
+      "platform": "Platform",
+      "method": "Method",
+      "platforms": {
+        "mac": "macOS",
+        "win": "Windows",
+        "android": "Android",
+        "ios": "iOS"
+      },
+      "methods": {
+        "docker": "Local (Recommended)",
+        "prod": "Production",
+        "trial": "Online Trial"
+      },
+      "tips": {
+        "client": {
+          "mac": "Recommended to use Homebrew, we'll handle audio permissions automatically.",
+          "mac_usage": "Run from command line after installation.",
+          "mac_usage_step1": "Enter server URL (e.g. https://reliquary.app)",
+          "mac_usage_step2": "Enter your personal access token",
+          "win": "Use Scoop for the best experience.",
+          "android": "Android client is not on Google Play yet, please download via APK.",
+          "ios": "iOS client is under development. Coming soon."
+        },
+        "server": {
+          "docker": "Quick start for development/testing.",
+          "prod": "Production deployment using docker-compose.prod.yml. Please configure .env.",
+          "trial": "No deployment needed. Data will be destroyed after 24 hours."
+        },
+        "trial": {
+          "title": "Trial Only, No Data Retention",
+          "desc": "Non-commercial service. Trial mode is for testing without deployment.",
+          "inviteLabel": "Use Invite Code:",
+          "warning": "Your account and ALL data will be permanently deleted after 24 hours.",
+          "action": "Register with Code"
+        }
+      }
     },
     "footer": {
       "copyright": "© 2024-2026 Reliquary Project. Open Core.",

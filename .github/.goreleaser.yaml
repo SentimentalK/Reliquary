@@ -63,7 +63,7 @@ brews:
     name: reliquary
     
     homepage: "https://github.com/SentimentalK/Reliquary"
-    description: "Your digital asset guardian."
+    description: "Reliquary: Your Digital Phylactery."
     license: "Private" 
 
 scoops:
@@ -74,5 +74,5 @@ scoops:
     
     name: reliquary
     homepage: "https://github.com/SentimentalK/Reliquary"
-    description: "Your digital asset guardian."
+    description: "Reliquary: Your Digital Phylactery."
     license: "Private"

@@ -123,8 +123,8 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "构建你的",
     "heroSubtitleStrong": "数字命匣",
-    "heroDesc": "还没用到大模型算力的1%？",
-    "heroDesc2": "别慌, 极致的语音输入带你接通超级个体的宽带光纤",
+    "heroDesc": "绝大部分人还没用到大模型算力的1%",
+    "heroDesc2": "别慌, Reliquary是你连接超级个体的宽带光纤",
     "version": "v1.0.0 Stable Available",
     "download": "下载客户端",
     "docker": "Docker 部署",
@@ -154,17 +154,53 @@
         "desc": "物理级的安全，一键即用的便利。极简 Docker 部署，30 秒拉起服务。数据死死锁在本地硬盘，物理隔绝任何云端审查与窥探。"
       }
     },
-    "trial": {
-      "title": "仅供体验，",
-      "titleStrong": "绝不留存数据",
-      "p1": "我目前不提供商业服务。设立试用仅为降低小白门槛，免去你盲目部署的麻烦。",
-      "p2a": "注册时输入邀请码",
-      "code": "reliquary-1day-demo",
-      "p2b": "即可获得限时完整体验。",
-      "p3": "你的账号与所有产生的语音数据将在注册24小时后被彻底、永久删除。",
-      "p4": "体验满意后，我强烈建议你查阅文档进行本地部署，让数据留在自己手里。",
-      "btnTrial": "使用邀请码体验",
-      "btnDocs": "查看部署文档"
+    "deployment": {
+      "title": "从这里开始",
+      "subtitle": "选择最适合你的部署方式。我们也提供一键试用环境。",
+      "tabs": {
+        "client": "安装客户端",
+        "server": "部署后端"
+      },
+      "steps": {
+        "install": "安装",
+        "usage": "使用"
+      },
+      "platform": "选择平台",
+      "method": "部署方式",
+      "platforms": {
+        "mac": "macOS",
+        "win": "Windows",
+        "android": "Android",
+        "ios": "iOS"
+      },
+      "methods": {
+        "docker": "本地 (推荐)",
+        "prod": "私有服务器",
+        "trial": "在线试用"
+      },
+      "tips": {
+        "client": {
+          "mac": "推荐使用 Homebrew 安装，我们会自动处理音频权限。",
+          "mac_usage": "安装完成后，每次通过命令行启动。",
+          "mac_usage_step1": "输入后端地址 (本地部署输入 http://localhost:8080, 远程部署输入网址)",
+          "mac_usage_step2": "输入您的个人访问令牌 (在后端设置页面获取)",
+          "win": "使用 Scoop 安装可以获得最佳体验。",
+          "android": "Android 客户端目前未上架 Google Play，请直接下载 APK。",
+          "ios": "iOS 客户端开发中，敬请期待。"
+        },
+        "server": {
+          "docker": "快速启动开发环境，适合本地测试。",
+          "prod": "生产环境部署，使用 docker-compose.prod.yml，请务必配置 .env。",
+          "trial": "无需部署，直接体验。数据将在 24 小时后自动销毁。"
+        },
+        "trial": {
+          "title": "仅供体验，绝不留存数据",
+          "desc": "我目前不提供商业服务。设立试用仅为降低门槛，免去你部署的麻烦。",
+          "inviteLabel": "注册时输入邀请码：",
+          "warning": "你的账号与所有产生的语音数据将在注册 24 小时后被彻底、永久删除。",
+          "action": "使用邀请码注册"
+        }
+      }
     },
     "footer": {
       "copyright": "© 2024-2026 Reliquary Project. Open Core.",
