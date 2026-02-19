@@ -213,7 +213,7 @@
       "groqWarning": "注意：需在后端网页填入 Groq API Key，否则无法使用。"
     },
     "footer": {
-      "copyright": "© 2024-2026 Reliquary Project. Open Core.",
+      "copyright": "© 2026 Reliquary Project. Open Core.",
       "license": "MIT License",
       "privacy": "Privacy",
       "terms": "Terms",

@@ -212,7 +212,7 @@
       "groqWarning": "Note: You must enter the Groq API Key in the backend settings, otherwise it will not work."
     },
     "footer": {
-      "copyright": "© 2024-2026 Reliquary Project. Open Core.",
+      "copyright": "© 2026 Reliquary Project. Open Core.",
       "license": "MIT License",
       "privacy": "Privacy",
       "terms": "Terms",

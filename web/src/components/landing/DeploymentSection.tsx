@@ -362,7 +362,7 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                         </div>
                                     </TerminalWindow>
                                 )}
-                                <div className="mt-8 flex items-start gap-3 text-rose-600 bg-rose-50/50 p-4 rounded-lg border border-rose-200/60">
+                                <div className="mt-8 flex items-start gap-3 text-rose-600 bg-rose-50/50 border-rose-200/60 dark:text-rose-400 dark:bg-rose-900/20 dark:border-rose-800/50 p-4 rounded-lg border">
                                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                                     <p className="text-sm md:text-base leading-relaxed font-medium">
                                         {t('landing.deployment.groqWarning')}
@@ -451,7 +451,7 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                                     </code>
                                                 </p>
 
-                                                <div className="flex items-start gap-3 text-rose-600 bg-rose-50/50 p-4 rounded-lg border border-rose-200/60">
+                                                <div className="flex items-start gap-3 text-rose-600 bg-rose-50/50 border-rose-200/60 dark:text-rose-400 dark:bg-rose-900/20 dark:border-rose-800/50 p-4 rounded-lg border">
                                                     <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                                                     <p className="text-sm md:text-base leading-relaxed font-medium">
                                                         {t('landing.deployment.tips.trial.warning')}
