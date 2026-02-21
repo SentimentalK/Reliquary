@@ -16,53 +16,59 @@
   <img src="https://img.shields.io/badge/Status-Production%20Ready-orange.svg" alt="Status">
 </div>
 
-## Why I Built This Project
+## Why I Built This
 
-**Without large language models (LLMs), Reliquary shouldn't exist.** Its sole value lies in shattering the input bottleneck, acting as a high-bandwidth pipeline perfectly tuned for human-AI token streams.
+**Most people simply don't need voice input.**
 
-You are likely paying a premium for flagship LLMs, yet the physical QWERTY bottleneck leaves 99% of their capabilities tapped out. Reliquary unblocks this. As a power user, my daily throughput using this tool consistently redlines top-tier models.
+Its only true value is acting as a high-bandwidth link between humans and AI.
 
-Current voice interaction tooling is fundamentally flawed:
+If you aren't a heavy AI user, Reliquary is worthless to you. But if you are, it eliminates interaction friction, allowing you to seamlessly sync with your AI exobrain and focus entirely on deep thinking.
 
-- **The free tier is broken**: Plagued by hallucinated transcripts. Miss one domain-specific term, and your downstream prompt turns into complete garbage (GIGO).
-- **SaaS traps**: You pay extra for marginally better inference, while explicitly locking your most intimate thought processes inside a walled garden.
-- **Zero fault tolerance**: Brainstorm for two minutes, and a single network hiccup or API timeout sends your entire context straight to `/dev/null`. You're left staring at the void. It’s a devastating UX.
+**The Reality:**
 
-Reliquary is a high-bandwidth exocortex interface engineered to solve this. It’s not a voice recorder—it’s an LLM-assisted thought funnel. It untethers you from the keyboard, enabling true speed-of-thought interaction, and finally delivers the ROI you deserve from your premium AI runtimes.
+You pay premium subscriptions for flagship models, yet barely scratch the surface of their potential. The real bottleneck is no longer the model's capability, but the friction of human-computer interaction.
+
+Written input has an absurdly high barrier. Inspiration is multi-dimensional and divergent. Forcing it into text requires you to untangle logic, select exact words, and police your grammar. This "dimensional reduction" of thought carries a massive cognitive load, causing details and fleeting ideas to vanish in the process.
+
+Since using Reliquary, the depth and frequency of my AI interactions have skyrocketed. The AI is no longer a passive tool; it's a symbiotic exobrain that catches every chaotic spark of inspiration.
+
+I've tried every voice tool on the market. They all suffer from unbearable flaws:
+
+- **Aggressive Cutoffs & Pressure**: Pause for a single second to think, and the system prematurely cuts you off and replies. It forces you into a breathless rapid-fire interrogation, interrupting your flow, polluting the context window, and creating massive psychological pressure.
+
+- **Unreliable Free Tools**: Riddled with transcription errors. One misheard technical term or mixed-language phrase, and the AI outputs complete garbage.
+
+- **Overpriced & Walled Gardens**: Premium tools charge heavily without fundamentally improving the core experience, all while locking your private thoughts in their cloud.
+
+- **Devastating Single Points of Failure**: You talk passionately for minutes, a network blip occurs, and hundreds of words vanish instantly. You can't even remember what you just said. The inspiration evaporates, leaving you completely derailed and frustrated.
+
+The Reliquary Solution: A voice bridge engineered specifically for high-frequency AI interaction. Powered by a self-correcting mechanism, it enables zero-friction dialogue with your AI.
 
 ## Core Features
 
-### 1. Absolute Certainty (The Fixer Pipeline)
+### 1. AI-Powered Auto-Correction
 
-**You no longer need to keep your eyes glued to the screen to verify transcription accuracy.**
+Built on Whisper Large-v3 and a dedicated LLM "Fixer" pipeline. Even if the initial transcription struggles, it uses context to automatically fix grammar, resolve homophones, and format code blocks.
 
-The built-in LLM-driven Fixer Pipeline seamlessly untangles domain-specific jargon and mixed-language speech. It autonomously patches syntactic drift, resolves homophones, and injects markdown for code blocks. Just brain-dump your chaos—Reliquary curates it into a pristine, zero-shot prompt that perfectly encapsulates your intent.
+It fully supports custom glossaries and Prompts, allowing you to build a correction engine tailored perfectly to your workflow.
 
-### 2. Zero Data Loss Guarantee
+### 2. Bulletproof Fallback
 
-**Eliminate the fear of talking to the void at a fundamental level.**
+Raw audio is streamed and saved locally in real-time. Whether the network drops or the API crashes, your data is never lost. One click to retry.
 
-Before a single byte hits the network, your raw audio streams are aggressively persisted to local storage. Network drops, API rate limits, or backend panics? Doesn't matter. If you said it, it’s safely immutable on your SSD. We refuse to let transient technical glitches vaporize your flow state.
+### 3. Pressure-Free Flow
 
-### 3. Zero-Friction Flow State
+- **Infinite Pause Time**: Take all the time you need; it never rushes you.
+- **Embrace the Chaos**: Speak incoherently, ramble, or contradict yourself.
+- **Silent Refactoring**: The backend LLM acts as a silent editor, weaving your raw, chaotic thoughts into crisp, perfect instructions.
 
-**Say goodbye to aggressive auto-cutoffs.**
+### 4. Your Data Sovereignty
 
-- Pace the room, lie on the couch, or eat your lunch. Stop pre-compiling your sentences before speaking. Stutter, ramble, and pause for minutes at a time. You have infinite TTL to think, while the backend silently distills your async brain-dump into a highly structured payload.
+All logs are stored locally by default. Your thought processes belong to you. These records are future-proofed to serve as your personal RAG memory bank.
 
-### 4. Future-Proof Data Assets
+### 5. Free & Uncompromising
 
-**Every piece of high-value thought shouldn't just be a flash in the pan.**
-
-- **Local-First Architecture**: Audio and text artifacts default to your local filesystem.
-- **Bootstrapping Your RAG**: This isn't just an input interface; it’s building your corpus. Future roadmap integrations will allow these logs to act as a goldmine for local vector embeddings and personalized multi-agent retrieval.
-
-### 5. Enterprise-Grade Infrastructure, Ultimate Efficiency
-
-**Built by an uncompromising power user. I ate the backend complexity so you get a frictionless, zero-overhead input workflow.**
-
-- **Open & Free**: Open-sourced under the MIT license. No subscriptions, no paywalls.
-- **Architectural Arbitrage**: Architecturally optimized for the free resource tiers of top compute providers (e.g., Groq). Even when processing hundreds of high-frequency commands daily, it maintains sub-second responses and incurs zero costs.
+As an extremely picky power user, I engineered this to perfection and open-sourced it (MIT). Optimized specifically for free, high-speed API tiers (like Groq), it handles high-frequency usage with zero extra cost.
 
 
 ## Quick Start
@@ -292,7 +298,7 @@ flowchart TB
 **License**: This project is open-sourced under the MIT License. You are free to fork, modify, and distribute the code.
 
 **Trademarks**:
-The "Reliquary" name and Logo (located in `web/public/*.svg`) are trademarks of the project creator.
+The "Reliquary" name and Logo (specifically `web/public/logo.svg`, `web/public/logo-nav.svg`, and `web/public/favicon.svg`) are trademarks of the project creator.
 
 - ✅ You **MAY** use the logo for personal use or when deploying an unmodified version of this software.
 - ❌ You **MAY NOT** use the logo to endorse derived works or commercial products without explicit permission.
