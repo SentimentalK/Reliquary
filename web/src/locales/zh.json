@@ -123,35 +123,35 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "构建你的",
     "heroSubtitleStrong": "数字命匣",
-    "heroDesc": "绝大部分人还没用到大模型算力的1%",
-    "heroDesc2": "别慌, Reliquary是你连接超级个体的宽带光纤",
+    "heroDesc": "绝大部分人连大模型 1% 的算力都榨不出来。",
+    "heroDesc2": "Reliquary 以思维的原始流速，全功率运转你的 AI 外脑。",
     "version": "v1.0.0 Stable Available",
     "download": "下载客户端",
     "docker": "Docker 部署",
     "features": {
       "sovereignty": {
-        "title": "数字主权",
-        "desc": "你的数据，是 AI 成为你“外脑”的唯一门票。大厂模型只懂通用知识，不懂你。Reliquary 帮你积累私有数据湖，让未来的 AI 真正理解你的语境，成为无法替代的专属副手。"
+        "title": "数据期权与主权",
+        "desc": "拒绝将高价值思考锁定在大厂云端。所有交互数据 Local First，将每天的高频输入转化为你个人的私有训练集，为未来的数字分身铺路。"
       },
       "recall": {
-        "title": "全量检索",
-        "desc": "拒绝“数据坟墓”，让记忆随时待命。自动将非结构化的语音流转化为结构化的资产。无论是上周的灵感还是去年的会议细节，都能被索引、被挖掘。"
+        "title": "全量检索 (RAG)",
+        "desc": "拒绝“只写不读”的数据坟墓。本地沉淀的所有非结构化语音都将被转化为结构化资产。随时向你的过去发起 Query，让数字记忆随时待命。"
       },
       "efficiency": {
-        "title": "极致效率",
-        "desc": "3 倍于打字的速度，100% 的完整语境。杜绝激进的打断机制，允许你一次性说完复杂的长逻辑。完整的长上下文能极大减少 AI 的幻觉，让输出质量更高。"
+        "title": "无感心流与确定感",
+        "desc": "告别激进的静音打断。拥有无限思考时间，内置 The Fixer 管道自动修复中英夹杂与语法逻辑，将混乱结巴精准提炼为完美 Prompt。"
       },
       "cost": {
-        "title": "零成本",
-        "desc": "免费享受企业级的极速体验。通过精妙的架构设计，合法利用顶级科技公司（如 Groq）的免费 API 额度。每天处理数百条高强度指令，秒级响应，不花一分钱。"
+        "title": "极致架构套利",
+        "desc": "零成本享受企业级算力。专为顶级提供商（如 Groq）免费资源层优化的精妙架构。日均处理数百条高强度指令，保持亚秒级响应。"
       },
       "pipeline": {
-        "title": "可编程管道",
-        "desc": "像搭积木一样定义你的工作流。数据如何流转、如何处理，全由你决定。通过简单的自然语言配置，你可以自定义规则：自动提取待办、过滤敏感词、或推送到看板。"
+        "title": "可编程工作流",
+        "desc": "你的数据流向由你全权定义。支持将清洗后的标准化 JSON 推送至任意 Webhook，无论是静静写入 Obsidian，还是触发 n8n 自动化引擎。"
       },
       "fortress": {
-        "title": "私有化堡垒",
-        "desc": "物理级的安全，一键即用的便利。极简 Docker 部署，30 秒拉起服务。数据死死锁在本地硬盘，物理隔绝任何云端审查与窥探。"
+        "title": "物理级防丢兜底",
+        "desc": "从底层逻辑上消灭“付诸东流”的恐惧。极简 Docker 部署，所有音频流在请求前安全落盘。哪怕遇到断网宕机，灵感也绝不蒸发，一键重试。"
       }
     },
     "deployment": {
@@ -176,41 +176,41 @@
       },
       "comingSoon": "(Coming Soon)",
       "methods": {
-        "docker": "本地 (推荐)",
-        "prod": "私有服务器",
+        "docker": "Docker 本地部署",
+        "prod": "生产环境部署",
         "trial": "在线试用"
       },
       "tips": {
         "client": {
-          "mac": "推荐使用 Homebrew 安装，我们会自动处理音频权限。",
-          "mac_usage": "安装完成后，每次通过命令行启动。",
-          "mac_usage_step1": "输入后端地址 (本地部署输入 http://localhost:8080, 远程部署输入网址)",
-          "mac_usage_step2": "输入您的个人访问令牌 (在后端设置页面获取)",
-          "win": "使用 Scoop 安装可以获得最佳体验。",
-          "win_usage": "安装完成后，每次通过命令行启动。",
-          "android": "Android 客户端目前未上架 Google Play，请直接下载 APK。",
-          "android_steps": "启用“安装未知来源应用”权限\n下载并安装最新版 APK",
+          "mac": "推荐通过 Homebrew 安装，我们会自动帮你处理好音频权限配置：",
+          "mac_usage": "在终端中启动客户端。首次启动会有引导向导：",
+          "mac_usage_step1": "输入服务器地址 (例如: http://localhost:8080)",
+          "mac_usage_step2": "输入身份令牌 (从后端面板获取 Access Token)",
+          "win": "在 Windows 上，使用 Scoop 能获得最干净的安装体验：",
+          "win_usage": "在 PowerShell 中启动客户端。",
+          "android": "当前安卓端暂未上架 Google Play，请通过侧载 APK 完成安装：",
+          "android_steps": "开启手机的“允许安装未知来源应用”选项\n下载最新的 APK 包进行安装",
           "android_download": "前往 GitHub Releases 下载",
-          "linux": "Linux 版本正在积极适配中，敬请期待。",
-          "ios": "iOS 客户端开发中，敬请期待。",
-          "ios_download": "前往 GitHub 下载 .ipa",
+          "linux": "Linux 版本即将发布，敬请期待。",
+          "ios": "iOS 客户端正处于紧锣密鼓的开发中，敬请关注仓库进度。",
+          "ios_download": "开发中",
           "pending": "功能开发中，敬请关注 GitHub 仓库更新。"
         },
         "server": {
-          "docker": "快速启动开发环境，适合本地测试。",
-          "prod": "生产环境部署，使用 docker-compose.prod.yml，请务必配置 .env。",
+          "docker": "适合快速起步、测试和个人日常使用。",
+          "prod": "暴露在公网时强烈推荐。内置的 Caddy 会自动为你申请并续期 SSL 证书。",
+          "prod_edit": "填入你的真实域名，并根据需要修改密钥等重要环境变量。",
           "trial": "无需部署，直接体验。数据将在 24 小时后自动销毁。"
         },
         "trial": {
           "title": "仅供体验，绝不留存数据",
-          "desc": "我目前不提供商业服务。设立试用仅为降低门槛，免去你部署的麻烦。",
+          "desc": "非商业服务。设立试用仅为降低体验门槛，免去你初期部署的麻烦。",
           "inviteLabel": "注册时输入邀请码：",
-          "warning": "你的账号与所有产生的语音数据将在注册 24 小时后被彻底、永久删除。",
+          "warning": "你的账号与所有产生的语音及文本数据，将在注册 24 小时后被彻底、永久地抹除。",
           "action": "使用邀请码注册"
         }
-
       },
-      "groqWarning": "注意：需在后端网页填入 Groq API Key，否则无法使用。"
+      "groqWarning": "注意：需在后端设置中填入 Groq API Key 才能启用核心的识别与纠错能力。"
     },
     "footer": {
       "copyright": "© 2026 Reliquary Project. Open Core.",

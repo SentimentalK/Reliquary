@@ -107,7 +107,10 @@ export default function LandingPage() {
                         <a href="https://github.com/sentimentalk/reliquary" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
                             GitHub
                         </a>
-                        <a href="#" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
+                        <a href="https://discord.gg/rWtHcMvb" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
+                            Discord
+                        </a>
+                        <a href="https://github.com/sentimentalk/reliquary#readme" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
                             Docs
                         </a>
 
@@ -142,11 +145,6 @@ export default function LandingPage() {
             <main className="container mx-auto px-4 py-16 md:py-24 lg:py-32">
                 {/* Hero Section */}
                 <div className="flex flex-col items-center text-center space-y-8 mb-24">
-                    <div className="inline-flex items-center rounded-full border border-primary/20 bg-secondary/50 px-3 py-1 text-sm font-medium text-secondary-foreground backdrop-blur-sm mb-4">
-                        <span className="flex h-2 w-2 rounded-full bg-primary mr-2 animate-pulse"></span>
-                        {t('landing.version')}
-                    </div>
-
                     {/* Prominent Logo & Name */}
                     <div className="flex flex-col items-center space-y-4">
                         <div className="relative group flex justify-center items-center mb-2">
@@ -242,9 +240,9 @@ export default function LandingPage() {
                         </a>
                     </div>
                     <div className="flex gap-6">
+                        <a href="https://discord.gg/rWtHcMvb" target="_blank" rel="noreferrer" className="hover:text-foreground">Discord</a>
                         <a href="#" className="hover:text-foreground">{t('landing.footer.privacy')}</a>
                         <a href="#" className="hover:text-foreground">{t('landing.footer.terms')}</a>
-                        {/* <a href="#" className="hover:text-foreground">{t('landing.footer.twitter')}</a> */}
                     </div>
                 </div>
             </footer>

@@ -7,6 +7,7 @@
     <a href="#connect-clients">Download Client</a> •
     <a href="#deploy-your-digital-fortress-server">Deploy Server</a> •
     <a href="#architecture">Architecture</a> •
+    <a href="https://discord.gg/rWtHcMvb">Discord</a> •
     <a href="docs/README.zh-CN.md">中文版</a>
   </p>
 
@@ -142,6 +143,50 @@ The Android app is currently not available on Google Play. Please complete the i
 
 - **Linux**: Coming soon, stay tuned.
 - **iOS**: The iOS client is currently under intensive development, please keep an eye on the repository's progress.
+</details>
+
+#### Build from Source (Local Build)
+
+If you prefer a hands-on approach, you can compile the client directly from the source code.
+
+<details>
+<summary><strong>Desktop (macOS / Windows / Linux)</strong></summary>
+
+**Requirements:** Go 1.21+
+
+```bash
+cd client
+go build -o reliquary ./cmd
+./reliquary
+```
+</details>
+
+<details>
+<summary><strong>Android</strong></summary>
+
+**Requirements:** Go 1.21+, Android SDK & NDK, Gomobile
+
+1. **Install Gomobile**:
+```bash
+go install golang.org/x/mobile/cmd/gomobile@latest
+gomobile init
+```
+
+2. **Build Core Library (.aar)**:
+```bash
+# Set NDK path (replace with your installed NDK version)
+export ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/26.3.11579264
+
+cd client
+gomobile bind -androidapi 26 -o android/app/libs/reliquary.aar -target=android ./mobile
+```
+
+3. **Build & Install APK**:
+```bash
+cd android
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
 </details>
 
 #### First Run Configuration Guide:

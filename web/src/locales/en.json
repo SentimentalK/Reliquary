@@ -123,43 +123,43 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "Build Your",
     "heroSubtitleStrong": "Digital Phylactery",
-    "heroDesc": "Most people utilize less than 1% of LLM capabilities.",
-    "heroDesc2": "Relax. Reliquary is your broadband link to the Super-Individual.",
+    "heroDesc": "Most people fail to unleash even 1% of an LLM's potential.",
+    "heroDesc2": "Reliquary runs your AI exocortex at full power, at the native speed of thought.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
-    "docker": "Backend Deploy",
+    "docker": "Docker Deploy",
     "features": {
       "sovereignty": {
-        "title": "Digital Sovereignty",
-        "desc": "Your data is the only ticket for AI to become your 'exocortex'. Big tech models only know general knowledge, not you. Reliquary helps you accumulate a private Data Lake, allowing future AI to truly understand your context and become an irreplaceable exclusive assistant."
+        "title": "Data Sovereignty",
+        "desc": "Stop locking your high-value thoughts in big tech clouds. All interactions are Local First. Transform your daily high-frequency inputs into a private training dataset, paving the way for your future digital twin."
       },
       "recall": {
-        "title": "Total Recall",
-        "desc": "Reject 'data tombs' and keep memories on standby. Automatically convert unstructured voice streams into structured assets. Whether it's an inspiration from last week or meeting details from last year, everything can be indexed and mined."
+        "title": "Total Recall (RAG)",
+        "desc": "Say goodbye to write-only data graveyards. Locally accumulated unstructured voice logs are automatically transformed into structured assets. Query your past at any time and keep your digital memory on standby."
       },
       "efficiency": {
-        "title": "Ultimate Efficiency",
-        "desc": "3x faster than typing, with 100% complete context. Eliminate aggressive interruption mechanisms, allowing you to articulate complex trains of thought in one go. Comprehensive long contexts significantly reduce AI hallucinations, resulting in higher output quality."
+        "title": "Frictionless Flow & Certainty",
+        "desc": "No more aggressive auto-cutoffs. Take all the time you need to think. The built-in Fixer pipeline automatically repairs mixed languages and grammatical logic, distilling your chaotic rambling into flawless prompts."
       },
       "cost": {
-        "title": "Zero Cost",
-        "desc": "Enjoy enterprise-grade speed for free. Through ingenious architectural design, legally utilize free API tiers from top tech companies (like Groq). Handle hundreds of high-intensity instructions daily with sub-second response times, without spending a penny."
+        "title": "Architectural Arbitrage",
+        "desc": "Enjoy enterprise-grade compute at zero cost. An ingenious architecture optimized for the free tiers of top compute providers (like Groq). Process hundreds of high-intensity commands daily with sub-second latency, completely free."
       },
       "pipeline": {
-        "title": "Programmable Pipeline",
-        "desc": "Define your workflow like building blocks. How data flows and is processed is entirely up to you. Through simple natural language configuration, you can customize rules: automatically extract to-dos, filter sensitive words, or push to a Kanban board."
+        "title": "Programmable Workflows",
+        "desc": "You dictate exactly where your data flows. Push sanitized, standardized JSON payloads to any Webhook—whether it's quietly logging to your Obsidian vault or triggering n8n automation engines."
       },
       "fortress": {
-        "title": "Private Fortress",
-        "desc": "Physical-level security with one-click convenience. Minimalist Docker deployment, service up in 30 seconds. Data is securely locked on your local hard drive, physically isolated from any cloud censorship or prying eyes."
+        "title": "Zero Data Loss Guarantee",
+        "desc": "Fundamentally eliminate the fear of talking to the void. With a minimalist Docker deployment, all audio streams are safely persisted to disk before hitting any API. Even during network drops, your inspiration never evaporates. Just hit retry."
       }
     },
     "deployment": {
       "title": "Get Started",
-      "subtitle": "Choose the best way to deploy. We also provide a one-click trial environment.",
+      "subtitle": "Choose your preferred deployment method. We also provide a one-click trial environment.",
       "tabs": {
         "client": "Install Client",
-        "server": "Deploy Backend"
+        "server": "Deploy Server"
       },
       "steps": {
         "install": "Installation",
@@ -176,40 +176,41 @@
       },
       "comingSoon": "(Coming Soon)",
       "methods": {
-        "docker": "Local (Recommended)",
-        "prod": "Production",
+        "docker": "Local Docker",
+        "prod": "Production Server",
         "trial": "Online Trial"
       },
       "tips": {
         "client": {
-          "mac": "Recommended to use Homebrew, we'll handle audio permissions automatically.",
-          "mac_usage": "Run from command line after installation.",
-          "mac_usage_step1": "Enter server URL (Local: http://localhost:8080, Remote: Your Server URL)",
-          "mac_usage_step2": "Enter your personal access token (get from backend settings)",
-          "win": "Use Scoop for the best experience.",
-          "win_usage": "Run from command line after installation.",
-          "android": "Android client is not on Google Play yet, please download via APK.",
-          "android_steps": "Enable \"Install from Unknown Sources\"\nDownload and install latest APK",
-          "android_download": "Go to GitHub Releases",
-          "linux": "Linux version is coming soon.",
-          "ios": "iOS client is under development. Coming soon.",
-          "ios_download": "Download .ipa from GitHub",
+          "mac": "Installation via Homebrew is recommended. We automatically handle audio permissions:",
+          "mac_usage": "Launch the client from your terminal. The initial setup will guide you:",
+          "mac_usage_step1": "Enter Server URL (e.g., http://localhost:8080)",
+          "mac_usage_step2": "Enter Access Token (Generated in the backend dashboard)",
+          "win": "On Windows, Scoop provides the cleanest installation experience:",
+          "win_usage": "Launch the client from PowerShell.",
+          "android": "Not available on Google Play yet. Please install by sideloading the APK:",
+          "android_steps": "Enable 'Install from Unknown Sources'\nDownload and install the latest APK",
+          "android_download": "Download from GitHub Releases",
+          "linux": "Linux version coming soon. Stay tuned.",
+          "ios": "The iOS client is under intensive development. Keep an eye on the repo.",
+          "ios_download": "In Development",
           "pending": "Feature under development. Please watch our GitHub repository for updates."
         },
         "server": {
-          "docker": "Quick start for development/testing.",
-          "prod": "Production deployment using docker-compose.prod.yml. Please configure .env.",
-          "trial": "No deployment needed. Data will be destroyed after 24 hours."
+          "docker": "Ideal for a quick start, testing, and daily personal use.",
+          "prod": "Strongly recommended for public exposure. The built-in Caddy server automatically provisions and renews SSL certificates.",
+          "prod_edit": "Fill in your actual domain and modify keys/environment variables as needed.",
+          "trial": "No deployment needed. Data will be automatically destroyed after 24 hours."
         },
         "trial": {
-          "title": "Trial Only, No Data Retention",
-          "desc": "Non-commercial service. Trial mode is for testing without deployment.",
-          "inviteLabel": "Use Invite Code:",
-          "warning": "Your account and ALL data will be permanently deleted after 24 hours.",
+          "title": "Trial Only, Zero Retention",
+          "desc": "We do not offer commercial services. This trial exists solely to lower the barrier to entry and save you the initial deployment hassle.",
+          "inviteLabel": "Enter invite code:",
+          "warning": "Your account and all generated voice/text data will be permanently and irreversibly wiped 24 hours after registration.",
           "action": "Register with Code"
         }
       },
-      "groqWarning": "Note: You must enter the Groq API Key in the backend settings, otherwise it will not work."
+      "groqWarning": "Note: You must configure your Groq API Key in the backend settings to enable core transcription and Fixer capabilities."
     },
     "footer": {
       "copyright": "© 2026 Reliquary Project. Open Core.",

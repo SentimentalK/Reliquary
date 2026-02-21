@@ -42,8 +42,15 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
 
     return (
         <section id="deployment" className="container mx-auto px-4 py-24 space-y-12">
-            <div className="text-center space-y-4">
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
+            <div className="flex flex-col items-center text-center space-y-4">
+                <div className="inline-flex items-center rounded-full border border-primary/20 bg-secondary/50 px-3 py-1 text-sm font-medium text-secondary-foreground backdrop-blur-sm mb-2">
+                    <span className="relative flex h-2 w-2 mr-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                    </span>
+                    {t('landing.version')}
+                </div>
+                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
                     {t('landing.deployment.title')}
                 </h2>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -404,21 +411,21 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                 {serverMode === 'prod' && (
                                     <TerminalWindow
                                         showCopy
-                                        onCopy={() => copyToClipboard('cp .env.example .env\nvim .env\ndocker compose -f docker-compose.prod.yml up -d')}
+                                        onCopy={() => copyToClipboard('vim .env\nvim Caddyfile\ndocker compose -f docker-compose.prod.yml up -d')}
                                     >
                                         <div className="text-muted-foreground mb-4 select-none italic">
                                             # {t('landing.deployment.tips.server.prod')}
                                         </div>
                                         <div className="flex gap-2">
                                             <span className="text-green-500">➜</span>
-                                            <span>cp .env.example .env</span>
+                                            <span>vim .env</span>
                                         </div>
                                         <div className="flex gap-2">
                                             <span className="text-green-500">➜</span>
-                                            <span>vim .env</span>
+                                            <span>vim Caddyfile</span>
                                         </div>
                                         <div className="text-muted-foreground/70 mb-3 select-none">
-                                            # Edit SECRET_KEY, Postgres password, etc.
+                                            # {t('landing.deployment.tips.server.prod_edit')}
                                         </div>
                                         <div className="flex gap-2">
                                             <span className="text-green-500">➜</span>

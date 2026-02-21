@@ -7,6 +7,7 @@
     <a href="#快速开始-客户端">下载客户端</a> •
     <a href="#部署你的数字堡垒-服务端">部署服务端</a> •
     <a href="#架构设计">架构设计</a> •
+    <a href="https://discord.gg/rWtHcMvb">Discord 交流</a> •
     <a href="../README.md">英文版</a>
   </p>
 
@@ -142,6 +143,50 @@ reliquary
 
 - **Linux**: 即将发布，敬请期待。
 - **iOS**: iOS 客户端正处于紧锣密鼓的开发中，敬请关注仓库进度。
+</details>
+
+#### 本地源码编译 (Build from Source)
+
+如果你更倾向于极客的方式，也可以完全通过源码在本地编译各个客户端。
+
+<details>
+<summary><strong>桌面端 (macOS / Windows / Linux)</strong></summary>
+
+**环境依赖**: Go 1.21+
+
+```bash
+cd client
+go build -o reliquary ./cmd
+./reliquary
+```
+</details>
+
+<details>
+<summary><strong>安卓端 (Android)</strong></summary>
+
+**环境依赖**: Go 1.21+, Android SDK & NDK, Gomobile
+
+1. **安装 Gomobile**:
+```bash
+go install golang.org/x/mobile/cmd/gomobile@latest
+gomobile init
+```
+
+2. **编译核心库 (.aar)**:
+```bash
+# 设置 NDK 路径（请替换为你本地实际的 NDK 路径）
+export ANDROID_NDK_HOME=$HOME/Library/Android/sdk/ndk/26.3.11579264
+
+cd client
+gomobile bind -androidapi 26 -o android/app/libs/reliquary.aar -target=android ./mobile
+```
+
+3. **编译并安装 APK**:
+```bash
+cd android
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
 </details>
 
 #### 初次运行配置指南：
