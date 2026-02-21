@@ -1,7 +1,7 @@
 <div align="center">
   <img src="web/public/logo.svg" alt="Reliquary Logo" width="180" height="180" />
   <h1>Reliquary</h1>
-  <p><strong>Run Your AI Exocortex at Full Power</strong></p>
+  <p><strong>A Zero-Friction Voice Bridge to Your AI Exobrain</strong></p>
 
   <p>
     <a href="#connect-clients">Download Client</a> •
@@ -22,15 +22,15 @@
 
 Its only true value is acting as a high-bandwidth link between humans and AI.
 
-If you aren't a heavy AI user, Reliquary is worthless to you. But if you are, it eliminates interaction friction, allowing you to seamlessly sync with your AI exobrain and focus entirely on deep thinking.
+If you aren't an AI power user, Reliquary is useless to you. But if you are, it eradicates input friction, letting you sync seamlessly with your AI exobrain for deep, uninterrupted thinking.
 
-**The Reality:**
+**The Real Bottleneck:**
 
-You pay premium subscriptions for flagship models, yet barely scratch the surface of their potential. The real bottleneck is no longer the model's capability, but the friction of human-computer interaction.
+You pay premium subscriptions for flagship models, yet barely scratch the surface of their potential. The bottleneck is no longer the AI's capability—it's the friction of getting thoughts into the machine.
 
-Written input has an absurdly high barrier. Inspiration is multi-dimensional and divergent. Forcing it into text requires you to untangle logic, select exact words, and police your grammar. This "dimensional reduction" of thought carries a massive cognitive load, causing details and fleeting ideas to vanish in the process.
+Typing exacts a massive cognitive tax. Raw inspiration is multi-dimensional and chaotic; forcing it into text requires you to prematurely untangle logic, curate vocabulary, and police your grammar. This forced "flattening" of thought creates a heavy cognitive load, causing fleeting nuances to evaporate before they ever hit the screen.
 
-Since using Reliquary, the depth and frequency of my AI interactions have skyrocketed. The AI is no longer a passive tool; it's a symbiotic exobrain that catches every chaotic spark of inspiration.
+Reliquary destroys this barrier, fundamentally shifting the paradigm. The AI evolves from a passive "Q&A dispenser" into a "logic collider." You can dump raw, unrefined intuition, engage in rapid-fire pushback to expose blind spots, and distill the absolute essence of your ideas. It’s how you finally crystallize half-formed thoughts into rigorous frameworks.
 
 I've tried every voice tool on the market. They all suffer from unbearable flaws:
 
