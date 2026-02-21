@@ -123,8 +123,8 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "Build Your",
     "heroSubtitleStrong": "Digital Phylactery",
-    "heroDesc": "Most people fail to unleash even 1% of an LLM's potential.",
-    "heroDesc2": "Reliquary runs your AI exocortex at full power, at the native speed of thought.",
+    "heroDesc": "Eradicate input friction and push your LLMs to their absolute limits.",
+    "heroDesc2": "Run your AI exobrain at full power, at the native speed of thought.",
     "version": "v1.0.0 Stable Available",
     "download": "Download Client",
     "docker": "Docker Deploy",
@@ -176,8 +176,8 @@
       },
       "comingSoon": "(Coming Soon)",
       "methods": {
-        "docker": "Local Docker",
-        "prod": "Production Server",
+        "docker": "Local Docker Deployment",
+        "prod": "Private Server Deployment",
         "trial": "Online Trial"
       },
       "tips": {

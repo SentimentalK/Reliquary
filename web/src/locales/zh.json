@@ -123,8 +123,8 @@
     "heroTitle": "Reliquary",
     "heroSubtitle": "构建你的",
     "heroSubtitleStrong": "数字命匣",
-    "heroDesc": "绝大部分人连大模型 1% 的算力都榨不出来。",
-    "heroDesc2": "Reliquary 以思维的原始流速，全功率运转你的 AI 外脑。",
+    "heroDesc": "消除人机交互摩擦力，榨干大模型算力",
+    "heroDesc2": "以思维的原始流速，全功率运转你的 AI 外脑",
     "version": "v1.0.0 Stable Available",
     "download": "下载客户端",
     "docker": "Docker 部署",
@@ -177,7 +177,7 @@
       "comingSoon": "(Coming Soon)",
       "methods": {
         "docker": "Docker 本地部署",
-        "prod": "生产环境部署",
+        "prod": "私有服务器部署",
         "trial": "在线试用"
       },
       "tips": {
