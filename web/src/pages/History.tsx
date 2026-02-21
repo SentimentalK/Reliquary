@@ -8,7 +8,8 @@ import {
     AlertTriangle,
     Activity,
     Download,
-    RotateCcw
+    RotateCcw,
+    KeyRound
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -205,6 +206,8 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting, onRet
     )
 }
 
+const GROQ_KEY_STORAGE = 'reliquary_groq_api_key'
+
 export function History() {
     const [selectedDate, setSelectedDate] = useState<Date>(() => new Date())
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
@@ -214,6 +217,10 @@ export function History() {
 
     // Modal state: null = closed, 'all' = clear day, string = entry id
     const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+
+    // API key dialog state for retry
+    const [apiKeyDialog, setApiKeyDialog] = useState<{ entryId: string } | null>(null)
+    const [apiKeyInput, setApiKeyInput] = useState('')
 
     const dateString = format(selectedDate, 'yyyy-MM-dd')
 
@@ -288,11 +295,33 @@ export function History() {
 
     // Retry entry pipeline
     const retryMutation = useMutation({
-        mutationFn: (entryId: string) => logsApi.retryEntry(entryId),
+        mutationFn: ({ entryId, apiKey }: { entryId: string; apiKey: string }) =>
+            logsApi.retryEntry(entryId, apiKey),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['logs', dateString] })
         },
+        onError: () => {
+            // Clear cached key so user can re-enter on next attempt
+            localStorage.removeItem(GROQ_KEY_STORAGE)
+        },
     })
+
+    const handleRetry = (entryId: string) => {
+        const cached = localStorage.getItem(GROQ_KEY_STORAGE)
+        if (cached) {
+            retryMutation.mutate({ entryId, apiKey: cached })
+        } else {
+            setApiKeyInput('')
+            setApiKeyDialog({ entryId })
+        }
+    }
+
+    const handleApiKeySubmit = () => {
+        if (!apiKeyDialog || !apiKeyInput.trim()) return
+        localStorage.setItem(GROQ_KEY_STORAGE, apiKeyInput.trim())
+        retryMutation.mutate({ entryId: apiKeyDialog.entryId, apiKey: apiKeyInput.trim() })
+        setApiKeyDialog(null)
+    }
 
     // Clear day (all entries)
     const clearDayMutation = useMutation({
@@ -347,6 +376,51 @@ export function History() {
                 cancelText={t('history.cancel')}
                 isLoading={isAll ? clearDayMutation.isPending : deleteMutation.isPending}
             />
+
+            {/* API Key Dialog */}
+            {apiKeyDialog && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/60 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setApiKeyDialog(null)}
+                >
+                    <div
+                        className="bg-card rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4 border border-border animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex flex-col items-center text-center space-y-3">
+                            <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-full text-blue-600 dark:text-blue-400 ring-4 ring-blue-50/50 dark:ring-blue-950/20">
+                                <KeyRound size={28} strokeWidth={2} />
+                            </div>
+                            <div className="space-y-1">
+                                <h3 className="text-lg font-bold text-foreground">{t('history.apiKeyTitle')}</h3>
+                                <p className="text-sm text-muted-foreground leading-relaxed px-2">{t('history.apiKeyDesc')}</p>
+                            </div>
+                        </div>
+                        <input
+                            type="password"
+                            value={apiKeyInput}
+                            onChange={(e) => setApiKeyInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleApiKeySubmit()}
+                            placeholder="gsk_..."
+                            autoFocus
+                            className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                        />
+                        <p className="text-xs text-muted-foreground text-center">{t('history.apiKeyLocal')}</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button variant="outline" onClick={() => setApiKeyDialog(null)} className="rounded-xl">
+                                {t('history.cancel')}
+                            </Button>
+                            <Button
+                                onClick={handleApiKeySubmit}
+                                disabled={!apiKeyInput.trim()}
+                                className="rounded-xl"
+                            >
+                                {t('history.retry')}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Header */}
             <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40 pb-4 mb-4 flex justify-between items-center">
@@ -429,8 +503,8 @@ export function History() {
                                 onToggle={() => toggleExpanded(entry.id)}
                                 onDelete={handleDeleteRequest}
                                 isDeleting={deleteMutation.isPending && deleteMutation.variables === entry.id}
-                                onRetry={(id) => retryMutation.mutate(id)}
-                                isRetrying={retryMutation.isPending && retryMutation.variables === entry.id}
+                                onRetry={handleRetry}
+                                isRetrying={retryMutation.isPending && retryMutation.variables?.entryId === entry.id}
                             />
                         ))}
                     </div>

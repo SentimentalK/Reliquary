@@ -176,7 +176,7 @@ export function Login() {
                                     <Label htmlFor="inviteCode">{t('login.inviteCodeLabel')}</Label>
                                     <Input
                                         id="inviteCode"
-                                        type="password"
+                                        type="text"
                                         placeholder={t('login.inviteCodePlaceholder')}
                                         value={inviteCode}
                                         onChange={(e) => setInviteCode(e.target.value)}

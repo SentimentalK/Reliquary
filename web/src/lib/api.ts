@@ -180,8 +180,8 @@ export const logsApi = {
         URL.revokeObjectURL(url)
     },
 
-    retryEntry: async (entryId: string): Promise<LogEntry> => {
-        const { data } = await api.post<LogEntry>(`/logs/${entryId}/retry`)
+    retryEntry: async (entryId: string, apiKey: string): Promise<LogEntry> => {
+        const { data } = await api.post<LogEntry>(`/logs/${entryId}/retry`, { api_key: apiKey })
         return data
     },
 }

@@ -225,10 +225,16 @@ def _infer_pipeline_from_steps(transcription: list) -> str:
     print(f"[Retry] No match found, falling back to raw_whisper")
     return "raw_whisper"
 
+from pydantic import BaseModel, Field
+
+class RetryRequest(BaseModel):
+    api_key: str = Field(default="", description="Groq API key (BYOK)")
+
 
 @router.post("/api/logs/{entry_id}/retry")
 async def retry_log_entry(
     entry_id: str,
+    body: RetryRequest = None,
     user: UserInfo = Depends(get_current_user),
 ) -> Dict[str, Any]:
     """
@@ -236,6 +242,9 @@ async def retry_log_entry(
 
     Reads the original audio file, re-runs the inferred pipeline,
     and replaces the entry in-place (same ID, same JSONL line position).
+
+    Request body (optional):
+        {"api_key": "gsk_..."}
     """
     import time
     from app.services.pipelines.manager import get_pipeline_manager
@@ -290,13 +299,15 @@ async def retry_log_entry(
     user_config, user_config_ver = read_user_config(user)
     manager = get_pipeline_manager()
 
-    # Use server's API key for retry (device BYOK key is not stored)
-    settings = get_settings()
-    api_key = settings.groq_api_key
+    # API key: prefer user-provided (BYOK), fall back to server key
+    api_key = body.api_key if body else ""
+    if not api_key:
+        settings = get_settings()
+        api_key = settings.groq_api_key
     if not api_key:
         raise HTTPException(
             status_code=400,
-            detail="No API key available. Configure GROQ_API_KEY on the server to enable retry.",
+            detail="API key required. Please provide your Groq API key to retry.",
         )
 
     t0 = time.time()

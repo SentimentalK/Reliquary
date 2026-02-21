@@ -62,7 +62,10 @@
     "confirmClearAll": "Yes, Clear All",
     "exportAll": "Export All",
     "retry": "Retry",
-    "retrying": "Retrying..."
+    "retrying": "Retrying...",
+    "apiKeyTitle": "API Key Required",
+    "apiKeyDesc": "Enter your Groq API key to retry processing. You can get one from console.groq.com.",
+    "apiKeyLocal": "Stored in your browser only. Never sent to our server."
   },
   "deviceCard": {
     "hotkey": "Hotkey",

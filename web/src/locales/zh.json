@@ -62,7 +62,10 @@
     "confirmClearAll": "全部清除",
     "exportAll": "导出全部",
     "retry": "重试",
-    "retrying": "重试中..."
+    "retrying": "重试中...",
+    "apiKeyTitle": "需要 API Key",
+    "apiKeyDesc": "输入你的 Groq API Key 以重新处理。可在 console.groq.com 获取。",
+    "apiKeyLocal": "仅保存在浏览器本地，不会上传到服务器。"
   },
   "deviceCard": {
     "hotkey": "热键",
