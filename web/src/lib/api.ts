@@ -179,6 +179,11 @@ export const logsApi = {
         document.body.removeChild(a)
         URL.revokeObjectURL(url)
     },
+
+    retryEntry: async (entryId: string): Promise<LogEntry> => {
+        const { data } = await api.post<LogEntry>(`/logs/${entryId}/retry`)
+        return data
+    },
 }
 
 // ============== Pipeline Config API ==============

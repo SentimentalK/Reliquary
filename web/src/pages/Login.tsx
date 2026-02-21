@@ -85,7 +85,7 @@ export function Login() {
                     <Logo className="h-32 w-32 shrink-0 drop-shadow-xl dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
                     <div className="flex flex-col">
                         <span className="text-5xl font-bold tracking-tight">Reliquary</span>
-                        <p className="mt-2 text-lg text-muted-foreground">智能语音输入系统</p>
+                        <p className="mt-2 text-lg text-muted-foreground">{t('login.slogan')}</p>
                     </div>
                 </div>
 

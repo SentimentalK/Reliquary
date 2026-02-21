@@ -7,7 +7,8 @@ import {
     Trash2,
     AlertTriangle,
     Activity,
-    Download
+    Download,
+    RotateCcw
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -19,12 +20,14 @@ import { useAuthStore } from '@/stores/auth'
 import { formatTime } from '@/lib/utils'
 import { analyzeQuality } from '@/lib/qualityCheck'
 
-function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
+function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting, onRetry, isRetrying }: {
     entry: LogEntry
     isExpanded: boolean
     onToggle: () => void
     onDelete: (id: string) => void
     isDeleting: boolean
+    onRetry: (id: string) => void
+    isRetrying: boolean
 }) {
     const { t } = useTranslation()
     const steps = Array.isArray(entry.transcription) ? entry.transcription : []
@@ -166,19 +169,34 @@ function LogEntryItem({ entry, isExpanded, onToggle, onDelete, isDeleting }: {
                                 <p>ID: {entry.id}</p>
                             </div>
 
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={isDeleting}
-                                className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 h-8 px-2"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    onDelete(entry.id)
-                                }}
-                            >
-                                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                                {isDeleting ? '...' : t('history.delete')}
-                            </Button>
+                            <div className="flex items-center gap-1">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={isRetrying || isDeleting}
+                                    className="text-muted-foreground hover:text-foreground hover:bg-muted/50 h-8 px-2"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onRetry(entry.id)
+                                    }}
+                                >
+                                    <RotateCcw className={`h-3.5 w-3.5 mr-1.5 ${isRetrying ? 'animate-spin' : ''}`} />
+                                    {isRetrying ? t('history.retrying') : t('history.retry')}
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={isDeleting || isRetrying}
+                                    className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 h-8 px-2"
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        onDelete(entry.id)
+                                    }}
+                                >
+                                    <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                                    {isDeleting ? '...' : t('history.delete')}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -263,6 +281,14 @@ export function History() {
     // Single entry delete
     const deleteMutation = useMutation({
         mutationFn: (entryId: string) => logsApi.deleteEntry(entryId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['logs', dateString] })
+        },
+    })
+
+    // Retry entry pipeline
+    const retryMutation = useMutation({
+        mutationFn: (entryId: string) => logsApi.retryEntry(entryId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['logs', dateString] })
         },
@@ -403,6 +429,8 @@ export function History() {
                                 onToggle={() => toggleExpanded(entry.id)}
                                 onDelete={handleDeleteRequest}
                                 isDeleting={deleteMutation.isPending && deleteMutation.variables === entry.id}
+                                onRetry={(id) => retryMutation.mutate(id)}
+                                isRetrying={retryMutation.isPending && retryMutation.variables === entry.id}
                             />
                         ))}
                     </div>

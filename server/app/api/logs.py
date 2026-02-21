@@ -180,6 +180,200 @@ async def delete_log_entry(
     raise HTTPException(status_code=404, detail="Entry not found")
 
 
+def _infer_pipeline_from_steps(transcription: list) -> str:
+    """
+    Infer pipeline key from existing transcription step names.
+
+    Maps step names (e.g. "whisper_large_v3", "chinese_fixer_kimi-k2") back to
+    PIPELINE_TEMPLATES by matching step lists.
+    """
+    from app.services.pipelines.manager import PIPELINE_TEMPLATES, STEP_CONFIGS
+    from app.services.pipelines.raw_whisper import WhisperStep
+
+    # Build reverse map: result step name -> template step name
+    # "whisper_large_v3" -> "whisper", fixer steps map directly
+    step_name_map = {}
+    for template_name, cfg in STEP_CONFIGS.items():
+        cls = cfg["class"]
+        if cls is WhisperStep:
+            step_name_map[WhisperStep.STEP_NAME] = template_name
+        else:
+            # LLMFixerStep: step_name arg IS the template key
+            result_name = cfg.get("args", {}).get("step_name", template_name)
+            step_name_map[result_name] = template_name
+
+    print(f"[Retry] Step name map: {step_name_map}")
+
+    # Convert transcription step names to template step names
+    entry_steps = []
+    raw_names = []
+    for s in transcription:
+        name = s.get("step", "") if isinstance(s, dict) else ""
+        raw_names.append(name)
+        if name in step_name_map:
+            entry_steps.append(step_name_map[name])
+
+    print(f"[Retry] Transcription step names: {raw_names}")
+    print(f"[Retry] Mapped template steps: {entry_steps}")
+
+    # Match against pipeline templates
+    for pipeline_key, template_steps in PIPELINE_TEMPLATES.items():
+        if entry_steps == template_steps:
+            print(f"[Retry] Matched pipeline: {pipeline_key}")
+            return pipeline_key
+
+    print(f"[Retry] No match found, falling back to raw_whisper")
+    return "raw_whisper"
+
+
+@router.post("/api/logs/{entry_id}/retry")
+async def retry_log_entry(
+    entry_id: str,
+    user: UserInfo = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """
+    Retry processing for a log entry.
+
+    Reads the original audio file, re-runs the inferred pipeline,
+    and replaces the entry in-place (same ID, same JSONL line position).
+    """
+    import time
+    from app.services.pipelines.manager import get_pipeline_manager
+    from app.api.pipeline_config import read_user_config
+
+    user_dir = _get_user_dir(user)
+
+    if not user_dir.exists():
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    # 1. Find the entry and its file/line position
+    target_file = None
+    target_line_idx = None
+    target_entry = None
+
+    for log_file in user_dir.glob("*.jsonl"):
+        try:
+            lines = log_file.read_text(encoding="utf-8").strip().splitlines()
+            for idx, line in enumerate(lines):
+                if not line.strip():
+                    continue
+                entry = json.loads(line)
+                if entry.get("id") == entry_id:
+                    target_file = log_file
+                    target_line_idx = idx
+                    target_entry = entry
+                    break
+            if target_entry:
+                break
+        except Exception as e:
+            print(f"[Logs] Error scanning {log_file}: {e}")
+
+    if not target_entry:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    # 2. Read the original audio file
+    audio_path = target_entry.get("audio_path")
+    if not audio_path:
+        raise HTTPException(status_code=400, detail="No audio file associated with this entry")
+
+    abs_audio_path = user_dir / audio_path
+    if not abs_audio_path.exists():
+        raise HTTPException(status_code=404, detail="Audio file not found on disk")
+
+    wav_data = abs_audio_path.read_bytes()
+
+    # 3. Infer pipeline from existing step names
+    transcription = target_entry.get("transcription", [])
+    pipeline_key = _infer_pipeline_from_steps(transcription)
+
+    # 4. Load user config and run pipeline
+    user_config, user_config_ver = read_user_config(user)
+    manager = get_pipeline_manager()
+
+    # Use server's API key for retry (device BYOK key is not stored)
+    settings = get_settings()
+    api_key = settings.groq_api_key
+    if not api_key:
+        raise HTTPException(
+            status_code=400,
+            detail="No API key available. Configure GROQ_API_KEY on the server to enable retry.",
+        )
+
+    t0 = time.time()
+    try:
+        step_results, final_text = await manager.run(
+            pipeline_key,
+            audio_bytes=wav_data,
+            filename="retry.wav",
+            user_config=user_config,
+            api_key=api_key,
+        )
+    except ValueError as e:
+        # Auth / validation errors -> 400
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Pipeline failed: {str(e)}")
+
+    total_latency_ms = int((time.time() - t0) * 1000)
+
+    # 5. Build updated entry (keep id, audio_path)
+    from datetime import datetime
+    from app.services.storage_service import _get_tz
+
+    new_transcription = [
+        {"step": r.step, "text": r.text, "latency_ms": r.latency_ms}
+        for r in step_results
+    ]
+
+    # Build audit metadata
+    meta = {}
+    for r in step_results:
+        if r.step not in ("whisper_large_v3", "error"):
+            try:
+                from app.services.prompt_service import get_prompt_service
+                from app.services.pipelines.manager import STEP_CONFIGS
+                ps = get_prompt_service()
+                cfg = STEP_CONFIGS.get(r.step)
+                if cfg:
+                    prompt_key = cfg.get("args", {}).get("prompt_key")
+                    if prompt_key:
+                        ver = ps.get_prompt_version(prompt_key)
+                        if "prompt_versions" not in meta:
+                            meta["prompt_versions"] = {}
+                        meta["prompt_versions"][r.step] = ver
+            except Exception:
+                pass
+    if user_config_ver > 0:
+        meta["user_config_ver"] = user_config_ver
+
+    updated_entry = {
+        **target_entry,
+        "timestamp": datetime.now(tz=_get_tz()).isoformat(),
+        "transcription": new_transcription,
+        "latency_stats": {"total_ms": total_latency_ms},
+    }
+    if meta:
+        updated_entry["meta"] = meta
+
+    # 6. Replace the entry in-place in the JSONL file
+    try:
+        lines = target_file.read_text(encoding="utf-8").strip().splitlines()
+        lines[target_line_idx] = json.dumps(updated_entry, ensure_ascii=False)
+        target_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update log file: {str(e)}")
+
+    # 7. Publish updated entry to WebSocket for real-time UI update
+    try:
+        bus = get_log_event_bus()
+        prefix = get_user_storage_prefix(user)
+        await bus.publish(updated_entry, user_prefix=prefix)
+    except Exception as e:
+        print(f"[Logs] Event publish error on retry: {e}")
+
+    return updated_entry
+
+
 @router.delete("/api/logs/date/{date}")
 async def clear_day(
     date: str,
