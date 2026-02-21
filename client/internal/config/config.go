@@ -31,12 +31,17 @@ type Config struct {
 }
 
 // defaultKeyCode returns the platform-specific default hotkey code.
-// macOS uses Carbon key codes, Windows uses Win32 virtual key codes.
+// macOS uses Carbon key codes, Windows uses Win32 virtual key codes,
+// Linux uses evdev key codes (linux/input-event-codes.h).
 func defaultKeyCode() int {
-	if runtime.GOOS == "windows" {
-		return 0xA1 // VK_RSHIFT (Right Shift on Windows)
+	switch runtime.GOOS {
+	case "windows":
+		return 0xA1 // VK_RSHIFT (Right Shift)
+	case "linux":
+		return 54 // KEY_RIGHTSHIFT (evdev)
+	default:
+		return 60 // Right Shift on macOS (Carbon)
 	}
-	return 60 // Right Shift on macOS
 }
 
 // DefaultConfig returns the default configuration.

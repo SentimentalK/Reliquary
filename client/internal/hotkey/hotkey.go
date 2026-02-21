@@ -157,6 +157,33 @@ func GetKeyName(keyCode int) string {
 			return "Unknown"
 		}
 	}
+	// Linux evdev key codes (from linux/input-event-codes.h)
+	if runtime.GOOS == "linux" {
+		switch keyCode {
+		case 42:
+			return "Left Shift"
+		case 54:
+			return "Right Shift"
+		case 29:
+			return "Left Control"
+		case 97:
+			return "Right Control"
+		case 56:
+			return "Left Alt"
+		case 100:
+			return "Right Alt"
+		case 125:
+			return "Left Super"
+		case 126:
+			return "Right Super"
+		case 58:
+			return "Caps Lock"
+		case 57:
+			return "Space"
+		default:
+			return "Unknown"
+		}
+	}
 	// Windows key codes
 	switch keyCode {
 	case 0xA5:

@@ -33,10 +33,21 @@ func (h *Handler) Start(ctx context.Context) error {
 			case <-ctx.Done():
 				return
 			default:
-				// Get current key code (may be updated at runtime)
+				// Get current key code and listening mode state atomically
 				h.mu.Lock()
 				keyCode := h.KeyCode
+				listening := h.listeningMode
 				h.mu.Unlock()
+
+				// If in learning mode, skip trigger key detection entirely.
+				// The EnableListeningMode goroutine handles key detection.
+				// Reset wasPressed so we don't generate a spurious KeyUp
+				// when learning mode ends (possibly with a different key).
+				if listening {
+					wasPressed = false
+					time.Sleep(10 * time.Millisecond)
+					continue
+				}
 
 				// Check key state using the current key code
 				ret, _, _ := getAsyncKeyState.Call(uintptr(keyCode))
