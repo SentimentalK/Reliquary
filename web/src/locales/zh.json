@@ -15,6 +15,7 @@
   },
   "login": {
     "title": "登录 Reliquary",
+    "slogan": "智能语音输入系统",
     "tokenLabel": "访问令牌 (Access Token)",
     "tokenPlaceholder": "输入您的访问令牌",
     "submit": "验证并登录",
@@ -59,7 +60,9 @@
     "confirmClearDayDesc": "这将永久删除当天所有记录和音频文件，此操作无法撤销。",
     "cancel": "取消",
     "confirmClearAll": "全部清除",
-    "exportAll": "导出全部"
+    "exportAll": "导出全部",
+    "retry": "重试",
+    "retrying": "重试中..."
   },
   "deviceCard": {
     "hotkey": "热键",

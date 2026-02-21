@@ -15,6 +15,7 @@
   },
   "login": {
     "title": "Login to Reliquary",
+    "slogan": "A Zero-Friction Voice Bridge to Your AI Exobrain",
     "tokenLabel": "Access Token",
     "tokenPlaceholder": "Enter your access token",
     "submit": "Verify & Login",
@@ -59,7 +60,9 @@
     "confirmClearDayDesc": "This will permanently delete all records and audio files for this day. This action cannot be undone.",
     "cancel": "Cancel",
     "confirmClearAll": "Yes, Clear All",
-    "exportAll": "Export All"
+    "exportAll": "Export All",
+    "retry": "Retry",
+    "retrying": "Retrying..."
   },
   "deviceCard": {
     "hotkey": "Hotkey",

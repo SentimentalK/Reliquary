@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Reliquary</string>
-    <string name="app_subtitle">AI Voice Input System</string>
+    <string name="app_subtitle">A Zero-Friction Voice Bridge to Your AI Exobrain</string>
     <string name="setup_wizard">Setup Wizard</string>
     <string name="setup_desc">Complete steps to enable Reliquary</string>
     
