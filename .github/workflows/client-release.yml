@@ -50,8 +50,7 @@ jobs:
           version: '~> v2'
           args: release --clean --config .github/.goreleaser.yaml
         env:
-
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_PAT: ${{ secrets.GH_PAT }}
 
       - name: Upload Snapshot Artifacts
@@ -130,6 +129,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: client/android/app/build/outputs/apk/debug/reliquary-android.apk
-          repository: SentimentalK/reliquary-releases
-          token: ${{ secrets.GH_PAT }}
 
