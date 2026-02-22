@@ -81,3 +81,43 @@
 .glass {
   @apply bg-card/80 backdrop-blur-sm border border-border/50;
 }
+
+/* 荧光笔高亮效果 (支持亮色/暗色自适应) */
+.marker-pink {
+  background: linear-gradient(180deg, transparent 60%, #fbcfe8 40%);
+  display: inline-block;
+  padding: 0 0.25rem;
+}
+.dark .marker-pink {
+  background: #f472b6;
+  color: #000000;
+  border-radius: 2px;
+  padding: 0.125rem 0.375rem;
+  margin: 0 0.125rem;
+}
+
+.marker-yellow {
+  background: linear-gradient(180deg, transparent 60%, #fef08a 40%);
+  display: inline-block;
+  padding: 0 0.25rem;
+}
+.dark .marker-yellow {
+  background: #fde047;
+  color: #000000;
+  border-radius: 2px;
+  padding: 0.125rem 0.375rem;
+  margin: 0 0.125rem;
+}
+
+.marker-blue {
+  background: linear-gradient(180deg, transparent 60%, #bae6fd 40%);
+  display: inline-block;
+  padding: 0 0.25rem;
+}
+.dark .marker-blue {
+  background: #7dd3fc;
+  color: #000000;
+  border-radius: 2px;
+  padding: 0.125rem 0.375rem;
+  margin: 0 0.125rem;
+}

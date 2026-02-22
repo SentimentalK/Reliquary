@@ -1,21 +1,20 @@
 import { Logo } from '@/components/Logo'
 import {
-    Database,
-    Search,
-    Workflow,
-    Zap,
-    Container,
-    Terminal,
-    Download,
     LogIn,
     Globe,
     Moon,
     Sun,
     Laptop,
-    Coins
+    ArrowRight,
+    Hexagon,
+    TimerOff,
+    StarOff,
+    WifiOff,
+    CloudOff,
+    ServerOff,
+    Play
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { DeploymentSection } from '@/components/landing/DeploymentSection'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -44,45 +43,6 @@ export default function LandingPage() {
     }
 
     const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Laptop
-
-    const features = [
-        {
-            icon: Database,
-            title: t('landing.features.sovereignty.title'),
-            titleEn: "Digital Sovereignty",
-            desc: t('landing.features.sovereignty.desc')
-        },
-        {
-            icon: Search,
-            title: t('landing.features.recall.title'),
-            titleEn: "Total Recall",
-            desc: t('landing.features.recall.desc')
-        },
-        {
-            icon: Zap,
-            title: t('landing.features.efficiency.title'),
-            titleEn: "Ultimate Efficiency",
-            desc: t('landing.features.efficiency.desc')
-        },
-        {
-            icon: Coins,
-            title: t('landing.features.cost.title'),
-            titleEn: "Zero Cost",
-            desc: t('landing.features.cost.desc')
-        },
-        {
-            icon: Workflow,
-            title: t('landing.features.pipeline.title'),
-            titleEn: "Programmable Pipeline",
-            desc: t('landing.features.pipeline.desc')
-        },
-        {
-            icon: Container,
-            title: t('landing.features.fortress.title'),
-            titleEn: "One-Click Fortress",
-            desc: t('landing.features.fortress.desc')
-        }
-    ]
 
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
@@ -142,88 +102,163 @@ export default function LandingPage() {
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-16 md:py-24 lg:py-32">
-                {/* Hero Section */}
-                <div className="flex flex-col items-center text-center space-y-8 mb-24">
-                    {/* Prominent Logo & Name */}
-                    <div className="flex flex-col items-center space-y-4">
-                        <div className="relative group flex justify-center items-center mb-2">
-                            {/* Glow backdrop */}
-                            <div className="absolute inset-0 bg-primary/20 blur-[60px] rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-700"></div>
+            <main className="flex flex-col w-full">
+                {/* 第一屏：最新 Hero Section */}
+                <header className="pt-32 pb-20 sm:pt-40 sm:pb-24 px-4 overflow-hidden bg-background">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid md:grid-cols-2 gap-16 items-center">
+                            {/* 左侧：文案与 CTA */}
+                            <div className="text-left w-full">
+                                <h1 className="text-5xl sm:text-[56px] font-black tracking-tight text-foreground mb-8 leading-[1.15] whitespace-pre-line">
+                                    {t('landing.hero.title')}
+                                </h1>
 
-                            {/* Main Logo Image */}
-                            <Logo variant="default" className="relative z-10 h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 drop-shadow-2xl dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform duration-500 ease-out" />
+                                <div className="pl-5 border-l-4 border-primary mb-10 space-y-6">
+                                    <div className="space-y-3">
+                                        <p
+                                            className="text-[18px] md:text-[20px] font-bold text-foreground leading-relaxed"
+                                            dangerouslySetInnerHTML={{ __html: t('landing.hero.quote1') }}
+                                        />
+                                        <p
+                                            className="text-[18px] md:text-[20px] font-bold text-foreground leading-relaxed"
+                                            dangerouslySetInnerHTML={{ __html: t('landing.hero.quote2') }}
+                                        />
+                                        <p
+                                            className="text-[18px] md:text-[20px] font-bold text-foreground leading-relaxed"
+                                            dangerouslySetInnerHTML={{ __html: t('landing.hero.quote3') }}
+                                        />
+                                    </div>
+                                    <p className="text-[15px] text-muted-foreground leading-relaxed max-w-md">
+                                        {t('landing.hero.desc')}
+                                    </p>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                                    <button
+                                        className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-medium text-[15px] hover:bg-primary/90 transition shadow-md flex items-center justify-center gap-2"
+                                        onClick={() => {
+                                            setDeploymentTab('client')
+                                            document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
+                                        }}
+                                    >
+                                        <Play className="w-4 h-4 fill-primary-foreground" /> {t('landing.hero.trial')}
+                                    </button>
+                                    <button
+                                        className="w-full sm:w-auto bg-transparent text-muted-foreground hover:text-foreground font-medium text-[15px] transition flex items-center justify-center gap-2 px-4 py-3.5 group"
+                                        onClick={() => {
+                                            setDeploymentTab('server')
+                                            document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
+                                        }}
+                                    >
+                                        {t('landing.hero.guide')} <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* 右侧：图形系统 */}
+                            <div className="relative flex justify-center items-center mt-12 md:mt-0 w-full h-[400px]">
+                                {/* 1. 最外层：还原带圆角、向右倾斜的六边形 */}
+                                <Hexagon className="absolute z-0 w-[340px] h-[340px] text-muted-foreground/20 stroke-[0.5] transform rotate-12" />
+
+                                {/* 2. 核心 Logo */}
+                                <div className="absolute z-20 w-[220px] h-[220px]">
+                                    <Logo variant="default" className="w-full h-full drop-shadow-2xl dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:scale-105 transition-transform duration-500" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* 第二屏：痛点揭露 */}
+                <section className="py-20 bg-muted/30 border-t border-border/40">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="text-center mb-16">
+                            <h2 className="text-3xl font-bold mb-4 text-foreground">{t('landing.painPoints.title')}</h2>
+                            <p className="text-muted-foreground">{t('landing.painPoints.subtitle')}</p>
                         </div>
 
-                        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl text-foreground">
-                            {t('landing.heroTitle')}
-                        </h1>
-
-                        <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl text-foreground max-w-4xl mx-auto">
-                            {t('landing.heroSubtitle')} <span className="text-primary ml-2">{t('landing.heroSubtitleStrong')}</span>
-                        </h2>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            {(t('landing.painPoints.items', { returnObjects: true }) as Array<{ title: string, desc: string }>).map((item, i) => {
+                                const Icon = [TimerOff, StarOff, WifiOff, CloudOff][i]
+                                return (
+                                    <div key={i} className="p-8 rounded-xl bg-card border border-border/50 hover:border-border transition shadow-sm">
+                                        <Icon className="w-6 h-6 mb-4 text-foreground" />
+                                        <h3 className="text-xl font-bold mb-3 text-foreground">{item.title}</h3>
+                                        <p className="text-muted-foreground leading-relaxed text-sm">
+                                            {item.desc}
+                                        </p>
+                                    </div>
+                                )
+                            })}
+                        </div>
                     </div>
+                </section>
 
-                    <p className="max-w-[700px] text-lg text-muted-foreground md:text-xl pt-4">
-                        {t('landing.heroDesc')}
-                        <br className="hidden sm:inline" />
-                        {t('landing.heroDesc2')}
-                    </p>
+                {/* 第三屏：改良版A - 副文填充法 */}
+                <section className="py-24 bg-background border-t border-border/40">
+                    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="grid md:grid-cols-12 gap-12 lg:gap-16">
 
-                    <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto pt-4">
-                        <Button
-                            size="lg"
-                            className="h-12 px-8 text-base shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
-                            onClick={() => {
-                                setDeploymentTab('client')
-                                document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
-                            }}
-                        >
-                            <Download className="mr-2 h-5 w-5" />
-                            {t('landing.download')}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            className="h-12 px-8 text-base bg-background/50 backdrop-blur-sm hover:bg-accent/50 hover:scale-105 transition-transform"
+                            <div className="md:col-span-4 relative">
+                                <div className="sticky top-24">
+                                    <h2
+                                        className="text-3xl lg:text-[36px] font-black text-foreground leading-[1.2] tracking-tight mb-6"
+                                        dangerouslySetInnerHTML={{ __html: t('landing.solution.title') }}
+                                    />
+                                    <p className="text-sm text-muted-foreground font-medium leading-relaxed pr-4">
+                                        {t('landing.solution.subtitle')}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="md:col-span-8 space-y-16">
+                                {(t('landing.solution.items', { returnObjects: true }) as Array<{ title: string, desc: string }>).map((item, i) => (
+                                    <div key={i} className={`relative ${i > 0 ? 'pt-10 border-t border-border/40' : ''}`}>
+                                        <div className="text-sm font-bold tracking-widest text-muted-foreground mb-3 font-mono">
+                                            / 0{i + 1}
+                                        </div>
+                                        <h3
+                                            className="text-2xl font-bold mb-4 text-foreground"
+                                            dangerouslySetInnerHTML={{ __html: item.title }}
+                                        />
+                                        <p className="text-muted-foreground leading-relaxed text-[16px]">
+                                            {item.desc}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                {/* 第四屏：从这里开始 -> DeploymentSection */}
+                <section className="bg-muted/30 border-t border-border/40">
+                    <DeploymentSection tab={deploymentTab} onTabChange={setDeploymentTab} />
+                </section>
+
+                {/* 底部 CTA */}
+                <section className="py-20 bg-zinc-950 text-zinc-50 text-center dark:bg-zinc-900 border-t border-border/40">
+                    <div className="max-w-3xl mx-auto px-4 flex flex-col items-center">
+                        <h2 className="text-3xl font-bold mb-6">{t('landing.cta.title')}</h2>
+                        <p className="text-zinc-400 mb-8 text-lg">{t('landing.cta.desc')}</p>
+
+                        <button
+                            className="bg-white text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-zinc-200 transition shadow-lg mb-6 flex items-center gap-2 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-300"
                             onClick={() => {
                                 setDeploymentTab('server')
                                 document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
                             }}
                         >
-                            <Terminal className="mr-2 h-5 w-5" />
-                            {t('landing.docker')}
-                        </Button>
+                            <ServerOff className="w-5 h-5" /> {t('landing.cta.button')}
+                        </button>
+
+                        <div className="text-sm text-zinc-400 w-full max-w-xl text-left space-y-2 border border-zinc-800 bg-zinc-950/50 p-5 rounded-lg">
+                            <p dangerouslySetInnerHTML={{ __html: t('landing.cta.disclaimer1') }} />
+                            <p dangerouslySetInnerHTML={{ __html: t('landing.cta.disclaimer2') }} />
+                            <p dangerouslySetInnerHTML={{ __html: t('landing.cta.disclaimer3') }} />
+                        </div>
                     </div>
-
-                    {/* Terminal Preview Hint */}
-
-                </div>
-
-                {/* Features Grid */}
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {features.map((feature, index) => (
-                        <Card key={index} className="group relative overflow-hidden border-primary/10 bg-card/40 backdrop-blur-sm transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1">
-                            <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-                            <CardHeader>
-                                <feature.icon className="h-10 w-10 text-primary mb-2" />
-                                <CardTitle className="text-xl">{feature.title}</CardTitle>
-                                <CardDescription className="font-mono text-xs uppercase tracking-wider text-primary/70">
-                                    {feature.titleEn}
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="relative z-10">
-                                <p className="text-muted-foreground leading-relaxed">
-                                    {feature.desc}
-                                </p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-
-
-                <DeploymentSection tab={deploymentTab} onTabChange={setDeploymentTab} />
+                </section>
             </main>
 
             <footer className="border-t border-border/40 bg-background/50 backdrop-blur py-8 mt-24">

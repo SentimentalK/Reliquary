@@ -18,9 +18,20 @@ i18n
             escapeValue: false,
         },
         detection: {
-            order: ['queryString', 'cookie', 'localStorage', 'navigator'],
+            // Priority: Query string -> User's saved preference -> Browser navigator language
+            order: ['queryString', 'localStorage', 'cookie', 'navigator'],
             caches: ['localStorage', 'cookie'],
         }
     })
+
+// Custom logic to handle zh-CN, zh-TW, etc. from browser detection
+i18n.on('languageChanged', (lng) => {
+    if (lng && lng.toLowerCase().startsWith('zh') && lng !== 'zh') {
+        i18n.changeLanguage('zh')
+    } else if (lng && !lng.startsWith('en') && !lng.startsWith('zh')) {
+        // Fallback to English for any unsupported languages
+        i18n.changeLanguage('en')
+    }
+})
 
 export default i18n

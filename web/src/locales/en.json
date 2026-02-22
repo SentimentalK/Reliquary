@@ -1,6 +1,6 @@
 {
   "layout": {
-    "dashboard": "Dashboard",
+    "dashboard": "Login",
     "logs": "History",
     "docs": "Documentation",
     "logout": "Log out",
@@ -27,7 +27,7 @@
     "displayNamePlaceholder": "e.g. John Doe",
     "inviteCodeLabel": "Invite Code",
     "inviteCodePlaceholder": "Enter invite code from admin",
-    "contactAdmin": "Contact admin for an invite code",
+
     "registerSubmit": "Create Account",
     "errorRegister": "Registration failed, check invite code",
     "loginLink": "Have a token? Back to Login",
@@ -126,39 +126,67 @@
     "saveFailed": "Save failed"
   },
   "landing": {
-    "heroTitle": "Reliquary",
-    "heroSubtitle": "Build Your",
-    "heroSubtitleStrong": "Digital Phylactery",
-    "heroDesc": "Eradicate input friction and push your LLMs to their absolute limits.",
-    "heroDesc2": "Run your AI exobrain at full power, at the native speed of thought.",
     "version": "v1.0.0 Stable Available",
-    "download": "Download Client",
-    "docker": "Docker Deploy",
-    "features": {
-      "sovereignty": {
-        "title": "Data Sovereignty",
-        "desc": "Stop locking your high-value thoughts in big tech clouds. All interactions are Local First. Transform your daily high-frequency inputs into a private training dataset, paving the way for your future digital twin."
-      },
-      "recall": {
-        "title": "Total Recall (RAG)",
-        "desc": "Say goodbye to write-only data graveyards. Locally accumulated unstructured voice logs are automatically transformed into structured assets. Query your past at any time and keep your digital memory on standby."
-      },
-      "efficiency": {
-        "title": "Frictionless Flow & Certainty",
-        "desc": "No more aggressive auto-cutoffs. Take all the time you need to think. The built-in Fixer pipeline automatically repairs mixed languages and grammatical logic, distilling your chaotic rambling into flawless prompts."
-      },
-      "cost": {
-        "title": "Architectural Arbitrage",
-        "desc": "Enjoy enterprise-grade compute at zero cost. An ingenious architecture optimized for the free tiers of top compute providers (like Groq). Process hundreds of high-intensity commands daily with sub-second latency, completely free."
-      },
-      "pipeline": {
-        "title": "Programmable Workflows",
-        "desc": "You dictate exactly where your data flows. Push sanitized, standardized JSON payloads to any Webhook—whether it's quietly logging to your Obsidian vault or triggering n8n automation engines."
-      },
-      "fortress": {
-        "title": "Zero Data Loss Guarantee",
-        "desc": "Fundamentally eliminate the fear of talking to the void. With a minimalist Docker deployment, all audio streams are safely persisted to disk before hitting any API. Even during network drops, your inspiration never evaporates. Just hit retry."
-      }
+    "hero": {
+      "title": "Frictionless Voice\nfor AI Superusers",
+      "quote1": "Do you want to communicate with AI in the <span class=\"marker-pink\">most efficient way possible</span>?",
+      "quote2": "Do you want to completely outsource those <span class=\"marker-yellow\">tedious, unimportant mental chores</span>?",
+      "quote3": "Do you want AI to become your <span class=\"marker-blue\">most understanding companion</span>?",
+      "desc": "Talk to AI with your most chaotic thoughts. Reliquary scrubs the mess and drops input friction to zero, letting you focus entirely on deep logical sparring with LLMs.",
+      "trial": "Start Free Trial",
+      "guide": "Geek Deployment Guide"
+    },
+    "painPoints": {
+      "title": "Why Reinvent the Wheel?",
+      "subtitle": "Mainstream voice tools are simply not designed for \"thinking\".",
+      "items": [
+        {
+          "title": "Aggressive Cutoffs & Pressure",
+          "desc": "Pause for a second, and the system forcefully truncates and replies. You're forced into a breathless \"rapid-fire\" mode that breaks your train of thought, pollutes context, and induces extreme psychological pressure."
+        },
+        {
+          "title": "Free Garbage or Expensive Wrappers",
+          "desc": "Free tools fail miserably at technical jargon and mixed languages. The good paid solutions are often just expensive AI wrappers, unworthy of their exorbitant mandatory monthly subscriptions."
+        },
+        {
+          "title": "One Error, And It's All Gone",
+          "desc": "After rambling on for minutes, a single network blip or API timeout evaporates hundreds of words of inspiration. You can't even remember what you just said, leading to complete frustration."
+        },
+        {
+          "title": "Locked-In Data & Zero Ownership",
+          "desc": "Why should your high-frequency private thoughts be locked in someone else's cloud? Inability to freely export data means losing the chance to build a personal knowledge base. Your data is yours, not big tech's training corpus."
+        }
+      ]
+    },
+    "solution": {
+      "title": "What happens when you drop<br/>interaction friction to zero?",
+      "subtitle": "Traditional tools force you to adapt to the machine. Reliquary makes the machine adapt to your intuition.",
+      "items": [
+        {
+          "title": "Your rambling and incoherence are the best Prompts",
+          "desc": "No need to perfectly organize your sentences beforehand. You don't have to weigh every word or craft the perfect \"prompt.\" Say whatever comes to mind, however it comes to mind. Ramble, repeat yourself, even contradict yourself. Your rambling actually helps the AI pinpoint what matters most. Just dump all your messy thoughts, and let the AI handle the grunt work of distilling, structuring, and executing."
+        },
+        {
+          "title": "Outsource the Overthinking, Stop Wasting Brainpower on Trivia",
+          "desc": "Daily energy is finite. Don't waste it comparison shopping or handling tedious chores. Buying something and tired of reading specs? Take a photo, ramble about your preferences, concerns, and dilemmas, and let it do the initial filtering and comparison for you. You don't have to follow its decision blindly, but this mental outsourcing saves you hours of research and hesitation, leaving your brain to only handle the final sign-off. Mainstream voice assistants can't do this; in their pursuit of \"real-time conversation,\" they are forced to use underpowered small models that simply cannot handle deep logical reasoning."
+        },
+        {
+          "title": "A venting outlet that gets you, and a partner to stop your overthinking",
+          "desc": "When dealing with workplace drama or frustrating situations, you can naturally vent to it. But unlike friends who just blindly agree with you, it has your long-term data and understands your context. It won't just listen to your complaints—it performs psychological and behavioral analysis based on objective facts: telling you why the other person did what they did, and whether you are actually at fault. It uses absolute rationality to peel away emotion, reducing unnecessary self-doubt and internal turmoil, getting you back on track to solving the actual problem faster. Reliquary can help you build detailed behavioral profiles of the people in your life. As data accumulates, it builds an objectively rational mirror based on your data, drastically reducing the context you need to explain next time."
+        },
+        {
+          "title": "\"Zero Loss\" of Inspiration for Complete Peace of Mind",
+          "desc": "The biggest pain point of voice input isn't the act of speaking; it's the constant anxiety of data loss. The more you talk, the more devastating it feels when a network blip or app crash instantly evaporates a ten-minute monologue. Reliquary performs physical-level streaming backups locally. Even if you lose internet mid-sentence, your fleeting inspiration is securely captured, completely eliminating the fear of your efforts going down the drain."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Stop Meaningless Friction",
+      "desc": "Stop wasting energy typing and fixing typos. Give expression back to your voice, and leave the structuring to the AI.",
+      "button": "Start Serverless Trial",
+      "disclaimer1": "<strong class=\"text-zinc-100\">Non-profit Test Node:</strong> Provided solely to lower the initial barrier to entry; not for commercial use.",
+      "disclaimer2": "Your trial account and all generated data will be <span class=\"text-destructive font-medium\">physically and permanently destroyed 24 hours after registration</span>.",
+      "disclaimer3": "For long-term use, please follow the guide to deploy your own dedicated backend."
     },
     "deployment": {
       "title": "Get Started",
@@ -199,7 +227,7 @@
           "android_download": "Download from GitHub Releases",
           "linux": "Linux version coming soon. Stay tuned.",
           "ios": "The iOS client is under intensive development. Keep an eye on the repo.",
-          "ios_download": "In Development",
+
           "pending": "Feature under development. Please watch our GitHub repository for updates."
         },
         "server": {
@@ -222,8 +250,7 @@
       "copyright": "© 2026 Reliquary Project. Open Core.",
       "license": "MIT License",
       "privacy": "Privacy",
-      "terms": "Terms",
-      "twitter": "Twitter"
+      "terms": "Terms"
     }
   }
 }
