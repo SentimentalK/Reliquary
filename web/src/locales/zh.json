@@ -31,8 +31,22 @@
     "registerSubmit": "创建账户",
     "errorRegister": "注册失败，请检查邀请码",
     "loginLink": "已有令牌？返回登录",
+    "inviteCodeHint": "默认邀请码含 24 小时免费服务端体验，到期后自动清理。若有专属邀请码请替换。",
     "successTitle": "注册成功",
     "successDesc": "您的账户不仅创建成功，还生成了一个专属访问令牌。",
+    "success": {
+      "step1Title": "1. 保存您的唯一凭证",
+      "step1Desc": "这是您的唯一登录凭证，关闭后将无法再次查看，请务必妥善保存。",
+      "step2Title": "2. 下载并安装客户端",
+      "step2Desc": "服务端已为您准备好，现在需要安装本地客户端。",
+      "step3Title": "3. 准备大模型 API Key",
+      "step3Desc": "登录客户端后，您还需要自行配置 OpenAI / 兼容的 API Key 才能开始语音对话。",
+      "enterSystem": "我已妥善保存，进入系统",
+      "copyModalTitle": "检测到您尚未复制令牌",
+      "copyModalDesc": "该令牌仅显示一次，丢失将无法找回账号，强烈建议您先点击复制并保存到备忘录。",
+      "forceCopy": "强制复制并继续",
+      "manualSaved": "我已手动记录，继续"
+    },
     "tokenWarning": "请务必保存此令牌。出于安全考虑，它将不会再次显示。",
     "saveAndLogin": "保存令牌并登录"
   },
@@ -70,7 +84,9 @@
   "deviceCard": {
     "hotkey": "热键",
     "connected": "建立连接",
-    "configure": "配置设备"
+    "configure": "配置设备",
+    "missingApiKey": "未配置 Groq API Key",
+    "missingApiKeyDesc": "请配置密钥以启用完整功能"
   },
   "config": {
     "errorNoDevice": "未选择设备",

@@ -13,9 +13,10 @@ type ServerType = 'docker' | 'prod' | 'trial'
 interface DeploymentSectionProps {
     tab?: TabType
     onTabChange?: (tab: TabType) => void
+    hideHeader?: boolean
 }
 
-export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) {
+export function DeploymentSection({ tab, onTabChange, hideHeader }: DeploymentSectionProps) {
     const { t } = useTranslation()
     const [internalTab, setInternalTab] = useState<TabType>('client')
     const [platform, setPlatform] = useState<PlatformType>('mac')
@@ -41,54 +42,57 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
     // Not critical for now, let's keep it simple.
 
     return (
-        <section id="deployment" className="container mx-auto px-4 py-24 space-y-12">
-            <div className="flex flex-col items-center text-center space-y-4">
-                <div className="inline-flex items-center rounded-full border border-primary/20 bg-secondary/50 px-3 py-1 text-sm font-medium text-secondary-foreground backdrop-blur-sm mb-2">
-                    <span className="relative flex h-2 w-2 mr-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                    </span>
-                    {t('landing.version')}
+        <section id="deployment" className={cn("container mx-auto px-4 space-y-12", hideHeader ? "py-4" : "py-24")}>
+            {!hideHeader && (
+                <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="inline-flex items-center rounded-full border border-primary/20 bg-secondary/50 px-3 py-1 text-sm font-medium text-secondary-foreground backdrop-blur-sm mb-2">
+                        <span className="relative flex h-2 w-2 mr-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                        </span>
+                        {t('landing.version')}
+                    </div>
+                    <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
+                        {t('landing.deployment.title')}
+                    </h2>
+                    <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                        {t('landing.deployment.subtitle')}
+                    </p>
                 </div>
-                <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
-                    {t('landing.deployment.title')}
-                </h2>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    {t('landing.deployment.subtitle')}
-                </p>
-            </div>
+            )}
 
             <div className="max-w-6xl mx-auto">
                 {/* Main Tabs */}
-                {/* Main Tabs - Refined Style */}
-                <div className="flex justify-center mb-12">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => handleTabChange('client')}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border",
-                                activeTab === 'client'
-                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105 border-primary"
-                                    : "bg-background text-muted-foreground border-border/40 hover:text-foreground hover:border-border/80 hover:bg-muted/30"
-                            )}
-                        >
-                            <Monitor className="h-4 w-4" />
-                            {t('landing.deployment.tabs.client')}
-                        </button>
-                        <button
-                            onClick={() => handleTabChange('server')}
-                            className={cn(
-                                "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border",
-                                activeTab === 'server'
-                                    ? "bg-background text-foreground shadow-xl border-border/50 scale-105"
-                                    : "bg-background text-muted-foreground border-border/40 hover:text-foreground hover:border-border/80 hover:bg-muted/30"
-                            )}
-                        >
-                            <Server className="h-4 w-4" />
-                            {t('landing.deployment.tabs.server')}
-                        </button>
+                {!hideHeader && (
+                    <div className="flex justify-center mb-12">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => handleTabChange('client')}
+                                className={cn(
+                                    "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border",
+                                    activeTab === 'client'
+                                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105 border-primary"
+                                        : "bg-background text-muted-foreground border-border/40 hover:text-foreground hover:border-border/80 hover:bg-muted/30"
+                                )}
+                            >
+                                <Monitor className="h-4 w-4" />
+                                {t('landing.deployment.tabs.client')}
+                            </button>
+                            <button
+                                onClick={() => handleTabChange('server')}
+                                className={cn(
+                                    "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 border",
+                                    activeTab === 'server'
+                                        ? "bg-background text-foreground shadow-xl border-border/50 scale-105"
+                                        : "bg-background text-muted-foreground border-border/40 hover:text-foreground hover:border-border/80 hover:bg-muted/30"
+                                )}
+                            >
+                                <Server className="h-4 w-4" />
+                                {t('landing.deployment.tabs.server')}
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="grid md:grid-cols-[280px_1fr] gap-8 items-start">
                     {/* Sidebar */}
@@ -452,7 +456,7 @@ export function DeploymentSection({ tab, onTabChange }: DeploymentSectionProps) 
                                                 <p className="flex flex-wrap items-center gap-2">
                                                     {t('landing.deployment.tips.trial.inviteLabel')}
                                                     <code className="text-rose-500 px-2 py-0.5 rounded font-mono font-bold">
-                                                        reliquary-1day-demo
+                                                        RELIQUARY-TRIAL-24H
                                                     </code>
                                                 </p>
 

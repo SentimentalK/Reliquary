@@ -31,8 +31,22 @@
     "registerSubmit": "Create Account",
     "errorRegister": "Registration failed, check invite code",
     "loginLink": "Have a token? Back to Login",
+    "inviteCodeHint": "Default code includes a 24-hour free trial. Your data will be wiped after. Replace this if you have a private code.",
     "successTitle": "Registration Successful",
     "successDesc": "Your account has been created successfully.",
+    "success": {
+      "step1Title": "1. Save Your Access Token",
+      "step1Desc": "This is your only login credential. It will not be shown again, please save it securely.",
+      "step2Title": "2. Download Client",
+      "step2Desc": "The server is ready. Now you need to install the local client.",
+      "step3Title": "3. Prepare API Key",
+      "step3Desc": "After logging into the client, you will need to configure an OpenAI compatible API Key to start using voice features.",
+      "enterSystem": "I have saved it, enter system",
+      "copyModalTitle": "Token Not Copied",
+      "copyModalDesc": "This token is only shown once. If lost, you cannot recover your account. We strongly recommend copying it now.",
+      "forceCopy": "Copy and Continue",
+      "manualSaved": "I saved it manually, Continue"
+    },
     "tokenWarning": "Please save this token securely. You won't be able to see it again.",
     "saveAndLogin": "Save Token & Login"
   },
@@ -70,7 +84,9 @@
   "deviceCard": {
     "hotkey": "Hotkey",
     "connected": "Connected",
-    "configure": "Configure Device"
+    "configure": "Configure Device",
+    "missingApiKey": "Missing Groq API Key",
+    "missingApiKeyDesc": "Please configure the key to enable full features"
   },
   "config": {
     "errorNoDevice": "No device selected",

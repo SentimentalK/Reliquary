@@ -1,4 +1,4 @@
-import { Laptop, Keyboard, Smartphone } from 'lucide-react'
+import { Laptop, Keyboard, Smartphone, AlertCircle } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { Button } from './ui/button'
@@ -80,6 +80,19 @@ export function DeviceCard({ device }: DeviceCardProps) {
                                     return date.toLocaleString()
                                 })()}
                             </span>
+                        </div>
+                    )}
+
+                    {/* Missing API Key Warning */}
+                    {!device.api_key && (
+                        <div className="mt-4 flex items-start gap-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/50 rounded-lg p-3">
+                            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                            <div className="text-sm text-amber-800 dark:text-amber-200">
+                                <span className="font-medium block">{t('deviceCard.missingApiKey', 'Missing Groq API Key')}</span>
+                                <span className="text-amber-600/80 dark:text-amber-400/80 text-xs mt-0.5 block">
+                                    {t('deviceCard.missingApiKeyDesc', 'Please configure the key to enable full features')}
+                                </span>
+                            </div>
                         </div>
                     )}
                 </div>

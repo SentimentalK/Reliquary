@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { Loader2, Copy, Check, Eye, EyeOff } from 'lucide-react'
+import { Loader2, Copy, Check, Eye, EyeOff, AlertTriangle, Key } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -9,14 +9,20 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/lib/api'
+import { DeploymentSection } from '@/components/landing/DeploymentSection'
 
 type Mode = 'login' | 'register' | 'success'
 
 export function Login() {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const { setAuth } = useAuthStore()
     const { t } = useTranslation()
-    const [mode, setMode] = useState<Mode>('login')
+
+    const urlMode = searchParams.get('mode') as Mode
+    const urlInvite = searchParams.get('invite')
+
+    const [mode, setMode] = useState<Mode>(urlMode || 'login')
 
     // Login state
     const [loginToken, setLoginToken] = useState('')
@@ -24,11 +30,19 @@ export function Login() {
 
     // Register state
     const [displayName, setDisplayName] = useState('')
-    const [inviteCode, setInviteCode] = useState('')
+    const [inviteCode, setInviteCode] = useState(urlInvite || '')
 
     // Success state
     const [generatedSecret, setGeneratedSecret] = useState('')
     const [copied, setCopied] = useState(false)
+    const [hasCopiedRecord, setHasCopiedRecord] = useState(false)
+    const [showCopyModal, setShowCopyModal] = useState(false)
+
+    useEffect(() => {
+        if (mode === 'register' && !inviteCode && !urlInvite) {
+            setInviteCode('RELIQUARY-TRIAL-24H')
+        }
+    }, [mode, inviteCode, urlInvite])
 
     // Login mutation
     const loginMutation = useMutation({
@@ -68,12 +82,21 @@ export function Login() {
     const copyToClipboard = async () => {
         await navigator.clipboard.writeText(generatedSecret)
         setCopied(true)
+        setHasCopiedRecord(true)
         setTimeout(() => setCopied(false), 2000)
     }
 
     const proceedToLogin = () => {
         setLoginToken(generatedSecret)
         setMode('login')
+    }
+
+    const handleEnterSystem = () => {
+        if (!hasCopiedRecord) {
+            setShowCopyModal(true)
+            return
+        }
+        proceedToLogin()
     }
 
     return (
@@ -181,7 +204,7 @@ export function Login() {
                                         value={inviteCode}
                                         onChange={(e) => setInviteCode(e.target.value)}
                                     />
-
+                                    <p className="text-xs text-muted-foreground pt-1">{t('login.inviteCodeHint')}</p>
                                 </div>
 
                                 {registerMutation.error && (
@@ -216,45 +239,111 @@ export function Login() {
                     )}
 
                     {mode === 'success' && (
-                        <>
-                            <div className="text-center mb-6">
+                        <div className="space-y-8 animate-in fade-in duration-500">
+                            {/* Header */}
+                            <div className="text-center">
                                 <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
                                     <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
                                 </div>
-                                <h2 className="mt-4 text-xl font-semibold">{t('login.successTitle')}</h2>
-                                <p className="mt-2 text-sm text-muted-foreground">
+                                <h2 className="mt-4 text-2xl font-bold tracking-tight">{t('login.successTitle')}</h2>
+                                <p className="mt-2 text-muted-foreground">
                                     {t('login.successDesc')}
                                 </p>
                             </div>
 
-                            <div className="space-y-4">
-                                <div className="rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4">
-                                    <p className="text-xs text-amber-700 dark:text-amber-300 mb-2">
-                                        {t('login.tokenWarning')}
+                            {/* Steps Container */}
+                            <div className="space-y-8 text-left">
+                                {/* Step 1: Save Token */}
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-bold text-foreground">{t('login.success.step1Title')}</h3>
+                                    <p className="text-sm text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 p-3 rounded-lg border border-amber-200 dark:border-amber-500/20">
+                                        {t('login.success.step1Desc')}
                                     </p>
                                     <div className="flex items-center gap-2">
-                                        <code className="flex-1 rounded bg-background px-3 py-2 font-mono text-sm break-all">
+                                        <code className="flex-1 rounded-lg bg-muted border border-border px-4 py-3 font-mono text-sm break-all font-semibold">
                                             {generatedSecret}
                                         </code>
                                         <Button
                                             variant="outline"
                                             size="icon"
+                                            className="h-11 w-11 shrink-0"
                                             onClick={copyToClipboard}
                                         >
-                                            {copied ? (
-                                                <Check className="h-4 w-4 text-green-500" />
-                                            ) : (
-                                                <Copy className="h-4 w-4" />
-                                            )}
+                                            {copied ? <Check className="h-5 w-5 text-green-500" /> : <Copy className="h-5 w-5" />}
                                         </Button>
                                     </div>
                                 </div>
 
-                                <Button onClick={proceedToLogin} className="w-full">
-                                    {t('login.saveAndLogin')}
-                                </Button>
+                                <div className="h-px w-full bg-border/50" />
+
+                                {/* Step 2: Download Client */}
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-bold text-foreground">{t('login.success.step2Title')}</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        {t('login.success.step2Desc')}
+                                    </p>
+                                    <div className="rounded-xl border bg-background/50 overflow-hidden text-left relative -mx-2 px-2 pb-2">
+                                        <DeploymentSection tab="client" hideHeader />
+                                    </div>
+                                </div>
+
+                                <div className="h-px w-full bg-border/50" />
+
+                                {/* Step 3: Prepare API Key */}
+                                <div className="space-y-3">
+                                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                                        {t('login.success.step3Title')}
+                                    </h3>
+                                    <div className="flex gap-3 text-sm text-muted-foreground bg-secondary/30 p-4 rounded-lg border border-border/50">
+                                        <Key className="w-5 h-5 shrink-0 text-primary mt-0.5" />
+                                        <p>{t('login.success.step3Desc')}</p>
+                                    </div>
+                                </div>
                             </div>
-                        </>
+
+                            <Button
+                                onClick={handleEnterSystem}
+                                size="lg"
+                                className="w-full text-base font-bold shadow-lg"
+                            >
+                                {t('login.success.enterSystem')}
+                            </Button>
+
+                            {/* Copy Modal Enforcement */}
+                            {showCopyModal && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+                                    <div className="w-full max-w-sm rounded-xl bg-background p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-border">
+                                        <div className="flex items-center gap-3 text-amber-600 dark:text-amber-500 mb-4">
+                                            <AlertTriangle className="h-6 w-6" />
+                                            <h3 className="text-lg font-bold">{t('login.success.copyModalTitle')}</h3>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mb-6">
+                                            {t('login.success.copyModalDesc')}
+                                        </p>
+                                        <div className="flex flex-col gap-3">
+                                            <Button
+                                                onClick={() => {
+                                                    setShowCopyModal(false)
+                                                    copyToClipboard()
+                                                    proceedToLogin()
+                                                }}
+                                                className="w-full font-bold bg-amber-600 hover:bg-amber-700 text-white"
+                                            >
+                                                <Copy className="mr-2 h-4 w-4" />
+                                                {t('login.success.forceCopy')}
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                onClick={proceedToLogin}
+                                                className="w-full text-muted-foreground hover:text-foreground"
+                                            >
+                                                {t('login.success.manualSaved')}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
 

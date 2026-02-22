@@ -136,10 +136,7 @@ export default function LandingPage() {
                                 <div className="flex flex-col sm:flex-row gap-4 items-center">
                                     <button
                                         className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-medium text-[15px] hover:bg-primary/90 transition shadow-md flex items-center justify-center gap-2"
-                                        onClick={() => {
-                                            setDeploymentTab('client')
-                                            document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
-                                        }}
+                                        onClick={() => navigate('/login?mode=register&invite=RELIQUARY-TRIAL-24H')}
                                     >
                                         <Play className="w-4 h-4 fill-primary-foreground" /> {t('landing.hero.trial')}
                                     </button>
@@ -242,15 +239,23 @@ export default function LandingPage() {
                         <h2 className="text-3xl font-bold mb-6">{t('landing.cta.title')}</h2>
                         <p className="text-zinc-400 mb-8 text-lg">{t('landing.cta.desc')}</p>
 
-                        <button
-                            className="bg-white text-black px-8 py-4 rounded-xl font-bold text-lg hover:bg-zinc-200 transition shadow-lg mb-6 flex items-center gap-2 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-300"
-                            onClick={() => {
-                                setDeploymentTab('server')
-                                document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
-                            }}
-                        >
-                            <ServerOff className="w-5 h-5" /> {t('landing.cta.button')}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4 items-center mb-8">
+                            <button
+                                className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition shadow-lg flex items-center justify-center gap-2"
+                                onClick={() => navigate('/login?mode=register&invite=RELIQUARY-TRIAL-24H')}
+                            >
+                                <Play className="w-5 h-5 fill-primary-foreground" /> {t('landing.hero.trial')}
+                            </button>
+                            <button
+                                className="w-full sm:w-auto bg-zinc-800 text-zinc-100 hover:text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-zinc-700 transition shadow-lg flex items-center justify-center gap-2"
+                                onClick={() => {
+                                    setDeploymentTab('server')
+                                    document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
+                                }}
+                            >
+                                <ServerOff className="w-5 h-5" /> {t('landing.hero.guide')}
+                            </button>
+                        </div>
 
                         <div className="text-sm text-zinc-400 w-full max-w-xl text-left space-y-2 border border-zinc-800 bg-zinc-950/50 p-5 rounded-lg">
                             <p dangerouslySetInnerHTML={{ __html: t('landing.cta.disclaimer1') }} />
