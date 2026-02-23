@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Reliquary</string>
-    <string name="app_subtitle">智能语音输入系统</string>
+    <string name="app_subtitle">零摩擦语音桥梁，直达你的AI外脑</string>
     <string name="setup_wizard">设置向导</string>
     <string name="setup_desc">完成以下步骤以启用 Reliquary 语音输入</string>
     

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation } from '@tanstack/react-query'
-import { Loader2, Copy, Check, Eye, EyeOff, AlertTriangle, Key } from 'lucide-react'
+import { Loader2, Copy, Check, Eye, EyeOff, Key, ExternalLink } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label'
 import { useAuthStore } from '@/stores/auth'
 import { authApi } from '@/lib/api'
 import { DeploymentSection } from '@/components/landing/DeploymentSection'
+import { ActionModal } from '@/components/ActionModal'
+import { SiteHeader } from '@/components/SiteHeader'
 
 type Mode = 'login' | 'register' | 'success'
 
@@ -100,20 +102,35 @@ export function Login() {
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
-            <div className="w-full max-w-md space-y-8 p-8">
+        <div className="flex min-h-screen items-center justify-center py-12 px-4 bg-gradient-to-br from-background via-background to-primary/5">
+            <SiteHeader />
+            <ActionModal
+                isOpen={showCopyModal}
+                onClose={() => setShowCopyModal(false)}
+                onConfirm={() => {
+                    setShowCopyModal(false)
+                    copyToClipboard()
+                    proceedToLogin()
+                }}
+                title={t('login.success.copyModalTitle')}
+                description={t('login.success.copyModalDesc')}
+                confirmText={t('login.success.forceCopy')}
+                intent="primary"
+                hideCancel={true}
+            />
+            <div className={`w-full transition-all duration-500 space-y-8 mt-12 ${mode === 'success' ? 'max-w-5xl' : 'max-w-md'}`}>
                 {/* Logo */}
                 {/* Logo - Side by Side */}
-                <div className="flex items-center gap-6 px-2">
+                <div className={`flex items-center px-2 transition-all duration-500 ${mode === 'success' ? 'justify-center mx-auto' : ''}`}>
                     <Logo className="h-32 w-32 shrink-0 drop-shadow-xl dark:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" />
-                    <div className="flex flex-col">
+                    <div className="flex flex-col ml-6 text-left">
                         <span className="text-5xl font-bold tracking-tight">Reliquary</span>
                         <p className="mt-2 text-lg text-muted-foreground">{t('login.slogan')}</p>
                     </div>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-2xl border bg-card/50 p-6 backdrop-blur-sm shadow-xl">
+                <div className={`rounded-2xl border bg-card/50 backdrop-blur-sm shadow-xl transition-all duration-500 ${mode === 'success' ? 'p-6 sm:p-10' : 'p-6'}`}>
                     {mode === 'login' && (
                         <>
                             <h2 className="text-xl font-semibold mb-6">{t('login.title')}</h2>
@@ -282,7 +299,7 @@ export function Login() {
                                     <p className="text-sm text-muted-foreground">
                                         {t('login.success.step2Desc')}
                                     </p>
-                                    <div className="rounded-xl border bg-background/50 overflow-hidden text-left relative -mx-2 px-2 pb-2">
+                                    <div className="pt-2">
                                         <DeploymentSection tab="client" hideHeader />
                                     </div>
                                 </div>
@@ -294,9 +311,20 @@ export function Login() {
                                     <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                                         {t('login.success.step3Title')}
                                     </h3>
-                                    <div className="flex gap-3 text-sm text-muted-foreground bg-secondary/30 p-4 rounded-lg border border-border/50">
+                                    <div className="flex gap-3 text-sm text-muted-foreground bg-secondary/30 p-4 rounded-lg border border-border/50 items-start">
                                         <Key className="w-5 h-5 shrink-0 text-primary mt-0.5" />
-                                        <p>{t('login.success.step3Desc')}</p>
+                                        <div className="space-y-1.5 flex-1">
+                                            <p className="leading-relaxed">{t('login.success.step3Desc')}</p>
+                                            <a
+                                                href="https://console.groq.com/keys"
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center gap-1 text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
+                                            >
+                                                {t('login.success.getApiKey', 'Get Groq API Key')}
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -308,41 +336,6 @@ export function Login() {
                             >
                                 {t('login.success.enterSystem')}
                             </Button>
-
-                            {/* Copy Modal Enforcement */}
-                            {showCopyModal && (
-                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
-                                    <div className="w-full max-w-sm rounded-xl bg-background p-6 shadow-2xl animate-in zoom-in-95 duration-200 border border-border">
-                                        <div className="flex items-center gap-3 text-amber-600 dark:text-amber-500 mb-4">
-                                            <AlertTriangle className="h-6 w-6" />
-                                            <h3 className="text-lg font-bold">{t('login.success.copyModalTitle')}</h3>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground mb-6">
-                                            {t('login.success.copyModalDesc')}
-                                        </p>
-                                        <div className="flex flex-col gap-3">
-                                            <Button
-                                                onClick={() => {
-                                                    setShowCopyModal(false)
-                                                    copyToClipboard()
-                                                    proceedToLogin()
-                                                }}
-                                                className="w-full font-bold bg-amber-600 hover:bg-amber-700 text-white"
-                                            >
-                                                <Copy className="mr-2 h-4 w-4" />
-                                                {t('login.success.forceCopy')}
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                onClick={proceedToLogin}
-                                                className="w-full text-muted-foreground hover:text-foreground"
-                                            >
-                                                {t('login.success.manualSaved')}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     )}
                 </div>

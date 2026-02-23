@@ -40,7 +40,8 @@
       "step2Title": "2. Download Client",
       "step2Desc": "The server is ready. Now you need to install the local client.",
       "step3Title": "3. Prepare API Key",
-      "step3Desc": "After logging into the client, you will need to configure an OpenAI compatible API Key to start using voice features.",
+      "step3Desc": "After logging into the client, you will need to configure a Groq API Key to start using voice features.",
+      "getApiKey": "Get Groq API Key",
       "enterSystem": "I have saved it, enter system",
       "copyModalTitle": "Token Not Copied",
       "copyModalDesc": "This token is only shown once. If lost, you cannot recover your account. We strongly recommend copying it now.",
@@ -149,7 +150,7 @@
       "quote2": "Do you want to completely outsource those <span class=\"marker-yellow\">tedious, unimportant mental chores</span>?",
       "quote3": "Do you want AI to become your <span class=\"marker-blue\">most understanding companion</span>?",
       "desc": "Talk to AI with your most chaotic thoughts. Reliquary scrubs the mess and drops input friction to zero, letting you focus entirely on deep logical sparring with LLMs.",
-      "trial": "Start Free Trial",
+      "trial": "Quick Experience",
       "guide": "Geek Deployment Guide"
     },
     "painPoints": {
@@ -199,7 +200,7 @@
     "cta": {
       "title": "Stop Meaningless Friction",
       "desc": "Stop wasting energy typing and fixing typos. Give expression back to your voice, and leave the structuring to the AI.",
-      "button": "Start Serverless Trial",
+      "button": "Serverless Deployment",
       "disclaimer1": "<strong class=\"text-zinc-100\">Non-profit Test Node:</strong> Provided solely to lower the initial barrier to entry; not for commercial use.",
       "disclaimer2": "Your trial account and all generated data will be <span class=\"text-destructive font-medium\">physically and permanently destroyed 24 hours after registration</span>.",
       "disclaimer3": "For long-term use, please follow the guide to deploy your own dedicated backend."

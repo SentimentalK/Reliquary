@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Monitor, Smartphone, Cloud, Code2, Server, Shield, Command, Download, Terminal } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Monitor, Smartphone, Cloud, Code2, Server, Shield, Command, Download, Terminal, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TerminalWindow } from './TerminalWindow'
 import { cn } from '@/lib/utils'
@@ -18,6 +19,7 @@ interface DeploymentSectionProps {
 
 export function DeploymentSection({ tab, onTabChange, hideHeader }: DeploymentSectionProps) {
     const { t } = useTranslation()
+    const navigate = useNavigate()
     const [internalTab, setInternalTab] = useState<TabType>('client')
     const [platform, setPlatform] = useState<PlatformType>('mac')
     const [serverMode, setServerMode] = useState<ServerType>('docker')
@@ -469,12 +471,14 @@ export function DeploymentSection({ tab, onTabChange, hideHeader }: DeploymentSe
                                             </div>
 
                                             <div className="pt-4">
-                                                <Button
-                                                    className="w-full sm:w-auto"
-                                                    onClick={() => window.open('/#/login', '_self')}
+                                                <button
+                                                    className="w-full sm:w-auto bg-zinc-900 dark:bg-white text-zinc-50 dark:text-zinc-950 px-6 py-3 rounded-xl font-bold text-[15px] hover:bg-zinc-800 dark:hover:bg-zinc-100 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-xl hover:shadow-zinc-900/20 dark:hover:shadow-white/20 transition-all duration-300 shadow-md flex items-center justify-center gap-2 relative overflow-hidden group border border-zinc-200 dark:border-transparent"
+                                                    onClick={() => navigate('/login?mode=register&invite=RELIQUARY-TRIAL-24H')}
                                                 >
-                                                    {t('landing.deployment.tips.trial.action')}
-                                                </Button>
+                                                    <div className="absolute inset-0 bg-white/20 dark:bg-zinc-950/10 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-700 ease-in-out"></div>
+                                                    <Zap className="w-4 h-4 fill-current relative z-10" />
+                                                    <span className="relative z-10">{t('landing.deployment.tips.trial.action')}</span>
+                                                </button>
                                             </div>
                                         </div>
                                     </TerminalWindow>

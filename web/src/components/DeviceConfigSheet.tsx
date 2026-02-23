@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Loader2, Keyboard, Save, X, Monitor, Key, Globe, Settings, Smartphone } from 'lucide-react'
+import { Loader2, Keyboard, Save, X, Monitor, Key, Globe, Settings, Smartphone, ExternalLink } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Button } from './ui/button'
@@ -262,9 +262,20 @@ export function DeviceConfigSheet() {
                                         onChange={(e) => setApiKey(e.target.value)}
                                         className="font-mono"
                                     />
-                                    <p className="text-xs text-muted-foreground">
-                                        {t('config.apiKeyDesc')}
-                                    </p>
+                                    <div className="flex items-center justify-between text-xs mt-1">
+                                        <p className="text-muted-foreground">
+                                            {t('config.apiKeyDesc')}
+                                        </p>
+                                        <a
+                                            href="https://console.groq.com/keys"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex items-center gap-1 text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
+                                        >
+                                            {t('login.success.getApiKey', 'Get Groq API Key')}
+                                            <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
 

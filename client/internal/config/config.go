@@ -137,6 +137,8 @@ func (m *Manager) Load() error {
 	if cfg.ServerURL == "" {
 		cfg.ServerURL = "http://localhost:8080"
 	}
+	// Sanitize ServerURL: remove trailing slashes
+	cfg.ServerURL = strings.TrimRight(cfg.ServerURL, "/")
 
 	m.config = cfg
 	return nil
@@ -162,6 +164,8 @@ func (m *Manager) LoadOrSetup() (bool, error) {
 	if serverURL == "" {
 		serverURL = "http://localhost:8080"
 	}
+	// Sanitize URL
+	serverURL = strings.TrimRight(strings.TrimSpace(serverURL), "/")
 
 	// Get auth token
 	fmt.Println("\nTo get your auth token:")
@@ -267,9 +271,12 @@ func (m *Manager) Update(keyCode *int, serverURL *string) error {
 		m.config.KeyCode = *keyCode
 		changed = true
 	}
-	if serverURL != nil && m.config.ServerURL != *serverURL {
-		m.config.ServerURL = *serverURL
-		changed = true
+	if serverURL != nil {
+		cleanURL := strings.TrimRight(*serverURL, "/")
+		if m.config.ServerURL != cleanURL {
+			m.config.ServerURL = cleanURL
+			changed = true
+		}
 	}
 
 	if changed {

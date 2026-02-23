@@ -1,48 +1,23 @@
 import { Logo } from '@/components/Logo'
 import {
-    LogIn,
-    Globe,
-    Moon,
-    Sun,
-    Laptop,
     ArrowRight,
     Hexagon,
     TimerOff,
     StarOff,
     WifiOff,
     CloudOff,
-    ServerOff,
-    Play
+    Zap
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { SiteHeader } from '@/components/SiteHeader'
 import { DeploymentSection } from '@/components/landing/DeploymentSection'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useAuthStore } from '@/stores/auth'
-import { useThemeStore } from '@/stores/theme'
-import { SUPPORTED_LANGUAGES } from '@/lib/i18n-utils'
 import { useState } from 'react'
 
 export default function LandingPage() {
     const [deploymentTab, setDeploymentTab] = useState<'client' | 'server'>('client')
-    const { t, i18n } = useTranslation()
+    const { t } = useTranslation()
     const navigate = useNavigate()
-    const { isAuthenticated } = useAuthStore()
-    const { theme, setTheme } = useThemeStore()
-
-    const cycleTheme = () => {
-        if (theme === 'light') setTheme('dark')
-        else if (theme === 'dark') setTheme('system')
-        else setTheme('light')
-    }
-
-    const toggleLanguage = () => {
-        const currentIndex = SUPPORTED_LANGUAGES.indexOf(i18n.language)
-        const nextIndex = (currentIndex + 1) % SUPPORTED_LANGUAGES.length
-        i18n.changeLanguage(SUPPORTED_LANGUAGES[nextIndex])
-    }
-
-    const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Laptop
 
     return (
         <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
@@ -54,53 +29,7 @@ export default function LandingPage() {
             </div>
 
             {/* Navbar */}
-            <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-8">
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
-                        {/* 32px Navbar Logo */}
-                        <div className="relative h-8 w-8 flex items-center justify-center">
-                            <Logo variant="nav" className="h-full w-full drop-shadow-md" />
-                        </div>
-                        Reliquary
-                    </div>
-                    <nav className="flex items-center gap-2 sm:gap-4">
-                        <a href="https://github.com/sentimentalk/reliquary" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
-                            GitHub
-                        </a>
-                        <a href="https://discord.gg/rWtHcMvb" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
-                            Discord
-                        </a>
-                        <a href="https://github.com/sentimentalk/reliquary#readme" target="_blank" rel="noreferrer" className="hidden sm:flex text-sm font-medium hover:text-primary transition-colors items-center gap-1">
-                            Docs
-                        </a>
-
-                        {/* Utilities Toggles */}
-                        <div className="flex items-center gap-1 ml-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={toggleLanguage}>
-                                <Globe className="h-4 w-4" />
-                                <span className="sr-only">{t('layout.toggleLanguage')}</span>
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={cycleTheme}>
-                                <ThemeIcon className="h-4 w-4" />
-                                <span className="sr-only">{t('layout.theme')}</span>
-                            </Button>
-                        </div>
-
-                        <div className="h-4 w-[1px] bg-border mx-1"></div>
-                        {isAuthenticated ? (
-                            <Button variant="ghost" size="sm" className="h-8 gap-2" onClick={() => navigate('/dashboard')}>
-                                <LogIn className="h-4 w-4" />
-                                {t('layout.dashboard')}
-                            </Button>
-                        ) : (
-                            <Button variant="ghost" size="sm" className="h-8 gap-2" onClick={() => navigate('/login')}>
-                                <LogIn className="h-4 w-4" />
-                                Login
-                            </Button>
-                        )}
-                    </nav>
-                </div>
-            </header>
+            <SiteHeader />
 
             <main className="flex flex-col w-full">
                 {/* 第一屏：最新 Hero Section */}
@@ -133,15 +62,17 @@ export default function LandingPage() {
                                     </p>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row gap-4 items-center">
+                                <div className="flex flex-col sm:flex-row gap-4 items-center justify-start mt-8">
                                     <button
-                                        className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-3.5 rounded-xl font-medium text-[15px] hover:bg-primary/90 transition shadow-md flex items-center justify-center gap-2"
+                                        className="w-full sm:w-auto bg-primary text-primary-foreground px-10 py-4 rounded-2xl font-bold text-[16px] hover:bg-primary/95 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-primary/30 transition-all duration-300 shadow-xl flex items-center justify-center gap-3 relative overflow-hidden group"
                                         onClick={() => navigate('/login?mode=register&invite=RELIQUARY-TRIAL-24H')}
                                     >
-                                        <Play className="w-4 h-4 fill-primary-foreground" /> {t('landing.hero.trial')}
+                                        <div className="absolute inset-0 bg-white/20 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-700 ease-in-out"></div>
+                                        <Zap className="w-5 h-5 fill-primary-foreground relative z-10" />
+                                        <span className="relative z-10">{t('landing.hero.trial')}</span>
                                     </button>
                                     <button
-                                        className="w-full sm:w-auto bg-transparent text-muted-foreground hover:text-foreground font-medium text-[15px] transition flex items-center justify-center gap-2 px-4 py-3.5 group"
+                                        className="w-full sm:w-auto bg-transparent text-muted-foreground hover:text-foreground font-medium text-[16px] transition flex items-center justify-center gap-2 px-6 py-4 group"
                                         onClick={() => {
                                             setDeploymentTab('server')
                                             document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
@@ -239,21 +170,14 @@ export default function LandingPage() {
                         <h2 className="text-3xl font-bold mb-6">{t('landing.cta.title')}</h2>
                         <p className="text-zinc-400 mb-8 text-lg">{t('landing.cta.desc')}</p>
 
-                        <div className="flex flex-col sm:flex-row gap-4 items-center mb-8">
+                        <div className="flex flex-col sm:flex-row gap-4 items-center justify-center mb-10 w-full">
                             <button
-                                className="w-full sm:w-auto bg-primary text-primary-foreground px-8 py-4 rounded-xl font-bold text-lg hover:bg-primary/90 transition shadow-lg flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto bg-white text-zinc-950 px-12 py-5 rounded-2xl font-bold text-[18px] hover:bg-zinc-100 hover:scale-[1.02] hover:-translate-y-0.5 hover:shadow-2xl hover:shadow-white/20 transition-all duration-300 shadow-xl flex items-center justify-center gap-3 relative overflow-hidden group"
                                 onClick={() => navigate('/login?mode=register&invite=RELIQUARY-TRIAL-24H')}
                             >
-                                <Play className="w-5 h-5 fill-primary-foreground" /> {t('landing.hero.trial')}
-                            </button>
-                            <button
-                                className="w-full sm:w-auto bg-zinc-800 text-zinc-100 hover:text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-zinc-700 transition shadow-lg flex items-center justify-center gap-2"
-                                onClick={() => {
-                                    setDeploymentTab('server')
-                                    document.getElementById('deployment')?.scrollIntoView({ behavior: 'smooth' })
-                                }}
-                            >
-                                <ServerOff className="w-5 h-5" /> {t('landing.hero.guide')}
+                                <div className="absolute inset-0 bg-zinc-950/10 translate-y-[-100%] group-hover:translate-y-[100%] transition-transform duration-700 ease-in-out"></div>
+                                <Zap className="w-6 h-6 fill-zinc-950 text-zinc-950 relative z-10" />
+                                <span className="relative z-10 tracking-wide">{t('landing.cta.button')}</span>
                             </button>
                         </div>
 

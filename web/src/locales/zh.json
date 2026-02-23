@@ -15,7 +15,7 @@
   },
   "login": {
     "title": "登录 Reliquary",
-    "slogan": "智能语音输入系统",
+    "slogan": "零摩擦语音桥梁，直达你的AI外脑",
     "tokenLabel": "访问令牌 (Access Token)",
     "tokenPlaceholder": "输入您的访问令牌",
     "submit": "验证并登录",
@@ -39,12 +39,13 @@
       "step1Desc": "这是您的唯一登录凭证，关闭后将无法再次查看，请务必妥善保存。",
       "step2Title": "2. 下载并安装客户端",
       "step2Desc": "服务端已为您准备好，现在需要安装本地客户端。",
-      "step3Title": "3. 准备大模型 API Key",
-      "step3Desc": "登录客户端后，您还需要自行配置 OpenAI / 兼容的 API Key 才能开始语音对话。",
+      "step3Title": "3. 准备 Groq API Key",
+      "step3Desc": "登录客户端后，您还需要自行配置 Groq API Key 才能开始语音对话。",
+      "getApiKey": "获取 Groq API Key",
       "enterSystem": "我已妥善保存，进入系统",
       "copyModalTitle": "检测到您尚未复制令牌",
       "copyModalDesc": "该令牌仅显示一次，丢失将无法找回账号，强烈建议您先点击复制并保存到备忘录。",
-      "forceCopy": "强制复制并继续",
+      "forceCopy": "复制到剪贴板并继续",
       "manualSaved": "我已手动记录，继续"
     },
     "tokenWarning": "请务必保存此令牌。出于安全考虑，它将不会再次显示。",
@@ -149,7 +150,7 @@
       "quote2": "<span class=\"marker-yellow\">繁杂不重要的脑力活</span>，你想不想全外包出去？",
       "quote3": "你是否希望 AI 变成最懂你的 <span class=\"marker-blue\">专属亲密伙伴</span>？",
       "desc": "你可以直接用你混乱的想法和 AI 对话。Reliquary 帮你洗稿，将交互摩擦力降至为零，你只需要专注于和大模型进行深度逻辑碰撞。",
-      "trial": "开启免注册体验",
+      "trial": "快速体验",
       "guide": "极客部署指南"
     },
     "painPoints": {
@@ -199,7 +200,7 @@
     "cta": {
       "title": "还在犹豫？",
       "desc": "此等小事不值得消耗你的脑力，来试试把它们外包出去。即刻打开不一样的生活体验！",
-      "button": "开启免服务器部署体验",
+      "button": "快速体验, 跳过后端部署",
       "disclaimer1": "<strong class=\"text-zinc-100\">纯公益测试节点：</strong>仅为降低初期体验门槛设立，非商业运营。",
       "disclaimer2": "你的测试账号及所有产生的数据，将在注册 <span class=\"text-destructive font-medium\">24 小时后被物理级永久销毁</span>。",
       "disclaimer3": "如需长期使用，请查阅指南自行部署专属后端。"

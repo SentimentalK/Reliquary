@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DatePicker } from '@/components/ui/date-picker'
-import { DeleteConfirmModal } from '@/components/DeleteConfirmModal'
+import { ActionModal } from '@/components/ActionModal'
 import { logsApi, type LogEntry } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth'
 import { formatTime } from '@/lib/utils'
@@ -366,7 +366,7 @@ export function History() {
     return (
         <div className="space-y-6">
             {/* Delete Confirmation Modal */}
-            <DeleteConfirmModal
+            <ActionModal
                 isOpen={!!deleteTarget}
                 onClose={() => setDeleteTarget(null)}
                 onConfirm={handleConfirmDelete}

@@ -1,7 +1,7 @@
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-interface DeleteConfirmModalProps {
+interface ActionModalProps {
     isOpen: boolean
     onClose: () => void
     onConfirm: () => void
@@ -10,18 +10,24 @@ interface DeleteConfirmModalProps {
     confirmText?: string
     cancelText?: string
     isLoading?: boolean
+    intent?: 'primary' | 'destructive'
+    hideCancel?: boolean
+    icon?: any
 }
 
-export function DeleteConfirmModal({
+export function ActionModal({
     isOpen,
     onClose,
     onConfirm,
     title,
     description,
-    confirmText = 'Delete',
+    confirmText = 'Confirm',
     cancelText = 'Cancel',
     isLoading = false,
-}: DeleteConfirmModalProps) {
+    intent = 'destructive',
+    hideCancel = false,
+    icon: Icon = AlertTriangle,
+}: ActionModalProps) {
     if (!isOpen) return null
 
     return (
@@ -35,8 +41,11 @@ export function DeleteConfirmModal({
             >
                 {/* Icon + Text */}
                 <div className="flex flex-col items-center text-center space-y-3">
-                    <div className="p-3 bg-red-50 dark:bg-red-950/30 rounded-full text-red-600 dark:text-red-400 ring-4 ring-red-50/50 dark:ring-red-950/20">
-                        <AlertTriangle size={28} strokeWidth={2} />
+                    <div className={`p-3 rounded-full ring-4 ${intent === 'destructive'
+                        ? 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 ring-red-50/50 dark:ring-red-950/20'
+                        : 'bg-primary/10 text-primary ring-primary/5'
+                        }`}>
+                        <Icon size={28} strokeWidth={2} />
                     </div>
                     <div className="space-y-1">
                         <h3 className="text-lg font-bold text-foreground">
@@ -49,17 +58,19 @@ export function DeleteConfirmModal({
                 </div>
 
                 {/* Buttons */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid gap-3 ${hideCancel ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                    {!hideCancel && (
+                        <Button
+                            variant="outline"
+                            onClick={onClose}
+                            disabled={isLoading}
+                            className="rounded-xl"
+                        >
+                            {cancelText}
+                        </Button>
+                    )}
                     <Button
-                        variant="outline"
-                        onClick={onClose}
-                        disabled={isLoading}
-                        className="rounded-xl"
-                    >
-                        {cancelText}
-                    </Button>
-                    <Button
-                        variant="destructive"
+                        variant={intent === 'destructive' ? "destructive" : "default"}
                         onClick={onConfirm}
                         disabled={isLoading}
                         className="rounded-xl shadow-sm"
