@@ -31,7 +31,7 @@
     "registerSubmit": "Create Account",
     "errorRegister": "Registration failed, check invite code",
     "loginLink": "Have a token? Back to Login",
-    "inviteCodeHint": "Default code includes a 24-hour free trial. Your data will be wiped after. Replace this if you have a private code.",
+    "inviteCodeHint": "Default code includes a 24-hour free trial. Your data will be wiped afterwards. Replace this if you have a private code.",
     "successTitle": "Registration Successful",
     "successDesc": "Your account has been created successfully.",
     "success": {
@@ -42,7 +42,7 @@
       "step3Title": "3. Prepare API Key",
       "step3Desc": "After logging into the client, you will need to configure a Groq API Key to start using voice features.",
       "getApiKey": "Get Groq API Key",
-      "enterSystem": "I have saved it, enter system",
+      "enterSystem": "Saved. Enter system",
       "copyModalTitle": "Token Not Copied",
       "copyModalDesc": "This token is only shown once. If lost, you cannot recover your account. We strongly recommend copying it now.",
       "forceCopy": "Copy and Continue",
@@ -105,7 +105,7 @@
     "pressKey": "Press key...",
     "detect": "Detect",
     "current": "Current",
-    "hotkeyWarning": "Note: Only single keys supported (e.g. Right Shift, F9). Some keys may be intercepted by system.",
+    "hotkeyWarning": "Note: Only single key is supported (e.g. Right Shift, F9). Some keys may be intercepted by thesystem.",
     "languageModel": "Language & Model Settings",
     "recognitionLang": "Recognition Language",
     "langAuto": "Auto Detect",
@@ -114,9 +114,8 @@
     "langJa": "Japanese",
     "langKo": "Korean",
     "pipeline": "Pipeline",
-    "pipelineDeviceDefault": "— Device Current —",
+    "pipelineDeviceDefault": "— Device Default —",
     "apiKey": "API Key (BYOK)",
-    "apiKeyDesc": "Groq API Key, get from https://console.groq.com/keys",
     "save": "Save Config",
     "cancel": "Cancel",
     "deviceOfflineWarning": "⚠️ Device offline, cannot push config"
@@ -145,13 +144,13 @@
   "landing": {
     "version": "v1.0.0 Stable Available",
     "hero": {
-      "title": "Frictionless Voice\nfor AI Superusers",
-      "quote1": "Do you want to communicate with AI in the <span class=\"marker-pink\">most efficient way possible</span>?",
-      "quote2": "Do you want to completely outsource those <span class=\"marker-yellow\">tedious, unimportant mental chores</span>?",
-      "quote3": "Do you want AI to become your <span class=\"marker-blue\">most understanding companion</span>?",
-      "desc": "Talk to AI with your most chaotic thoughts. Reliquary scrubs the mess and drops input friction to zero, letting you focus entirely on deep logical sparring with LLMs.",
-      "trial": "Quick Experience",
-      "guide": "Geek Deployment Guide"
+      "title": "Frictionless\nVoice Interface",
+      "quote1": "Want the <span class=\"marker-pink\">most efficient way</span> to interact with AI?",
+      "quote2": "Ready to completely outsource those <span class=\"marker-yellow\">tedious, unimportant mental chores</span>?",
+      "quote3": "Looking for an AI that truly understands you like a <span class=\"marker-blue\">dedicated thought partner</span>?",
+      "desc": "Dump your chaotic thoughts out loud. Reliquary scrubs the noise and drops input friction to zero, freeing you to focus purely on high-level reasoning and decision-making.",
+      "trial": "Try It Now",
+      "guide": "Deployment Guide"
     },
     "painPoints": {
       "title": "Why Reinvent the Wheel?",
@@ -159,19 +158,19 @@
       "items": [
         {
           "title": "Aggressive Cutoffs & Pressure",
-          "desc": "Pause for a second, and the system forcefully truncates and replies. You're forced into a breathless \"rapid-fire\" mode that breaks your train of thought, pollutes context, and induces extreme psychological pressure."
+          "desc": "Pause for a second, and the system forcefully truncates and replies. You're forced into a breathless \"rapid-fire\" mode that breaks your train of thought, pollutes the context, and induces extreme psychological pressure."
         },
         {
           "title": "Free Garbage or Expensive Wrappers",
-          "desc": "Free tools fail miserably at technical jargon and mixed languages. The good paid solutions are often just expensive AI wrappers, unworthy of their exorbitant mandatory monthly subscriptions."
+          "desc": "Free tools fail miserably at technical jargon and mixed-language input. The good paid solutions are often just expensive AI wrappers, unworthy of their exorbitant mandatory monthly subscriptions."
         },
         {
           "title": "One Error, And It's All Gone",
-          "desc": "After rambling on for minutes, a single network blip or API timeout evaporates hundreds of words of inspiration. You can't even remember what you just said, leading to complete frustration."
+          "desc": "After speaking uninterrupted for minutes, a single network blip or API timeout evaporates hundreds of words of inspiration. You can't even remember what you just said, leading to complete frustration."
         },
         {
           "title": "Locked-In Data & Zero Ownership",
-          "desc": "Why should your high-frequency private thoughts be locked in someone else's cloud? Inability to freely export data means losing the chance to build a personal knowledge base. Your data is yours, not big tech's training corpus."
+          "desc": "Why should your high-volume, private thoughts be locked in someone else's cloud? The inability to freely export data means losing the chance to build a personal knowledge base. Your data is yours, not big tech's training corpus."
         }
       ]
     },
@@ -180,27 +179,27 @@
       "subtitle": "Traditional tools force you to adapt to the machine. Reliquary makes the machine adapt to your intuition.",
       "items": [
         {
-          "title": "Your rambling and incoherence are the best Prompts",
+          "title": "Your rambling and incoherence are the best prompts",
           "desc": "No need to perfectly organize your sentences beforehand. You don't have to weigh every word or craft the perfect \"prompt.\" Say whatever comes to mind, however it comes to mind. Ramble, repeat yourself, even contradict yourself. Your rambling actually helps the AI pinpoint what matters most. Just dump all your messy thoughts, and let the AI handle the grunt work of distilling, structuring, and executing."
         },
         {
           "title": "Outsource the Overthinking, Stop Wasting Brainpower on Trivia",
-          "desc": "Daily energy is finite. Don't waste it comparison shopping or handling tedious chores. Buying something and tired of reading specs? Take a photo, ramble about your preferences, concerns, and dilemmas, and let it do the initial filtering and comparison for you. You don't have to follow its decision blindly, but this mental outsourcing saves you hours of research and hesitation, leaving your brain to only handle the final sign-off. Mainstream voice assistants can't do this; in their pursuit of \"real-time conversation,\" they are forced to use underpowered small models that simply cannot handle deep logical reasoning."
+          "desc": "Daily energy is finite. Don't waste it comparison shopping or handling tedious chores. Buying something and tired of reading specs? Take a photo, ramble about your preferences, concerns, and dilemmas, and let it do the initial filtering and comparison for you. You don't have to follow its decision blindly, but this mental outsourcing saves you hours of research and hesitation, reserving your brainpower solely for the final sign-off. Mainstream voice assistants can't do this; in their pursuit of \"real-time conversation,\" they are forced to use underpowered small models that simply cannot handle deep logical reasoning."
         },
         {
-          "title": "A venting outlet that gets you, and a partner to stop your overthinking",
-          "desc": "When dealing with workplace drama or frustrating situations, you can naturally vent to it. But unlike friends who just blindly agree with you, it has your long-term data and understands your context. It won't just listen to your complaints—it performs psychological and behavioral analysis based on objective facts: telling you why the other person did what they did, and whether you are actually at fault. It uses absolute rationality to peel away emotion, reducing unnecessary self-doubt and internal turmoil, getting you back on track to solving the actual problem faster. Reliquary can help you build detailed behavioral profiles of the people in your life. As data accumulates, it builds an objectively rational mirror based on your data, drastically reducing the context you need to explain next time."
+          "title": "A Rational Sounding Board to Kill Overthinking",
+          "desc": "When dealing with workplace drama or frustrating situations, you can naturally vent to Reliquary. But unlike friends who just blindly agree with you, it has your long-term data and understands your context. It won't just listen to your complaints—it performs psychological and behavioral analysis based on objective facts: telling you why the other person did what they did, and whether you are actually at fault. It uses absolute rationality to peel away emotion, reducing unnecessary self-doubt and internal turmoil, getting you back on track to solving the actual problem faster. Reliquary can help you build detailed behavioral profiles of the people in your life. As data accumulates, it builds an objectively rational mirror based on your context, drastically reducing the context you need to explain next time."
         },
         {
           "title": "\"Zero Loss\" of Inspiration for Complete Peace of Mind",
-          "desc": "The biggest pain point of voice input isn't the act of speaking; it's the constant anxiety of data loss. The more you talk, the more devastating it feels when a network blip or app crash instantly evaporates a ten-minute monologue. Reliquary performs physical-level streaming backups locally. Even if you lose internet mid-sentence, your fleeting inspiration is securely captured, completely eliminating the fear of your efforts going down the drain."
+          "desc": "The biggest pain point of voice input isn't the act of speaking; it's the constant anxiety of data loss. The more you talk, the more devastating it feels when a network blip or app crash instantly evaporates a ten-minute monologue. Reliquary performs continuous local streaming backups. Even if you lose internet mid-sentence, your fleeting inspiration is securely captured, completely eliminating the fear of your efforts going down the drain."
         }
       ]
     },
     "cta": {
-      "title": "Stop Meaningless Friction",
-      "desc": "Stop wasting energy typing and fixing typos. Give expression back to your voice, and leave the structuring to the AI.",
-      "button": "Serverless Deployment",
+      "title": "Still hesitating?",
+      "desc": "Don't waste your mental energy on these trivial matters. Outsource them to AI and open up a new way of living today.",
+      "button": "Try It Now, Skip Deployment",
       "disclaimer1": "<strong class=\"text-zinc-100\">Non-profit Test Node:</strong> Provided solely to lower the initial barrier to entry; not for commercial use.",
       "disclaimer2": "Your trial account and all generated data will be <span class=\"text-destructive font-medium\">physically and permanently destroyed 24 hours after registration</span>.",
       "disclaimer3": "For long-term use, please follow the guide to deploy your own dedicated backend."

@@ -262,18 +262,15 @@ export function DeviceConfigSheet() {
                                         onChange={(e) => setApiKey(e.target.value)}
                                         className="font-mono"
                                     />
-                                    <div className="flex items-center justify-between text-xs mt-1">
-                                        <p className="text-muted-foreground">
-                                            {t('config.apiKeyDesc')}
-                                        </p>
+                                    <div className="flex items-center text-xs mt-2">
                                         <a
                                             href="https://console.groq.com/keys"
                                             target="_blank"
                                             rel="noreferrer"
-                                            className="inline-flex items-center gap-1 text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
+                                            className="inline-flex items-center gap-1.5 text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
                                         >
                                             {t('login.success.getApiKey', 'Get Groq API Key')}
-                                            <ExternalLink className="w-3 h-3" />
+                                            <ExternalLink className="w-3.5 h-3.5" />
                                         </a>
                                     </div>
                                 </div>
