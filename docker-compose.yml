@@ -54,6 +54,17 @@ services:
     networks:
       - reliquary-network
 
+  # ==========================================================================
+  # Watchtower - Auto Update
+  # ==========================================================================
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 600 --cleanup
+    restart: unless-stopped
+
 # ==========================================================================
 # Networks
 # ==========================================================================

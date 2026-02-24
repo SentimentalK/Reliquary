@@ -58,6 +58,14 @@ services:
     networks:
       - reliquary-network
 
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 600 --cleanup
+    restart: unless-stopped
+
 volumes:
   caddy_data:
   caddy_config:
