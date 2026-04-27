@@ -3,20 +3,26 @@
 # Usage: docker compose -f docker-compose.prod.yml up -d
 services:
   gateway:
-    image: caddy:alpine
+    image: lucaslorentz/caddy-docker-proxy:ci-alpine
     container_name: reliquary-gateway
     restart: always
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
+    environment:
+      - CADDY_INGRESS_NETWORKS=master-gateway
+      - CADDY_DOCKER_CADDYFILE_PATH=/etc/caddy/Caddyfile
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
       - frontend
       - backend
     networks:
+      - master-gateway
       - reliquary-network
 
   backend:
@@ -74,3 +80,5 @@ volumes:
 networks:
   reliquary-network:
     driver: bridge
+  master-gateway:
+    external: true
