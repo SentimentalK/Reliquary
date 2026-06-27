@@ -237,10 +237,13 @@ export function DeviceConfigSheet() {
                                         >
                                             <option value="">{t('config.pipelineDeviceDefault')}</option>
                                             <option value="raw_whisper">Raw Whisper</option>
-                                            <option value="whisper_chinese_fixer_kimi-k2">Whisper + Chinese Fixer (kimi-k2)</option>
-                                            <option value="whisper_chinese_fixer_gpt-oss-20b">Whisper + Chinese Fixer (gpt-oss-20b)</option>
-                                            <option value="whisper_chinese_fixer_qwen3-32b">Whisper + Chinese Fixer (qwen3-32b)</option>
-                                            <option value="whisper_english_fixer">Whisper + English Fixer</option>
+                                            <option value="whisper_chinese_fixer">Whisper + Chinese Fixer (Llama 70B)</option>
+                                            <option value="whisper_chinese_fixer_gpt-oss-20b">Whisper + Chinese Fixer (GPT-OSS 20B)</option>
+                                            <option value="whisper_english_fixer">Whisper + English Fixer (Llama 70B)</option>
+                                            <option value="raw_sensevoice">Raw SenseVoice</option>
+                                            <option value="sensevoice_chinese_fixer">SenseVoice + Chinese Fixer (Llama 70B)</option>
+                                            <option value="sensevoice_chinese_fixer_gpt-oss-20b">SenseVoice + Chinese Fixer (GPT-OSS 20B)</option>
+                                            <option value="sensevoice_english_fixer">SenseVoice + English Fixer (Llama 70B)</option>
                                         </select>
                                     </div>
                                 </div>

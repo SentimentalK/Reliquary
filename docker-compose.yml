@@ -17,6 +17,7 @@ services:
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
       - STORAGE_ROOT=/app/data
       - TZ=America/Toronto
+      - SENSEVOICE_API_URL=http://reliquary-sensevoice:8000
     volumes:
       - ./data:/app/data
     ports:
@@ -55,6 +56,26 @@ services:
       - reliquary-network
 
   # ==========================================================================
+  # SenseVoice - Multilingual Speech Recognition Service
+  # ==========================================================================
+  sensevoice:
+    build:
+      context: ./sensevoice
+      dockerfile: Dockerfile
+    image: ghcr.io/sentimentalk/reliquery-sensevoice:latest
+    container_name: reliquary-sensevoice
+    restart: unless-stopped
+    environment:
+      - SENSEVOICE_DEVICE=cpu
+      - MODELSCOPE_CACHE=/models
+    volumes:
+      - sensevoice-model:/models
+    ports:
+      - "${SENSEVOICE_PORT:-8000}:8000"
+    networks:
+      - reliquary-network
+
+  # ==========================================================================
   # Watchtower - Auto Update
   # ==========================================================================
   watchtower:
@@ -64,6 +85,12 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 600 --cleanup
     restart: unless-stopped
+
+# ==========================================================================
+# Volumes
+# ==========================================================================
+volumes:
+  sensevoice-model:
 
 # ==========================================================================
 # Networks

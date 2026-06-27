@@ -37,6 +37,7 @@ services:
       - REQUIRE_AUTH=${REQUIRE_AUTH:-true}
       - STORAGE_ROOT=/app/data
       - TZ=America/Toronto
+      - SENSEVOICE_API_URL=http://reliquary-sensevoice:8000
     volumes:
       - ./data:/app/data
     healthcheck:
@@ -64,6 +65,18 @@ services:
     networks:
       - reliquary-network
 
+  sensevoice:
+    image: ghcr.io/sentimentalk/reliquery-sensevoice:latest
+    container_name: reliquary-sensevoice
+    restart: unless-stopped
+    environment:
+      - SENSEVOICE_DEVICE=cpu
+      - MODELSCOPE_CACHE=/models
+    volumes:
+      - sensevoice-model:/models
+    networks:
+      - reliquary-network
+
   watchtower:
     image: containrrr/watchtower
     container_name: watchtower
@@ -75,6 +88,7 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  sensevoice-model:
 
 
 networks:

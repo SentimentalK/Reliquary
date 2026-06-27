@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     # Pipeline settings
     default_pipeline: str = "raw_whisper"
     
+    # SenseVoice settings
+    sensevoice_api_url: str = "http://reliquary-sensevoice:8000"
+    
     # Server settings
     server_host: str = "0.0.0.0"
     server_port: int = 8080

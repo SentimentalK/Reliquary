@@ -6,6 +6,7 @@ from functools import lru_cache
 from app.services.pipelines.base import PipelineStep, PipelineContext, StepResult
 from app.services.pipelines.raw_whisper import WhisperStep
 from app.services.pipelines.fixers import LLMFixerStep
+from app.services.pipelines.sensevoice import SenseVoiceStep
 
 
 # ---------------------------------------------------------------------------
@@ -16,14 +17,15 @@ STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
     "whisper": {
         "class": WhisperStep,
     },
-    "chinese_fixer_kimi-k2": {
+    "sensevoice": {
+        "class": SenseVoiceStep,
+    },
+    "chinese_fixer": {
         "class": LLMFixerStep,
         "args": {
-            "step_name": "chinese_fixer_kimi-k2",
-            "model": "moonshotai/kimi-k2-instruct-0905",
+            "step_name": "chinese_fixer",
+            "model": "llama-3.3-70b-versatile",
             "prompt_key": "chinese_fixer",
-            "token_ratio": 1.4,
-            "frequency_penalty": 1.0,
         },
     },
     "chinese_fixer_gpt-oss-20b": {
@@ -36,23 +38,11 @@ STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
             "min_latency_ms": 2000,
         },
     },
-    "chinese_fixer_qwen3-32b": {
-        "class": LLMFixerStep,
-        "args": {
-            "step_name": "chinese_fixer_qwen3-32b",
-            "model": "qwen/qwen3-32b",
-            "prompt_key": "chinese_fixer",
-            "strip_pattern": r"<think>.*?</think>\s*",
-            "token_ratio": 3.0,
-            "token_buffer": 1024,
-            "min_latency_ms": 3000,
-        },
-    },
     "english_fixer": {
         "class": LLMFixerStep,
         "args": {
             "step_name": "english_fixer",
-            "model": "llama-3.1-8b-instant",
+            "model": "llama-3.3-70b-versatile",
             "prompt_key": "english_fixer",
         },
     },
@@ -64,10 +54,15 @@ STEP_CONFIGS: Dict[str, Dict[str, Any]] = {
 # ---------------------------------------------------------------------------
 PIPELINE_TEMPLATES: Dict[str, List[str]] = {
     "raw_whisper": ["whisper"],
-    "whisper_chinese_fixer_kimi-k2": ["whisper", "chinese_fixer_kimi-k2"],
+    "whisper_chinese_fixer": ["whisper", "chinese_fixer"],
     "whisper_chinese_fixer_gpt-oss-20b": ["whisper", "chinese_fixer_gpt-oss-20b"],
-    "whisper_chinese_fixer_qwen3-32b": ["whisper", "chinese_fixer_qwen3-32b"],
     "whisper_english_fixer": ["whisper", "english_fixer"],
+
+    # SenseVoice pipelines
+    "raw_sensevoice": ["sensevoice"],
+    "sensevoice_chinese_fixer": ["sensevoice", "chinese_fixer"],
+    "sensevoice_chinese_fixer_gpt-oss-20b": ["sensevoice", "chinese_fixer_gpt-oss-20b"],
+    "sensevoice_english_fixer": ["sensevoice", "english_fixer"],
 }
 
 
