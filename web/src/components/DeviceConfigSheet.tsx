@@ -80,7 +80,7 @@ export function DeviceConfigSheet() {
         <>
             {/* Backdrop */}
             <div
-                className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${sheetOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                className={`fixed inset-0 z-50 bg-black/60 transition-opacity duration-300 ${sheetOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
                     }`}
                 onClick={closeSheet}
             />

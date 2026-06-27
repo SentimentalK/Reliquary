@@ -102,8 +102,8 @@ jobs:
           tags: |
             ${{ env.BACKEND_IMAGE }}:latest
             ${{ env.BACKEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
   build-frontend:
     needs: changes
@@ -151,8 +151,8 @@ jobs:
           tags: |
             ${{ env.FRONTEND_IMAGE }}:latest
             ${{ env.FRONTEND_IMAGE }}:${{ steps.version.outputs.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
 
   build-sensevoice:
     needs: changes
@@ -200,5 +200,5 @@ jobs:
           tags: |
             ${{ env.SENSEVOICE_IMAGE }}:latest
             ${{ env.SENSEVOICE_IMAGE }}:${{ steps.version.outputs.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=sensevoice
+          cache-to: type=gha,mode=max,scope=sensevoice
