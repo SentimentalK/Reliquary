@@ -89,6 +89,8 @@ async def process_audio_buffer(
     api_key: str = None,  # BYOK: Bring Your Own Key
     user_info: object = None,  # UserInfo for proper storage path
     pipeline_name: str = "raw_whisper",
+    pre_transcribed_text: str | None = None,
+    pre_transcribed_latency: int = 0,
 ) -> tuple[list, str, str, str | None]:
     """
     Process the audio buffer and return (step_results, interaction_id, error).
@@ -103,6 +105,8 @@ async def process_audio_buffer(
         api_key: Optional API key override (BYOK)
         user_info: UserInfo object for proper storage path
         pipeline_name: Pipeline identifier (default: "raw_whisper")
+        pre_transcribed_text: Optional pre-transcribed text from WebSocket stream
+        pre_transcribed_latency: Latency of the pre-transcribed text
     
     Returns:
         Tuple of (step_results, interaction_id, error_message)
@@ -138,6 +142,10 @@ async def process_audio_buffer(
     if user_info:
         from app.api.pipeline_config import read_user_config
         user_config, user_config_ver = read_user_config(user_info)
+        
+    if pre_transcribed_text is not None:
+        user_config["sensevoice_pre_transcribed_text"] = pre_transcribed_text
+        user_config["sensevoice_pre_transcribed_latency"] = pre_transcribed_latency
     
     final_text = ""
     try:
@@ -301,6 +309,27 @@ async def websocket_audio_stream(websocket: WebSocket):
         # Store BYOK api_key for later use (will be passed to pipeline)
         session_api_key = api_key
         
+        # Check if the pipeline contains the SenseVoice step
+        is_sensevoice = False
+        try:
+            manager = get_pipeline_manager()
+            is_sensevoice = "sensevoice" in manager.get_pipeline_steps(pipeline_name)
+        except Exception:
+            pass
+            
+        sv_ws = None
+        if is_sensevoice and settings.sensevoice_api_url:
+            try:
+                sv_ws_url = settings.sensevoice_api_url.replace("http://", "ws://").replace("https://", "wss://") + "/ws/transcribe"
+                import websockets
+                import json
+                sv_ws = await websockets.connect(sv_ws_url, close_timeout=10.0)
+                await sv_ws.send(json.dumps({"language": language or "auto"}))
+                print(f"[WebSocket] Connected to SenseVoice WebSocket streaming endpoint: {sv_ws_url}")
+            except Exception as e:
+                print(f"[WebSocket] Failed to connect to SenseVoice WS, will fallback to HTTP: {e}")
+                sv_ws = None
+        
         print(f"[WebSocket] Config received: user={current_user_id}, device={current_device_id}, pipeline={pipeline_name}, byok={bool(api_key)}")
         start_time = time.time()
         
@@ -341,8 +370,35 @@ async def websocket_audio_stream(websocket: WebSocket):
             elif "bytes" in message:
                 pcm_buffer.extend(message["bytes"])
                 chunk_count += 1
+                if sv_ws:
+                    try:
+                        await sv_ws.send(message["bytes"])
+                    except Exception as e:
+                        print(f"[WebSocket] Error forwarding chunk to SenseVoice WS: {e}")
+                        sv_ws = None
         
-        # Step 3: Process whatever we have in the buffer
+        # Step 3: Handle final SenseVoice transcription if we used the WebSocket stream
+        pre_transcribed_text = None
+        pre_transcribed_latency = 0
+        if sv_ws:
+            try:
+                await sv_ws.send("EOF")
+                # Wait for final transcription result from SenseVoice
+                res_data = await sv_ws.recv()
+                import json
+                res_json = json.loads(res_data)
+                pre_transcribed_text = res_json.get("text", "")
+                pre_transcribed_latency = res_json.get("latency_ms", 0)
+                print(f"[WebSocket] SenseVoice WS streaming transcription done: '{pre_transcribed_text}' in {pre_transcribed_latency}ms")
+            except Exception as e:
+                print(f"[WebSocket] Error finalizing SenseVoice WS streaming: {e}")
+            finally:
+                try:
+                    await sv_ws.close()
+                except:
+                    pass
+        
+        # Step 4: Process whatever we have in the buffer
         if len(pcm_buffer) >= 100:
             trigger = "eof" if client_connected else "disconnect"
             if len(pcm_buffer) >= MAX_BUFFER_SIZE:
@@ -364,6 +420,8 @@ async def websocket_audio_stream(websocket: WebSocket):
                     api_key=session_api_key,
                     user_info=user_info,
                     pipeline_name=pipeline_name,
+                    pre_transcribed_text=pre_transcribed_text,
+                    pre_transcribed_latency=pre_transcribed_latency,
                 )
             finally:
                 # Stop heartbeat but DON'T set client_connected=False yet

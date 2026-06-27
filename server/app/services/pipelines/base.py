@@ -94,3 +94,19 @@ class PipelineStep(ABC):
         4. Return ctx
         """
         pass
+
+
+def clean_transcription_text(text: str) -> str:
+    """Clean emojis, smiley faces, and sound event tags from text."""
+    import re
+    if not text:
+        return ""
+    # Strip Plane 1+ emojis (e.g. 😄, 👏)
+    text = re.sub(r'[\U00010000-\U0010ffff]', '', text)
+    # Strip Basic Plane emojis/symbols (e.g. 2600-27BF)
+    text = re.sub(r'[\u2600-\u27BF]', '', text)
+    # Strip sound event tags in brackets or parentheses (e.g. [laughter], (laughter), (笑声))
+    text = re.sub(r'\[.*?\]|<.*?>|\(.*?\)', '', text)
+    # Clean up double/multiple spaces and strip
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text

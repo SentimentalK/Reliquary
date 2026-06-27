@@ -4,7 +4,7 @@ import io
 import time
 from typing import Optional, List, Dict, Any
 
-from app.services.pipelines.base import PipelineStep, PipelineContext, GroqProvider, StepResult
+from app.services.pipelines.base import PipelineStep, PipelineContext, GroqProvider, StepResult, clean_transcription_text
 
 
 class WhisperStep(PipelineStep):
@@ -45,6 +45,7 @@ class WhisperStep(PipelineStep):
         latency_ms = int((time.time() - t0) * 1000)
         
         text = transcription.strip() if isinstance(transcription, str) else transcription.text.strip()
+        text = clean_transcription_text(text)
         
         # Write to context for downstream steps
         ctx.set_data("raw_text", text)
