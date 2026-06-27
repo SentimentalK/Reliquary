@@ -322,7 +322,6 @@ async def websocket_audio_stream(websocket: WebSocket):
             try:
                 sv_ws_url = settings.sensevoice_api_url.replace("http://", "ws://").replace("https://", "wss://") + "/ws/transcribe"
                 import websockets
-                import json
                 sv_ws = await websockets.connect(sv_ws_url, close_timeout=10.0)
                 await sv_ws.send(json.dumps({"language": language or "auto"}))
                 print(f"[WebSocket] Connected to SenseVoice WebSocket streaming endpoint: {sv_ws_url}")
@@ -385,7 +384,6 @@ async def websocket_audio_stream(websocket: WebSocket):
                 await sv_ws.send("EOF")
                 # Wait for final transcription result from SenseVoice
                 res_data = await sv_ws.recv()
-                import json
                 res_json = json.loads(res_data)
                 pre_transcribed_text = res_json.get("text", "")
                 pre_transcribed_latency = res_json.get("latency_ms", 0)
