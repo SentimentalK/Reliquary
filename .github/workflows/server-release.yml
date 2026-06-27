@@ -17,6 +17,11 @@ on:
       - 'web/**'
       - '.github/workflows/server-release.yml'
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag to release (e.g., v1.0.0)'
+        required: false
+        default: ''
 
 env:
   REGISTRY: ghcr.io
@@ -51,7 +56,9 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
+          if [ "${{ github.event.inputs.version }}" != "" ]; then
+            echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          elif [[ $GITHUB_REF == refs/tags/* ]]; then
             echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           else
             echo "VERSION=latest" >> $GITHUB_OUTPUT
