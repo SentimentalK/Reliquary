@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: self-hosted
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,7 +63,7 @@ jobs:
 
   build-android:
     needs: build-and-release
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
