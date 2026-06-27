@@ -4,16 +4,72 @@ on:
   push:
     branches: [ "main", "master" ]
     tags: [ "v*" ]
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-release.yml'
+      - '.github/.goreleaser.darwin.yaml'
+      - '.github/.goreleaser.windows.yaml'
   pull_request:
     branches: [ "main", "master" ]
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-release.yml'
+      - '.github/.goreleaser.darwin.yaml'
+      - '.github/.goreleaser.windows.yaml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  build-darwin:
     runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: client/go.sum
+
+      - name: Tidy Go Modules
+        run: cd client && go mod tidy
+
+      - name: Run GoReleaser (Snapshot)
+        if: startsWith(github.ref, 'refs/tags/') == false
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --snapshot --clean --skip=publish --config .github/.goreleaser.darwin.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser (Release)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: '~> v2'
+          args: release --clean --config .github/.goreleaser.darwin.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
+
+      - name: Upload Snapshot Artifacts
+        if: startsWith(github.ref, 'refs/tags/') == false
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-darwin-snapshot
+          path: dist/*
+          retention-days: 1
+
+  build-windows:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,7 +86,9 @@ jobs:
         run: cd client && go mod tidy
           
       - name: Install MinGW (for Windows Cross-Compile)
-        run: brew install mingw-w64
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64 g++-mingw-w64
 
       - name: Run GoReleaser (Snapshot)
         if: startsWith(github.ref, 'refs/tags/') == false
@@ -38,7 +96,7 @@ jobs:
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --snapshot --clean --skip=publish --config .github/.goreleaser.yaml
+          args: release --snapshot --clean --skip=publish --config .github/.goreleaser.windows.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -48,7 +106,7 @@ jobs:
         with:
           distribution: goreleaser
           version: '~> v2'
-          args: release --clean --config .github/.goreleaser.yaml
+          args: release --clean --config .github/.goreleaser.windows.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_PAT: ${{ secrets.GH_PAT }}
@@ -57,12 +115,12 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/') == false
         uses: actions/upload-artifact@v4
         with:
-          name: dist-snapshot
+          name: dist-windows-snapshot
           path: dist/*
           retention-days: 1
 
   build-android:
-    needs: build-and-release
+    needs: [build-darwin, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

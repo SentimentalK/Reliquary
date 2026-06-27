@@ -1,0 +1,49 @@
+version: 2
+project_name: reliquary
+
+builds:
+  - id: windows
+    binary: reliquary
+    dir: client
+    main: ./cmd
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    goos:
+      - windows
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{.Version}}
+
+archives:
+  - formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "386" }}i386{{ else }}{{ .Arch }}{{ end }}
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  version_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+scoops:
+  - repository:
+      owner: SentimentalK
+      name: scoop-bucket
+      token: "{{ .Env.GH_PAT }}"
+    
+    name: reliquary
+    homepage: "https://github.com/SentimentalK/Reliquary"
+    description: "Reliquary: Your Digital Phylactery."
+    license: "Private"

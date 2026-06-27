@@ -2,32 +2,22 @@ version: 2
 project_name: reliquary
 
 builds:
-  - binary: reliquary
+  - id: darwin
+    binary: reliquary
     dir: client
     main: ./cmd
     env:
       - CGO_ENABLED=1
     goos:
       - darwin
-      - windows
     goarch:
       - amd64
       - arm64
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s -w -X main.version={{.Version}}
     hooks:
       post:
         - sh -c "if [[ '{{ .Os }}' == 'darwin' ]]; then codesign --force --deep -s - {{ .Path }}; fi"
-    overrides:
-      - goos: windows
-        goarch: amd64
-        env:
-          - CGO_ENABLED=1
-          - CC=x86_64-w64-mingw32-gcc
-          - CXX=x86_64-w64-mingw32-g++
 
 archives:
   - formats: [tar.gz]
@@ -60,14 +50,3 @@ brews:
     homepage: "https://github.com/SentimentalK/Reliquary"
     description: "Reliquary: Your Digital Phylactery."
     license: "Private" 
-
-scoops:
-  - repository:
-      owner: SentimentalK
-      name: scoop-bucket
-      token: "{{ .Env.GH_PAT }}"
-    
-    name: reliquary
-    homepage: "https://github.com/SentimentalK/Reliquary"
-    description: "Reliquary: Your Digital Phylactery."
-    license: "Private"
