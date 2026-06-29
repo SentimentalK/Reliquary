@@ -27,7 +27,7 @@ env:
   REGISTRY: ghcr.io
   BACKEND_IMAGE: ghcr.io/sentimentalk/reliquary-backend
   FRONTEND_IMAGE: ghcr.io/sentimentalk/reliquary-frontend
-  SENSEVOICE_IMAGE: ghcr.io/sentimentalk/reliquery-sensevoice
+  SENSEVOICE_IMAGE: ghcr.io/sentimentalk/reliquary-sensevoice
 
 jobs:
   # Job to check which paths changed
